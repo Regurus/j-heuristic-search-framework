@@ -544,11 +544,12 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 //        SearchAlgorithm alg = new DP();
+//        alg.setAdditionalParameter("emptyFocalRatio","200");
         SearchAlgorithm alg = new WAStar();
 //        SearchAlgorithm alg = new EES(1);
-        Main.mainDP(args,10,alg);
+        Main.mainDP(args,18,alg);
         //Main.mainTopSpin12Domain(args);
-        Main.mainRawGraphDomain(args);
+        //Main.mainRawGraphDomain(args);
         //Main.mainFifteenPuzzleDomain(args);
         //Main.mainGridPathFindingWithPivotsDomain(args);
         //Main.mainGridPathFindingDomain(args);

@@ -47,6 +47,7 @@ public class DP  implements SearchAlgorithm {
     private boolean reopen;
     //when to empty Focal
     private int emptyFocalRatio;
+    private NodeComparator NC;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -114,6 +115,7 @@ public class DP  implements SearchAlgorithm {
         this.open = new BinHeapF<>(new NodeComparator());
         //this.open = buildHeap(heapType, 100);
         this.closed = new HashMap<>();
+        this.NC = new NodeComparator();
     }
 
     @Override
@@ -186,63 +188,44 @@ public class DP  implements SearchAlgorithm {
                     ++result.duplicates;
                     // Get the previous copy of this node (and extract it)
                     Node dupChildNode = this.closed.get(childNode.packed);
+                    // check if the potential has changed
+                    dupChildNode.reCalcValue();
                     // Take the h value from the previous version of the node (for case of randomization of h values)
                     childNode.computeNodeValue(dupChildNode.h);
-                    // All this is relevant only if we reached the node via a cheaper path
-                    if (dupChildNode.f > childNode.f) {
-                        // If false - let's check it!
-                        //assert dupChildNode.g > childNode.g;
-                        if (dupChildNode.g > childNode.g) {
-
-                            // Node in closed but we get duplicate
-                            if (this.weight == 1.0 && dupChildNode.getIndex(this.open.getKey()) == -1 && this.domain.isCurrentHeuristicConsistent()) {
-                                System.out.println(dupChildNode.f + " " + childNode.f);
-                                System.out.println(dupChildNode.g + " " + childNode.g);
-                                System.out.println(dupChildNode.h + " " + childNode.h);
-                                //System.out.println(dupChildNode.parent.packed.getFirst());
-                                //System.out.println(dupChildNode.packed.getFirst());
-                                //System.out.println(domain.unpack(dupChildNode.parent.packed).dumpState());
-                                //System.out.println(domain.unpack(childNode.parent.packed).dumpState());
-                                assert false;
-                            }
-
-                            // In any case update the duplicate with the new values - we reached it via a shorter path
-                            double oldf = dupChildNode.f;
-                            dupChildNode.f = childNode.f;
-                            dupChildNode.g = childNode.g;
-                            dupChildNode.op = childNode.op;
-                            dupChildNode.pop = childNode.pop;
-                            dupChildNode.parent = childNode.parent;
-                            dupChildNode.potential = childNode.potential;
-
-                            // In case the duplicate is also in the open list - let's just update it there
-                            // (since we updated g and f)
-                            if (dupChildNode.getIndex(this.open.getKey()) != -1) {
-                                ++result.opupdated;
-                                this.open.updateF(dupChildNode,oldf);
-                                this.closed.put(dupChildNode.packed, dupChildNode);
-                                // Otherwise, consider to reopen the node
-                            } else {
-                                // For debugging issues!
-                                if (this.weight == 1.0 && this.domain.isCurrentHeuristicConsistent()) {
-                                    assert false;
-                                }
-                                // Return to OPEN list only if reopening is allowed
-                                if (this.reopen) {
-                                    ++result.reopened;
-                                    this.open.add(dupChildNode);
-                                }
-                                this.closed.put(dupChildNode.packed, dupChildNode);
+                    // check which child is better
+                    int compared = NC.compare(childNode,dupChildNode);
+                    // childNode is better, need to update dupChildNode
+                    if(compared < 0){
+                        // In any case update the duplicate with the new values - we reached it via a shorter path
+                        double oldF = dupChildNode.f;
+                        dupChildNode.f = childNode.f;
+                        dupChildNode.g = childNode.g;
+                        dupChildNode.op = childNode.op;
+                        dupChildNode.pop = childNode.pop;
+                        dupChildNode.parent = childNode.parent;
+                        dupChildNode.potential = childNode.potential;
+                        // if dupChildNode is in open, update it there too
+                        if (dupChildNode.getIndex(this.open.getKey()) != -1) {
+                            ++result.opupdated;
+                            this.open.updateF(dupChildNode,oldF);
+                        }
+                        // Otherwise, consider to reopen dupChildNode
+                        else{
+                            if (this.reopen) {
+                                ++result.reopened;
+                                this.open.add(dupChildNode);
                             }
                         }
+                        // in any case, update closed to be bestChild
+                        this.closed.put(dupChildNode.packed, dupChildNode);
                     }
-                    // Otherwise, the node is new (hasn't been reached yet)
-                } else {
+                } else {// Otherwise, the node is new (hasn't been reached yet)
                     this.open.add(childNode);
                     this.closed.put(childNode.packed, childNode);
                 }
             }
             this.open.remove(currentNode);
+            this.open.test();
         }
 
         result.stopTimer();
@@ -348,15 +331,6 @@ public class DP  implements SearchAlgorithm {
 
             // Update potential, h and f values
             this.computeNodeValue(state.getH());
-
-            // Start of PathMax
-            /*
-            if (parent != null) {
-                double costsDiff = this.g - parent.g;
-                this.h = Math.max(this.h, (parent.h - costsDiff));
-            }
-            */
-            // End of PathMax
 
             // Parent node
             this.parent = parent;

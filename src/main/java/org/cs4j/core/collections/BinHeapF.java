@@ -1,5 +1,7 @@
 package org.cs4j.core.collections;
 
+import org.cs4j.core.algorithms.DP;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,16 +49,28 @@ public class BinHeapF<E extends SearchQueueElement> implements SearchQueue<E> {
                 if(e.getF()!=heap.getElementAt(i).getF()){
                     System.out.println("wrong update" + e);
                 }
+            }
+            for (int i = 0; i < heap.size(); i++) {
+                E e = heap.getElementAt(i);
+                if(e.getIndex(heap.getKey()) != i){
+                    System.out.println("Wrong index in Array");
+                }
                 heap.update(e);
-                if (i != e.getIndex(heap.getKey())) {
-                    //System.out.println("wrong reorder1" + e);
+                int ix = e.getIndex(heap.getKey());
+                if (ix > i ) {
                     i--;
                 }
+                else if(ix < i){
+                    i=ix;
+                    i--;
+                }
+
             }
             for (int i = 0; i < heap.size(); i++) {
                 E e = heap.getElementAt(i);
                 heap.update(e);
-                if (i != e.getIndex(heap.getKey())) {
+                int ix = e.getIndex(heap.getKey());
+                if (i != ix) {
                     System.out.println("wrong reorder2" + e);
                 }
             }
@@ -83,11 +97,11 @@ public class BinHeapF<E extends SearchQueueElement> implements SearchQueue<E> {
         throw new UnsupportedOperationException("Invalid operation for BinheapF, use updateF instead.");
     }
 
-    public void updateF(E newNode, double oldf) {
-        countF_add(newNode.getF());
-        countF_remove(oldf);
-        heap.update(newNode);
-        heapF.update(newNode);
+    public void updateF(E updatedNode, double oldF) {
+        countF_add(updatedNode.getF());
+        countF_remove(oldF);
+        heap.update(updatedNode);
+        heapF.update(updatedNode);
     }
 
     public boolean isEmpty() {
@@ -116,7 +130,6 @@ public class BinHeapF<E extends SearchQueueElement> implements SearchQueue<E> {
 
     private void countF_remove(double Val){
         countF.put(Val,countF.get(Val)-1);
-//        test();
         if(countF.get(Val)==0){
             countF.remove(Val);
             if(Val==fmin && heapF.size()>0){//find next lowest fmin
@@ -150,7 +163,7 @@ public class BinHeapF<E extends SearchQueueElement> implements SearchQueue<E> {
         }
     }
 
-    private void test(){
+    public void test(){
         BinHeap list = heapF;
 //        System.out.println(heap.size());
         Iterator it = countF.entrySet().iterator();
@@ -171,7 +184,7 @@ public class BinHeapF<E extends SearchQueueElement> implements SearchQueue<E> {
         it = countF.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
-//            System.out.println(pair.getKey() + " = " + pair.getValue());
+//           System.out.println(pair.getKey() + " = " + pair.getValue());
         }
 
         for(int i=0; i < list.size(); i++){

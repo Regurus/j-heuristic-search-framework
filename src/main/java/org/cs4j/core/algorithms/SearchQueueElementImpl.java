@@ -21,5 +21,4 @@ public abstract class SearchQueueElementImpl implements SearchQueueElement {
 	public int getIndex(int key) {
 		return indexMap[key];
 	}
-
 }

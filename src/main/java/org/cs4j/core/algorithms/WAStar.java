@@ -293,6 +293,11 @@ public class WAStar implements SearchAlgorithm {
                             }
                         }
                     } else {
+/*                        // Return to OPEN list only if reopening is allowed and not already in OPEN
+                        if (this.reopen && dupChildNode.getIndex(this.open.getKey()) == -1) {
+                            ++result.reopened;
+                            this.open.add(dupChildNode);
+                        }*/
                         // A shorter path has not been found, but let's update the node in open if its h increased
                         if (this.useBPMX) {
                             if (dupChildNode.getIndex(this.open.getKey()) != -1) {

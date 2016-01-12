@@ -160,7 +160,25 @@ public class EES implements SearchAlgorithm {
 
     @Override
     public void setAdditionalParameter(String parameterName, String value) {
-        throw new NotImplementedException();
+        switch (parameterName) {
+            case "weight": {
+                this.weight = Double.parseDouble(value);
+                if (this.weight < 1.0d) {
+                    System.out.println("[ERROR] The weight must be >= 1.0");
+                    throw new IllegalArgumentException();
+                } else if (this.weight == 1.0d) {
+                    System.out.println("[WARNING] Weight of 1.0 is equivalent to A*");
+                }
+                break;
+            }
+            case "reopen": {
+                this.reopen = Boolean.parseBoolean(value);
+                break;
+            }
+            default: {
+                throw new NotImplementedException();
+            }
+        }
     }
 
     /**
@@ -308,7 +326,7 @@ public class EES implements SearchAlgorithm {
             SolutionImpl solution = new SolutionImpl(this.domain);
             List<Operator> path = new ArrayList<>();
             List<State> statesPath = new ArrayList<>();
-            System.out.println("[INFO] Solved - Generating output path.");
+            //System.out.println("[INFO] Solved - Generating output path.");
             long cost = 0;
 
             State currentPacked = domain.unpack(goal.packed);

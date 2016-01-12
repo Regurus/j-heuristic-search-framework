@@ -41,7 +41,8 @@ public interface SearchQueueElement {
   /**
    *
    * @return Elements F value;
-     */
-    public double getF();
-  
+   */
+  public double getF();
+
+
 }
