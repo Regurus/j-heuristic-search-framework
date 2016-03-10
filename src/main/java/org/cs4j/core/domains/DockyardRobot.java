@@ -356,6 +356,11 @@ public class DockyardRobot implements SearchDomain {
     }
 
     @Override
+    public int maxGeneratedSize() {
+        return 6000000;
+    }
+
+    @Override
     public DRobotState initialState() {
         // Initialize the first state: The robot is currently on location 0 and no box is loaded
         DRobotState drs = new DRobotState(this, this.initialLocation, -1, 0);

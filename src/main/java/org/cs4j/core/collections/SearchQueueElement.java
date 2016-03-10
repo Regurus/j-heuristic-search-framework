@@ -44,5 +44,17 @@ public interface SearchQueueElement {
    */
   public double getF();
 
+  /**
+   *
+   * @return Elements G value;
+   */
+  public double getG();
+
+  /**
+   *
+   * @return Elements H value;
+   */
+  public double getH();
+
 
 }

@@ -4,6 +4,7 @@ import org.cs4j.core.SearchDomain;
 import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.collections.Pair;
 import org.cs4j.core.collections.PairInt;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -905,6 +906,11 @@ public class GridPathFinding implements SearchDomain {
     @Override
     public double getOptimalSolutionCost() {
         return this.optimalSolutionCost;
+    }
+
+    @Override
+    public int maxGeneratedSize() {
+        throw new NotImplementedException();
     }
 
     /**

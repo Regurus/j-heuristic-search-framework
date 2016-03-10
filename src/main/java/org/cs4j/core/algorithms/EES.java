@@ -10,6 +10,9 @@ import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.collections.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -209,7 +212,7 @@ public class EES implements SearchAlgorithm {
             this.gequeue.updateFocal(null, initNode, 0);
 
             // Loop while there is some node in open
-            while (!this.gequeue.isEmpty()) {
+            while (!this.gequeue.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize()) {
                 // First, take the best node from the open list (best f^)
                 Node oldBest = this.gequeue.peekOpen();
                 // Now this node is in closed only, and not in open
@@ -239,6 +242,10 @@ public class EES implements SearchAlgorithm {
                         continue;
                     }
                     ++result.generated;
+/*                    if(result.getGenerated() % 1000 == 0){
+                        DecimalFormat formatter = new DecimalFormat("#,###");
+                        System.out.print("\r[INFO] EES Generated:" + formatter.format(result.getGenerated()));
+                    }*/
                     // Apply the operator and extract the child state
                     State childState = domain.applyOperator(state, op);
                     // Create the child node
@@ -316,18 +323,19 @@ public class EES implements SearchAlgorithm {
                 this.gequeue.updateFocal(oldBest, newBest, fHatChange);
             }
         } catch (OutOfMemoryError e) {
-            System.out.println("Out of Memory :-( ");
+            System.out.println("[INFO] EES OutOfMemory :-( "+e);
+            System.out.println("[INFO] OutOfMemory EES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
         }
-
         result.stopTimer();
 
         // If a goal was found: update the solution
         if (goal != null) {
+            System.out.print("\r");
             SolutionImpl solution = new SolutionImpl(this.domain);
             List<Operator> path = new ArrayList<>();
             List<State> statesPath = new ArrayList<>();
             //System.out.println("[INFO] Solved - Generating output path.");
-            long cost = 0;
+            double cost = 0;
 
             State currentPacked = domain.unpack(goal.packed);
             State currentParentPacked = null;
@@ -343,10 +351,12 @@ public class EES implements SearchAlgorithm {
                 statesPath.add(domain.unpack(currentNode.packed));
             }
             // The actual size of the found path can be only lower the G value of the found goal
-            assert statesPath.size() <= goal.g + 1;
-            if (statesPath.size() - goal.g < 1) {
+            assert cost <= goal.g;
+            double roundedCost = new BigDecimal(cost).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
+            double roundedG = new BigDecimal(goal.g).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
+            if (roundedCost - roundedG < 0) {
                 System.out.println("[INFO] Goal G is higher that the actual path " +
-                        "(G: " + goal.g +  ", Actual: " + statesPath.size() + ")");
+                        "(G: " + roundedG +  ", Actual: " + roundedCost + ")");
             }
 
             Collections.reverse(path);
@@ -655,6 +665,16 @@ public class EES implements SearchAlgorithm {
         @Override
         public double getF() {
             return this.f;
+        }
+
+        @Override
+        public double getG() {
+            return this.g;
+        }
+
+        @Override
+        public double getH() {
+            return this.h;
         }
     }
 }

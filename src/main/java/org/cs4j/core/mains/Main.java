@@ -501,7 +501,8 @@ public class Main {
         Weights weights = new Weights();
         boolean reopen = true;
         boolean overwriteFile = true;
-        String relPath = "C:\\Users\\Daniel\\Documents\\thesis\\Research Data\\";
+        System.out.println("Solving Pancakes " + num);
+        String relPath = "C:\\Users\\Daniel\\Documents\\gilond\\Master\\Research Data\\";
         OutputResult summary = new OutputResult(relPath+"results\\pancakes\\"+num+"\\Summary_"+alg.getName(),num+"_", -1, -1, "", reopen, overwriteFile);
         summary.writeln("WG,WH,"+alg.getName()+" Solved,"+alg.getName()+" Generated,"+alg.getName()+" Depth");
         for (Weights.SingleWeight w : weights.NATURAL_WEIGHTS) {
@@ -516,7 +517,7 @@ public class Main {
                     InputStream is = new FileInputStream(new File(relPath+"input/pancakes/generated-"+num+"/" + i+".in"));
                     SearchDomain domain = new Pancakes(is);
                     alg.setAdditionalParameter("weight", totalWeight + "");
-                    System.out.println("Solving instance " + i + " For weight " + totalWeight + " reopen? " + reopen);
+//                    System.out.println("Solving instance " + i + " For weight " + totalWeight + " reopen? " + reopen);
                     SearchResult result = alg.search(domain);
                     double d[];
                     if (result.hasSolution()) {
@@ -551,17 +552,25 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-//        SearchAlgorithm alg = new DP();
-//        alg.setAdditionalParameter("emptyFocalRatio","200");
-        SearchAlgorithm alg = new WAStar();
+        SearchAlgorithm alg = new DP();
+//        int[] pancakesNum = new int[] {10,12,16,20,40};
+        int[] pancakesNum = new int[] {40};
+        for(int j=0 ; j<pancakesNum.length;j++){
+            for(int i = 3200 ; i >24  ; i = i / 2) {
+                System.out.println("emptyFocalRatio:"+i+", pancakesNum:"+pancakesNum[j]);
+                alg.setAdditionalParameter("emptyFocalRatio", i + "");
+//            alg.setAdditionalParameter("emptyFocalRatio", "200");
+//        SearchAlgorithm alg = new WAStar();
 //        SearchAlgorithm alg = new EES(1);
-        Main.mainDP(args,18,alg);
+                Main.mainDP(args, pancakesNum[j], alg);
+            }
+        }
         //Main.mainTopSpin12Domain(args);
         //Main.mainRawGraphDomain(args);
         //Main.mainFifteenPuzzleDomain(args);
         //Main.mainGridPathFindingWithPivotsDomain(args);
         //Main.mainGridPathFindingDomain(args);
-        Main.mainPancakesDomain(args);
+        //Main.mainPancakesDomain(args);
         //Main.mainVacuumRobotDomain(args);
         //Main.mainDockyardRobotDomain();
 

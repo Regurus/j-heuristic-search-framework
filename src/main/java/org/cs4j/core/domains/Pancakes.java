@@ -3,10 +3,7 @@ package org.cs4j.core.domains;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.collections.PackedElement;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -154,6 +151,13 @@ public class Pancakes implements SearchDomain {
     }
 
     /**
+     * constructor with no initial state, it will be set later by setInstance(stream)
+     */
+    public Pancakes() {
+        this.costFunction = COST_FUNCTION.UNIT;
+    }
+
+    /**
      * Check whether there is a gap between the cakes n and n+1? (whether they are following)
      *
      * @param cakes The pancakes array to calculate the data from
@@ -245,6 +249,11 @@ public class Pancakes implements SearchDomain {
     @Override
     public double getOptimalSolutionCost() {
         return -1;
+    }
+
+    @Override
+    public int maxGeneratedSize() {
+        return 10000000;
     }
 
     @Override
@@ -497,7 +506,7 @@ public class Pancakes implements SearchDomain {
 
         @Override
         public String dumpStateShort() {
-            return null;
+            return Arrays.toString(this.cakes);
         }
     }
 

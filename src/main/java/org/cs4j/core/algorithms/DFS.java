@@ -169,5 +169,15 @@ public class DFS implements SearchAlgorithm {
         public double getF() {
             return 0;
         }
+
+        @Override
+        public double getG() {
+            return 0;
+        }
+
+        @Override
+        public double getH() {
+            return 0;
+        }
     }
 }

@@ -406,6 +406,16 @@ public class PTS implements SearchAlgorithm {
             return this.g + this.h;
         }
 
+        @Override
+        public double getG() {
+            return this.g;
+        }
+
+        @Override
+        public double getH() {
+            return this.h;
+        }
+
         /**
          * Default constructor which creates the node from some given state
          *

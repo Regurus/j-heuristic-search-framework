@@ -111,7 +111,7 @@ public interface SearchDomain extends SearchConfigurable {
     boolean isCurrentHeuristicConsistent();
 
     /**
-     * For tests with oracles, set the optimal cost of the soltion
+     * For tests with oracles, set the optimal cost of the solution
      *
      */
     void setOptimalSolutionCost(double cost);
@@ -121,6 +121,12 @@ public interface SearchDomain extends SearchConfigurable {
      * @return The cost of the optimal solution if defined (or -1 if the cost hasn't been set)
      */
     double getOptimalSolutionCost();
+
+    /**
+     *
+     * @return the number of instances to generate of this domain before OutOfMemory
+     */
+    int maxGeneratedSize();
 
     /**
      * The State interface.
@@ -187,4 +193,5 @@ public interface SearchDomain extends SearchConfigurable {
         Operator reverse(State state);
 
     }
+
 }

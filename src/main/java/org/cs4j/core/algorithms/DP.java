@@ -6,6 +6,9 @@ import org.cs4j.core.SearchResult;
 import org.cs4j.core.collections.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -13,7 +16,8 @@ import java.util.*;
  */
 public class DP  implements SearchAlgorithm {
 
-    private static final int QID = 0;
+    private static final int open_ID = 1;
+    private static final int openF_ID = 0;
 
     private static final Map<String, Class> DPPossibleParameters;
 
@@ -23,15 +27,19 @@ public class DP  implements SearchAlgorithm {
         DPPossibleParameters = new HashMap<>();
         DP.DPPossibleParameters.put("weight", Double.class);
         DP.DPPossibleParameters.put("reopen", Boolean.class);
-        DP.DPPossibleParameters.put("emptyFocalRatio", Integer.class);
+        DP.DPPossibleParameters.put("FR", Integer.class);
     }
 
     // The domain for the search
     private SearchDomain domain;
     // Open list (frontier)
-    private BinHeapF<Node> open = new BinHeapF<>(new NodeComparator());
+//    private BinHeapF<Node> open;
+    private GH_heap<Node> open;//gh_heap
+//    private BinHeapF<Node> openF;
     // Closed list (seen states)
     private Map<PackedElement, Node> closed;
+    //the result to return
+    private SearchResultImpl result;
 
     // TODO ...
     private HeapType heapType;
@@ -46,8 +54,9 @@ public class DP  implements SearchAlgorithm {
     // Whether to perform reopening of states
     private boolean reopen;
     //when to empty Focal
-    private int emptyFocalRatio;
+    private int FR;
     private NodeComparator NC;
+    private NodePackedComparator NPC;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -56,7 +65,7 @@ public class DP  implements SearchAlgorithm {
         // Default values
         this.weight = 1.0;
         this.reopen = true;
-        this.emptyFocalRatio = Integer.MAX_VALUE;
+        this.FR = Integer.MAX_VALUE;
     }
 
     protected DP(double maxCost, HeapType heapType) {
@@ -85,37 +94,19 @@ public class DP  implements SearchAlgorithm {
 
     @Override
     public String getName() {
-        if(this.emptyFocalRatio==Integer.MAX_VALUE) return "DP";
-        else return "DP"+this.emptyFocalRatio;
-    }
-
-    /**
-     * Creates a heap according to the required type (Builder design pattern)
-     *
-     * @param heapType Type of the required heap (choose from the available types)
-     * @param size Initial size of the heap
-     *
-     * NOTE: In case of unknown type, null is returned (no exception is thrown)
-     * @return The created heap
-     */
-    private SearchQueue<Node> buildHeap(HeapType heapType, int size) {
-        SearchQueue<Node> heap = null;
-        switch (heapType) {
-            case BUCKET:
-                heap = new BucketHeap<>(size, QID);
-                break;
-            case BIN:
-                heap = new BinHeapF<>(new NodeComparator());
-                break;
-        }
-        return heap;
+/*        if(this.FR==Integer.MAX_VALUE) return "DP";
+        else return "DP"+this.FR;*/
+        return "DP";
     }
 
     private void _initDataStructures() {
-        this.open = new BinHeapF<>(new NodeComparator());
+        this.NC = new NodeComparator();
+        this.NPC = new NodePackedComparator();
+//        this.open = new BinHeapF<>(open_ID,domain,this.NC);
+        this.open = new GH_heap<>(open_ID,domain,weight,NPC);//gh_heap
+//        this.openF = new BinHeapF<>(openF_ID,domain);
         //this.open = buildHeap(heapType, 100);
         this.closed = new HashMap<>();
-        this.NC = new NodeComparator();
     }
 
     @Override
@@ -124,114 +115,77 @@ public class DP  implements SearchAlgorithm {
         Node goal = null;
         // Initialize all the data structures required for the search
         this._initDataStructures();
-        SearchResultImpl result = new SearchResultImpl();
+        result = new SearchResultImpl();
         result.startTimer();
 
         // Let's instantiate the initial state
         SearchDomain.State currentState = domain.initialState();
-        // set initial H as Fmin for potential computation
-        this.open.setFmin(currentState.getH());
+
         // Create a graph node from this state
         Node initNode = new Node(currentState);
-
         // And add it to the frontier
-        this.open.add(initNode);
-        // The nodes are ordered in the closed list by their packed values
-        this.closed.put(initNode.packed, initNode);
+        _addNode(initNode);
 
-        forntierLoop:
-        // Loop over the frontier
-        while (!this.open.isEmpty()) {
-            // Take the first state (still don't remove it)
-            Node currentNode;
-            currentNode = this.open.peek();
-            if(open.getFminCount() * emptyFocalRatio < result.generated && emptyFocalRatio!=Integer.MAX_VALUE){
-                currentNode = this.open.peekF();
-            }
+        try{
+            while (!this.open.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize()) {
 
-            if(currentNode.potential < DP.this.weight - 0.00001){
-                System.out.println("F:"+currentNode.f);
-                System.out.println("G:"+currentNode.g);
-                System.out.println("H:"+currentNode.h);
-            }
+                // Take the first state (still don't remove it)
+                Node currentNode = _selectNode();
 
-            // Extract the state from the packed value of the node
-            currentState = domain.unpack(currentNode.packed);
-
-            // Check for goal condition
-            if (domain.isGoal(currentState)) {
-                goal = currentNode;
-                break;
-            }
-
-            // Expand the current node
-            ++result.expanded;
-            // Go over all the possible operators and apply them
-            for (int i = 0; i < domain.getNumOperators(currentState); ++i) {
-                SearchDomain.Operator op = domain.getOperator(currentState, i);
-                // Try to avoid loops
-                if (op.equals(currentNode.pop)) {
-                    continue;
-                }
-                // Here we actually generate a new state
-                ++result.generated;
-                if(result.generated > 7000000){
-                    System.out.println("[INFO] nearly out of memory - exiting state");
-                    break forntierLoop;
-                }
-                SearchDomain.State childState = domain.applyOperator(currentState, op);
-                Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
-
-                // Treat duplicates
-                if (this.closed.containsKey(childNode.packed)) {
-                    // Count the duplicates
-                    ++result.duplicates;
-                    // Get the previous copy of this node (and extract it)
-                    Node dupChildNode = this.closed.get(childNode.packed);
-                    // check if the potential has changed
-                    dupChildNode.reCalcValue();
-                    // Take the h value from the previous version of the node (for case of randomization of h values)
-                    childNode.computeNodeValue(dupChildNode.h);
-                    // check which child is better
-                    int compared = NC.compare(childNode,dupChildNode);
-                    // childNode is better, need to update dupChildNode
-                    if(compared < 0){
-                        // In any case update the duplicate with the new values - we reached it via a shorter path
-                        double oldF = dupChildNode.f;
-                        dupChildNode.f = childNode.f;
-                        dupChildNode.g = childNode.g;
-                        dupChildNode.op = childNode.op;
-                        dupChildNode.pop = childNode.pop;
-                        dupChildNode.parent = childNode.parent;
-                        dupChildNode.potential = childNode.potential;
-                        // if dupChildNode is in open, update it there too
-                        if (dupChildNode.getIndex(this.open.getKey()) != -1) {
-                            ++result.opupdated;
-                            this.open.updateF(dupChildNode,oldF);
-                        }
-                        // Otherwise, consider to reopen dupChildNode
-                        else{
-                            if (this.reopen) {
-                                ++result.reopened;
-                                this.open.add(dupChildNode);
-                            }
-                        }
-                        // in any case, update closed to be bestChild
-                        this.closed.put(dupChildNode.packed, dupChildNode);
+/*                if (currentNode.potential < DP.this.weight - 0.00001) {
+//                    System.out.println("\rPotential too low   \tFmin:" + this.open.getFmin() + "\tF:" +currentNode.f + "\tG:" + currentNode.g + "\tH:" + currentNode.h+ "\tPotential:" + currentNode.potential);
+                    currentNode.reCalcValue();
+                    if (currentNode.potential < DP.this.weight - 0.00001) {
+                        System.out.println("Potential after reCalc\tFmin:" + this.open.getFmin() + "\tF:" + currentNode.f + "\tG:" + currentNode.g + "\tH:" + currentNode.h + "\tPotential:" + currentNode.potential);
                     }
-                } else {// Otherwise, the node is new (hasn't been reached yet)
-                    this.open.add(childNode);
-                    this.closed.put(childNode.packed, childNode);
+                }*/
+
+                // Extract the state from the packed value of the node
+                currentState = domain.unpack(currentNode.packed);
+
+                // Check for goal condition
+                if (domain.isGoal(currentState)) {
+                    goal = currentNode;
+                    break;
                 }
+
+                // Expand the current node
+                ++result.expanded;
+                // Go over all the possible operators and apply them
+                for (int i = 0; i < domain.getNumOperators(currentState); ++i) {
+                    SearchDomain.Operator op = domain.getOperator(currentState, i);
+                    // Try to avoid loops
+                    if (op.equals(currentNode.pop)) {
+                        continue;
+                    }
+                    // Here we actually generate a new state
+                    ++result.generated;
+                    SearchDomain.State childState = domain.applyOperator(currentState, op);
+                    Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
+/*                    if(result.getGenerated() % 1000 == 0){
+                        DecimalFormat formatter = new DecimalFormat("#,###");
+                        System.out.print("\r[INFO] DP Generated:" + formatter.format(result.getGenerated()));
+                    }*/
+
+                    // Treat duplicates
+                    if (this.closed.containsKey(childNode.packed)) {
+                        _duplicateNode(childNode);
+                    } else {// Otherwise, the node is new (hasn't been reached yet)
+                        _addNode(childNode);
+                    }
+                }
+                _removeNode(currentNode);
             }
-            this.open.remove(currentNode);
-            this.open.test();
+        } catch (OutOfMemoryError e) {
+            System.out.println("[INFO] DP OutOfMemory :-( "+e);
+            System.out.println("[INFO] OutOfMemory DP on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
         }
 
         result.stopTimer();
 
         // If a goal was found: update the solution
         if (goal != null) {
+            System.out.print("\r");
             SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
             List<SearchDomain.Operator> path = new ArrayList<>();
             List<SearchDomain.State> statesPath = new ArrayList<>();
@@ -253,7 +207,9 @@ public class DP  implements SearchAlgorithm {
             }
             // The actual size of the found path can be only lower the G value of the found goal
             assert cost <= goal.g;
-            if (cost - goal.g < 0) {
+            double roundedCost = new BigDecimal(cost).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
+            double roundedG = new BigDecimal(goal.g).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
+            if (roundedCost - roundedG < 0) {
                 System.out.println("[INFO] Goal G is higher than the actual cost " +
                         "(G: " + goal.g +  ", Actual: " + cost + ")");
             }
@@ -293,8 +249,8 @@ public class DP  implements SearchAlgorithm {
                 this.reopen = Boolean.parseBoolean(value);
                 break;
             }
-            case "emptyFocalRatio": {
-                this.emptyFocalRatio = Integer.parseInt(value);
+            case "FR": {
+                this.FR = Integer.parseInt(value);
                 break;
             }
             default: {
@@ -304,13 +260,125 @@ public class DP  implements SearchAlgorithm {
     }
 
     /**
+     *
+     * @return chosen Node for expansion
+     */
+    private Node _selectNode() {
+        Node toReturn;
+        toReturn = this.open.peek();
+/*        if(openF.getFminCount(FR) < result.generated){
+            toReturn = this.openF.peek();
+        }*/
+        return toReturn;
+    }
+
+    /**
+     *
+     * @param toAdd is the new node toAdd to open
+     */
+    private void _addNode(Node toAdd) {
+        this.open.add(toAdd);
+//        this.openF.add(toAdd);
+        // The nodes are ordered in the closed list by their packed values
+        this.closed.put(toAdd.packed, toAdd);
+    }
+
+    /**
+     *
+     * @param childNode is the new duplicate detected
+     */
+    private void _duplicateNode(Node childNode) {
+        // Count the duplicates
+        ++result.duplicates;
+        // Get the previous copy of this node (and extract it)
+        Node dupChildNode = this.closed.get(childNode.packed);
+        // check if the potential has changed
+//        dupChildNode.reCalcValue();
+        // Take the h value from the previous version of the node (for case of randomization of h values)
+        childNode.computeNodeValue(dupChildNode.h);
+        // check which child is better
+        int compared = NC.compare(childNode, dupChildNode);
+        // childNode is better, need to update dupChildNode
+        if (compared < 0) {
+            // In any case update the duplicate with the new values - we reached it via a shorter path
+            _updateNode(dupChildNode,childNode);
+        }
+    }
+
+    /**
+     *
+     * @param oldNode is the old Node, last time visited
+     * @param newNode is the new Node, with better path
+     */
+    private void _updateNode(Node oldNode,Node newNode) {
+//        double oldF = oldNode.getF();
+/*        double oldG = oldNode.getG();
+        double oldH = oldNode.getH();
+        oldNode.f = newNode.f;
+        oldNode.g = newNode.g;
+        oldNode.op = newNode.op;
+        oldNode.pop = newNode.pop;
+        oldNode.parent = newNode.parent;
+        oldNode.potential = newNode.potential;*/
+        // if dupChildNode is in open, update it there too
+        if (oldNode.getIndex(this.open.getKey()) != -1) {
+            ++result.opupdated;
+            this.open.remove(oldNode);
+            _copyNodeValues(oldNode,newNode);
+            this.open.add(newNode);
+//            this.open.updateF(oldNode,oldG,oldH);//gh_heap
+//            this.open.updateF(oldNode, oldF);
+//            this.openF.updateF(oldNode, oldF);
+        }
+        // Otherwise, consider to reopen dupChildNode
+        else {
+            if (this.reopen) {
+                ++result.reopened;
+                _copyNodeValues(oldNode,newNode);
+                this.open.add(oldNode);//gh_heap
+//                this.open.add(oldNode);
+//                this.openF.add(oldNode);
+            }
+        }
+        // in any case, update closed to be bestChild
+        this.closed.put(oldNode.packed, oldNode);
+    }
+
+    /**
+     *
+     * @param oldNode get values from newNode
+     * @param newNode
+     */
+    private void _copyNodeValues(Node oldNode,Node newNode) {
+        oldNode.f = newNode.f;
+        oldNode.g = newNode.g;
+        oldNode.op = newNode.op;
+        oldNode.pop = newNode.pop;
+        oldNode.parent = newNode.parent;
+//        oldNode.potential = newNode.potential;
+    }
+
+    /**
+     *
+     * @param toRemove is the node to be removed from open
+     */
+    private void _removeNode(Node toRemove) {
+//        double prevFmin = open.getFmin();
+        this.open.remove(toRemove);
+//        this.openF.remove(toRemove);
+/*        if(prevFmin < open.getFmin()){//fmin changed, need to reorder priority Queue
+            _reorder();
+        }*/
+    }
+
+    /**
      * The node class
      */
-    protected final class Node extends SearchQueueElementImpl implements BucketHeap.BucketHeapElement,reComputeable {
+    protected final class Node extends SearchQueueElementImpl implements BucketHeap.BucketHeapElement {
         private double f;
         private double g;
         private double h;
-        private double potential;
+//        private double potential;
 
         private SearchDomain.Operator op;
         private SearchDomain.Operator pop;
@@ -337,7 +405,35 @@ public class DP  implements SearchAlgorithm {
             this.packed = DP.this.domain.pack(state);
             this.pop = pop;
             this.op = op;
+
         }
+
+        @Override
+        public String toString() {
+            SearchDomain.State state = domain.unpack(this.packed);
+            StringBuilder sb = new StringBuilder();
+            sb.append("State:"+state.dumpStateShort());
+            sb.append(", h: "+this.h);//h
+            sb.append(", g: "+this.g);//g
+            sb.append(", f: "+this.f);//f
+//            sb.append(", potential: "+this.potential);//potential
+//            sb.append(", fcounterFmin: "+this.fcounterFmin);//fcounterFmin
+            return sb.toString();
+        }
+
+/*        void printNode(Node node){
+            SearchDomain.State state = domain.unpack(node.packed);
+            StringBuilder sb = new StringBuilder();
+            sb.append("State:"+state.dumpStateShort());
+            sb.append(", h: "+this.h);//h
+            sb.append(", g: "+this.g);//g
+            sb.append(", f: "+this.f);//f
+            sb.append(", potential: "+this.potential);//potential
+//            sb.append(", fcounterFmin: "+this.fcounterFmin);//fcounterFmin
+            System.out.println(sb.toString());
+            System.out.println("State:"+state.dumpStateShort());
+//            System.out.println("F:" +this.f + "\tG:" + this.g + "\tH:" + this.h+ "\tPotential:" + this.potential+ "\tfcounterFmin:" + this.fcounterFmin);
+        }*/
 
         /**
          * The function computes the F values according to the given heuristic value (which is computed externally)
@@ -347,18 +443,24 @@ public class DP  implements SearchAlgorithm {
          * @param updatedHValue The updated heuristic value
          */
         public void computeNodeValue(double updatedHValue) {
+
+            updatedHValue = new BigDecimal(updatedHValue).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
+
+            if(this.h != 0 && this.h != updatedHValue){
+                System.out.println("[INFO] GH_heap should update");
+            }
             this.h = updatedHValue;
             this.f = this.g + this.h;
             this.fcounterFmin = open.getFmin();
-            this.potential =  (this.fcounterFmin*DP.this.weight -this.g)/this.h;
+//            this.potential =  (this.fcounterFmin*DP.this.weight -this.g)/this.h;
         }
 
-        public void reCalcValue() {
+/*        public void reCalcValue() {
             if(open.getFmin() != this.fcounterFmin) {
                 this.fcounterFmin = open.getFmin();
                 this.potential =  (this.fcounterFmin*DP.this.weight -this.g)/this.h;
             }
-        }
+        }*/
 
 
         /**
@@ -390,6 +492,17 @@ public class DP  implements SearchAlgorithm {
         public double getF() {
             return this.f;
         }
+
+        @Override
+        public double getG() {
+            return this.g;
+        }
+
+        @Override
+        public double getH() {
+            return this.h;
+        }
+
     }
 
     /**
@@ -400,8 +513,8 @@ public class DP  implements SearchAlgorithm {
         @Override
         public int compare(final Node a, final Node b) {
             // First compare by potential (bigger is preferred), then by f (smaller is preferred), then by g (bigger is preferred)
-            if (a.potential > b.potential) return -1;
-            if (a.potential < b.potential) return 1;
+/*            if (a.potential > b.potential) return -1;
+            if (a.potential < b.potential) return 1;*/
 
             if (a.f < b.f) return -1;
             if (a.f > b.f) return 1;
@@ -409,6 +522,18 @@ public class DP  implements SearchAlgorithm {
             if (a.g > b.g) return -1;
             if (a.g < b.g) return 1;
             return 0;
+        }
+    }
+
+    /**
+     * The nodes comparator class
+     */
+    protected final class NodePackedComparator implements Comparator<Node> {
+
+        @Override
+        public int compare(final Node a, final Node b) {
+            if (a.packed.equals(b.packed)) return 0;
+            return -1;
         }
     }
 }

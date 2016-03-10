@@ -122,6 +122,7 @@ public final class FifteenPuzzle implements SearchDomain {
         FifteenPuzzlePossibleParameters.put("pdb-78-files", String.class);
         FifteenPuzzlePossibleParameters.put("pdb-555-files", String.class);
         FifteenPuzzlePossibleParameters.put("use-reflection", Boolean.class);
+        FifteenPuzzlePossibleParameters.put("cost-function", String.class);
     }
 
     /**
@@ -293,6 +294,11 @@ public final class FifteenPuzzle implements SearchDomain {
     @Override
     public double getOptimalSolutionCost() {
         return -1;
+    }
+
+    @Override
+    public int maxGeneratedSize() {
+        return 5000000;
     }
 
     /**
@@ -1146,6 +1152,31 @@ public final class FifteenPuzzle implements SearchDomain {
                 }
                 break;
             }
+            case "cost-function": {
+                switch (value) {
+                    case "unit": {
+                        _init(COST_FUNCTION.UNIT);
+                        break;
+                    }
+                    case "sqrt": {
+                        _init(COST_FUNCTION.SQRT);
+                        break;
+                    }
+                    case "invr": {
+                        _init(COST_FUNCTION.INVR);
+                        break;
+                    }
+                    case "heavy": {
+                        _init(COST_FUNCTION.HEAVY);
+                        break;
+                    }
+                    default: {
+                        System.err.println("Illegal heuristic type for FifteenPuzzle domain: " + value);
+                        throw new IllegalArgumentException();
+                    }
+                }
+                break;
+            }
             default: {
                 System.out.println("No such parameter: " + parameterName + " (value: " + value + ")");
                 throw new IllegalArgumentException();
@@ -1172,8 +1203,8 @@ public final class FifteenPuzzle implements SearchDomain {
         @Override
         public double getCost(State s, State parent) {
             // All the operators have the same cost
-            TileState ts = (TileState) s;
-            int tile = ts.tiles[value];
+            TileState pts = (TileState) parent;
+            int tile = pts.tiles[value];
             return FifteenPuzzle.this._getTileCost(tile);
         }
 

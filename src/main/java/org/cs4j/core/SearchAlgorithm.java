@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * @author Matthew Hatem
  */
-public interface SearchAlgorithm extends SearchConfigurable {
+public interface SearchAlgorithm extends SearchConfigurable{
 
     String getName();
 

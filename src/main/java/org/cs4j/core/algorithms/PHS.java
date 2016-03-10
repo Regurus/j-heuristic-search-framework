@@ -362,6 +362,16 @@ public class PHS implements SearchAlgorithm {
         public double getF() {
             return this.f;
         }
+
+        @Override
+        public double getG() {
+            return this.g;
+        }
+
+        @Override
+        public double getH() {
+            return this.h;
+        }
     }
 
     /**

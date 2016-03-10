@@ -241,14 +241,14 @@ public class VacuumRobot implements SearchDomain {
             System.err.println("Too many bits required: " + totalRequiredBits);
             System.exit(1);
         }
-        System.out.println("[Init] Initializes reverse operators");
+//        System.out.println("[Init] Initializes reverse operators");
         // Initialize the array of reverse operators
         this._initializeReverseOperatorsArray();
-        System.out.println("[Done] (Initializes reverse operators)");
-        System.out.println("[Init] Initializes MST for heavy calculation");
+//        System.out.println("[Done] (Initializes reverse operators)");
+//        System.out.println("[Init] Initializes MST for heavy calculation");
         // Pre-compute the {h, d} pairs for all the possible combinations of dirty vectors
         this._preComputeMSTHeavy();
-        System.out.println("[Done] (Initializes MST for heavy calculation)");
+//        System.out.println("[Done] (Initializes MST for heavy calculation)");
     }
 
     /**
@@ -1288,6 +1288,11 @@ public class VacuumRobot implements SearchDomain {
     @Override
     public double getOptimalSolutionCost() {
         return -1;
+    }
+
+    @Override
+    public int maxGeneratedSize() {
+        return Integer.MAX_VALUE;
     }
 
     /**

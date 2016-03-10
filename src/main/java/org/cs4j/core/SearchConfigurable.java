@@ -1,5 +1,7 @@
 package org.cs4j.core;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Map;
 
 /**

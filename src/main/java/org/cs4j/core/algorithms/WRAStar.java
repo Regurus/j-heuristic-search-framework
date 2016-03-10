@@ -601,6 +601,16 @@ public class WRAStar implements SearchAlgorithm {
         public double getF() {
             return this.g + this.h;
         }
+
+        @Override
+        public double getG() {
+            return this.g;
+        }
+
+        @Override
+        public double getH() {
+            return this.h;
+        }
     }
 
     /**
