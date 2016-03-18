@@ -18,8 +18,11 @@ package org.cs4j.core.algorithms;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchDomain.Operator;
@@ -49,8 +52,47 @@ public class SearchResultImpl implements SearchResult {
     private long stopWallTimeMillis;
     private long stopCpuTimeMillis;
 
+    private HashMap<String, Long> arrStartCpuTimeMillis;
+
+    private HashMap<String, Long> arrCpuTimeMillis;
+
     public List<Iteration> iterations = new ArrayList<>();
     private List<Solution> solutions = new ArrayList<>();
+
+    public SearchResultImpl() {
+        arrCpuTimeMillis = new HashMap<>();
+        arrStartCpuTimeMillis = new HashMap<>();
+    }
+
+    public void startArrCpuTimeMillis(String name){
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        long startTime = bean.isCurrentThreadCpuTimeSupported() ? bean.getCurrentThreadCpuTime() : -1L;
+        arrStartCpuTimeMillis.put(name,startTime);
+    }
+
+    public void stopArrCpuTimeMillis(String name){
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        long arrStopCpuTimeMillis = bean.isCurrentThreadCpuTimeSupported() ? bean.getCurrentThreadCpuTime() : -1L;
+        long startCpuTimeMillis = arrStartCpuTimeMillis.get(name);
+        long passed = arrStopCpuTimeMillis - startCpuTimeMillis;
+        long totalPassed = 0;
+        if(arrCpuTimeMillis.containsKey(name)) {
+            totalPassed = arrCpuTimeMillis.get(name);
+        }
+        totalPassed +=passed;
+        arrCpuTimeMillis.put(name,totalPassed);
+    }
+
+    public void printArrCpuTimeMillis(){
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        long val;
+        for(Map.Entry<String, Long> entry : arrCpuTimeMillis.entrySet()) {
+            val = (long) (entry.getValue() * 0.000001);
+            System.out.println(entry.getKey() +"\t: "+formatter.format(val));
+            entry.getKey();
+            entry.getValue();
+        }
+    }
 
     @Override
     public long getExpanded() {

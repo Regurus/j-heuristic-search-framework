@@ -221,7 +221,7 @@ public class Weights {
         new SingleWeight(1, 15),
         new SingleWeight(1, 7),*/
         new SingleWeight(1, 3),
-        new SingleWeight(3, 7),
+/*        new SingleWeight(3, 7),
         new SingleWeight(1, 2),
         new SingleWeight(9, 16),
         new SingleWeight(2, 3),
@@ -232,7 +232,7 @@ public class Weights {
         new SingleWeight(7, 8),
         new SingleWeight(8, 9),
         new SingleWeight(9, 10),
-        new SingleWeight(10, 11),
+        new SingleWeight(10, 11),*/
 //        new SingleWeight(20, 21),
 //        new SingleWeight(40, 41),
 //        new SingleWeight(1, 1),

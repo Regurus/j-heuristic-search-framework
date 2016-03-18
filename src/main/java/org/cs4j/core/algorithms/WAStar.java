@@ -16,16 +16,6 @@
  */
 package org.cs4j.core.algorithms;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchDomain.Operator;
@@ -35,6 +25,10 @@ import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.collections.*;
 import org.cs4j.core.collections.BucketHeap.BucketHeapElement;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
 
 /**
  * A* Search and Weighted A* Search
@@ -66,7 +60,6 @@ public class WAStar implements SearchAlgorithm {
 //    private BinHeapF<Node> openF;
     // Closed list (seen states)
     private Map<PackedElement, Node> closed;
-    private SearchResultImpl result;
 
     // TODO ...
     private HeapType heapType;
@@ -83,6 +76,8 @@ public class WAStar implements SearchAlgorithm {
     protected boolean useBPMX;
 
     private int FR;
+
+    private SearchResultImpl result;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -149,7 +144,6 @@ public class WAStar implements SearchAlgorithm {
 //        this.openF = new BinHeapF<>(1,domain);
 //        this.open = buildHeap(heapType, 100);
         this.closed = new HashMap<>();
-        result = new SearchResultImpl();
     }
 
     @Override
@@ -158,7 +152,10 @@ public class WAStar implements SearchAlgorithm {
         this._initDataStructures(domain);
         Node goal = null;
 
+        result = new SearchResultImpl();
+
         result.startTimer();
+        result.startArrCpuTimeMillis("Level0.0");
 
         // Let's instantiate the initial state
         State currentState = domain.initialState();
@@ -169,10 +166,13 @@ public class WAStar implements SearchAlgorithm {
         _addNode(initNode);
         try {
             // Loop over the frontier
-            while (!this.open.isEmpty() && this.result.getGenerated() < this.domain.maxGeneratedSize()) {
+            while (!this.open.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize()) {
+//                result.startArrCpuTimeMillis("Level1.1");
                 // Take the first state (still don't remove it)
     //            Node currentNode = this.open.poll();
+//                result.startArrCpuTimeMillis("_selectNode");
                 Node currentNode = _selectNode();
+//                result.stopArrCpuTimeMillis("_selectNode");
                 // Prune
                 if (currentNode.getRf() >= this.maxCost) {
                     continue;
@@ -208,7 +208,9 @@ public class WAStar implements SearchAlgorithm {
                     ++result.generated;
 /*                    if(result.getGenerated() % 1000 == 0){
                         DecimalFormat formatter = new DecimalFormat("#,###");
+//                        System.out.println("[INFO] WA Generated:" + formatter.format(result.getGenerated()) + "\tTime:"+passed);
                         System.out.print("\r[INFO] WA Generated:" + formatter.format(result.getGenerated()));
+
                     }*/
                     // Perform only if BPMX is required
                     if (this.useBPMX) {
@@ -225,9 +227,12 @@ public class WAStar implements SearchAlgorithm {
                         continue;
                     }
                 }
+//                result.stopArrCpuTimeMillis("Level1.1");
+//                result.startArrCpuTimeMillis("Level1.2");
 
                 // Go over all the possible operators and apply them
                 for (Pair<State, Node> currentChild : children) {
+//                    result.startArrCpuTimeMillis("Level1.2.1.1");
                     State childState = currentChild.getKey();
                     Node childNode = currentChild.getValue();
                     double edgeCost = childNode.op.getCost(childState, currentState);
@@ -236,13 +241,19 @@ public class WAStar implements SearchAlgorithm {
                     if (childNode.getRf() >= this.maxCost) {
                         continue;
                     }
-
+//                    result.stopArrCpuTimeMillis("Level1.2.1.1");
                     // Treat duplicates
-                    if (this.closed.containsKey(childNode.packed)) {
+                    result.startArrCpuTimeMillis("closed.containsKey");
+                    boolean contains = this.closed.containsKey(childNode.packed);
+                    result.stopArrCpuTimeMillis("closed.containsKey");
+                    if (contains) {
+//                        result.startArrCpuTimeMillis("Level1.2.2");
                         // Count the duplicates
                         ++result.duplicates;
                         // Get the previous copy of this node (and extract it)
+                        result.startArrCpuTimeMillis("closed.get");
                         Node dupChildNode = this.closed.get(childNode.packed);
+                        result.stopArrCpuTimeMillis("closed.get");
 
                         // Propagate the H value to child (in case of BPMX)
                         if (this.useBPMX) {
@@ -261,7 +272,33 @@ public class WAStar implements SearchAlgorithm {
                                 continue;
                             }
                             // In any case update the duplicate with the new values - we reached it via a shorter path
-                            _updateNode(dupChildNode, childNode);
+                            double dupF = dupChildNode.getF();
+                            dupChildNode.g = childNode.g;
+                            dupChildNode.op = childNode.op;
+                            dupChildNode.pop = childNode.pop;
+                            dupChildNode.parent = childNode.parent;
+
+                            // if dupChildNode is in open, update it there too
+                            if (dupChildNode.getIndex(this.open.getKey()) != -1) {
+                                ++result.opupdated;
+//                                result.startArrCpuTimeMillis("update-opupdated");
+                                this.open.update(dupChildNode);
+//                                result.stopArrCpuTimeMillis("update-opupdated");
+//            this.openF.updateF(dupChildNode, dupF);
+                            }
+                            // Otherwise, consider to reopen dupChildNode
+                            else {
+                                // Return to OPEN list only if reopening is allowed
+                                if (this.reopen) {
+                                    ++result.reopened;
+//                                    result.startArrCpuTimeMillis("_addNode-reopened");
+                                    _addNode(dupChildNode);
+//                                    result.stopArrCpuTimeMillis("_addNode-reopened");
+//                this.openF.add(dupChildNode);
+                                }
+                            }
+                            // in any case, update closed to be bestChild
+                            this.closed.put(dupChildNode.packed, dupChildNode);
 
                         } else {
                             // A shorter path has not been found, but let's update the node in open if its h increased
@@ -271,15 +308,19 @@ public class WAStar implements SearchAlgorithm {
                                 }
                             }
                         }
+//                        result.stopArrCpuTimeMillis("Level1.2.2");
                         // Otherwise, the node is new (hasn't been reached yet)
                     } else {
+//                        result.startArrCpuTimeMillis("Level1.2.3");
                         // Propagate the H value to child (in case of BPMX)
                         if (this.useBPMX) {
                             childNode.h = Math.max(childNode.h, currentNode.h - edgeCost);
                         }
                         _addNode(childNode);
+//                        result.stopArrCpuTimeMillis("Level1.2.3");
                     }
                 }
+//                result.stopArrCpuTimeMillis("Level1.2");
             }
         }
         catch(OutOfMemoryError e){
@@ -288,6 +329,11 @@ public class WAStar implements SearchAlgorithm {
         }
 
         result.stopTimer();
+        System.out.println("closed Size:\t"+this.closed.size());
+        result.stopArrCpuTimeMillis("Level0.0");
+        result.printArrCpuTimeMillis();
+
+
 
         // If a goal was found: update the solution
         if (goal != null) {
@@ -358,39 +404,6 @@ public class WAStar implements SearchAlgorithm {
         // The nodes are ordered in the closed list by their packed values
         this.closed.put(toAdd.packed, toAdd);
     }
-
-    /**
-     *
-     * @param oldNode is the old Node, last time visited
-     * @param newNode is the new Node, with better path
-     */
-    private void _updateNode(Node oldNode,Node newNode) {
-        double oldF = oldNode.getF();
-        oldNode.g = newNode.g;
-        oldNode.op = newNode.op;
-        oldNode.pop = newNode.pop;
-        oldNode.parent = newNode.parent;
-
-        // if dupChildNode is in open, update it there too
-        if (oldNode.getIndex(this.open.getKey()) != -1) {
-            ++result.opupdated;
-            this.open.update(oldNode);
-//            this.openF.updateF(oldNode, oldF);
-        }
-        // Otherwise, consider to reopen dupChildNode
-        else {
-            // Return to OPEN list only if reopening is allowed
-            if (this.reopen) {
-                ++result.reopened;
-                this.open.add(oldNode);
-//                this.openF.add(oldNode);
-            }
-        }
-        // in any case, update closed to be bestChild
-        this.closed.put(oldNode.packed, oldNode);
-    }
-
-
 
     @Override
     public Map<String, Class> getPossibleParameters() {

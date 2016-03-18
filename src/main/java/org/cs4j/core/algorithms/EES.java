@@ -10,6 +10,8 @@ import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.collections.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -36,6 +38,8 @@ public class EES implements SearchAlgorithm {
     // Closed list
     // private LongObjectOpenHashMap<Node> closed;
     private Map<PackedElement, Node> closed;
+
+    private SearchResultImpl result;
 
     /**
      * Initializes all the data structures required for the search, especially OPEN, FOCAL, CLEANUP and CLOSED lists
@@ -198,9 +202,9 @@ public class EES implements SearchAlgorithm {
         Node goal = null;
 
         // Initialize the result
-        SearchResultImpl result = new SearchResultImpl();
-
+        result = new SearchResultImpl();
         result.startTimer();
+        result.startArrCpuTimeMillis("Level0.0");
 
         try {
             // Create the initial state and node
@@ -242,9 +246,9 @@ public class EES implements SearchAlgorithm {
                         continue;
                     }
                     ++result.generated;
-/*                    if(result.getGenerated() % 1000 == 0){
+                    /*if(result.getGenerated() % 1000 == 0){
                         DecimalFormat formatter = new DecimalFormat("#,###");
-                        System.out.print("\r[INFO] EES Generated:" + formatter.format(result.getGenerated()));
+                        System.out.println("[INFO] EES Generated:" + formatter.format(result.getGenerated()));
                     }*/
                     // Apply the operator and extract the child state
                     State childState = domain.applyOperator(state, op);
@@ -254,10 +258,15 @@ public class EES implements SearchAlgorithm {
                     // merge duplicates
 
                     // ==> This means it is in CLOSED (and maybe in OPEN too!) - a duplicate was found!
-                    if (this.closed.containsKey(childNode.packed)) {
+                    result.startArrCpuTimeMillis("closed.containsKey");
+                    boolean contains = this.closed.containsKey(childNode.packed);
+                    result.stopArrCpuTimeMillis("closed.containsKey");
+                    if (contains) {
                         ++result.duplicates;
                         // Extract the duplicate
+                        result.startArrCpuTimeMillis("closed.get");
                         Node dupChildNode = this.closed.get(childNode.packed);
+                        result.stopArrCpuTimeMillis("closed.get");
                         // In case the node should be re-considered
                         if (dupChildNode.f > childNode.f) {
                             // This must be true (since h values are the same) - however, PathMax ...
@@ -327,6 +336,9 @@ public class EES implements SearchAlgorithm {
             System.out.println("[INFO] OutOfMemory EES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
         }
         result.stopTimer();
+        System.out.println("closed Size:\t"+this.closed.size());
+        result.stopArrCpuTimeMillis("Level0.0");
+        result.printArrCpuTimeMillis();
 
         // If a goal was found: update the solution
         if (goal != null) {

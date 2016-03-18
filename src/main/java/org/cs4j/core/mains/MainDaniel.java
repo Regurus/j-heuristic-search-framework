@@ -1,12 +1,19 @@
 package org.cs4j.core.mains;
 
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import jxl.write.*;
+import jxl.write.Number;
+import jxl.write.biff.RowsExceededException;
 import org.cs4j.core.OutputResult;
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
-import org.cs4j.core.algorithms.*;
+import org.cs4j.core.algorithms.DP;
+import org.cs4j.core.algorithms.EES;
+import org.cs4j.core.algorithms.WAStar;
 import org.cs4j.core.data.Weights;
-import org.cs4j.core.domains.FifteenPuzzle;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
@@ -16,9 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +34,8 @@ public class MainDaniel {
     private static String relPath = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/";
     private static String inputPath;
     private static String outputPath;
-    private static String summaryPath;
+    private static String summarySheetName;
+    private static String summaryName;
     private static Weights.SingleWeight w;
     private static String domainName;
     private static Weights weights = new Weights();
@@ -79,7 +84,7 @@ public class MainDaniel {
             //set algo total weight
             alg.setAdditionalParameter("weight", totalWeight + "");
             //search on this domain and algo and weight the 100 instances
-            for (int i = 1; i <= instancesNum; ++i) {
+            for (int i = 43; i <= instancesNum; ++i) {
                 try {
                     double d[] = new double[]{i, 0, 0, 0, 0,0,0};
                     if(appendToFile && save && lines.length > i && lines[i].split(",").length == d.length){
@@ -289,29 +294,48 @@ public class MainDaniel {
     private static void createSummary()throws IOException{
         int algoNum = SearchAlgorithmArr.length;
         try {
-            OutputResult output = new OutputResult(summaryPath+"_"+fileEnd, null, -1, -1, null, false, overwriteSummary);//never overwrite
-            ArrayList<String> toPrintArrLIst = new ArrayList<>();
-            String toPrint;
-            int resultColNum = 6;
-            toPrintArrLIst.add("WG");
-            toPrintArrLIst.add("WH");
-            toPrintArrLIst.add("All Solved");
+            int num = 0;
+            String path = relPath +"results/summary/"+summaryName+summarySheetName+".xls";
+            File summaryFile = new File(path);
+            WritableWorkbook wworkbook;
+/*            if(summaryFile.exists()){
+                Workbook rworkbook = Workbook.getWorkbook(summaryFile);
+                num = rworkbook.getNumberOfSheets();
+            }*/
+            wworkbook = Workbook.createWorkbook(summaryFile);
+            WritableSheet wsheet = wworkbook.createSheet(summarySheetName,0);
+            Label label;
+            int currentCol = 0;
+            int currentRow = 0;
 
-            for (int i = 0; i < algoNum; i++) {
-                alg = SearchAlgorithmArr[i];
-//                toPrintArrLIst.add(alg.getName()+" Solved");
-//                toPrintArrLIst.add(alg.getName()+" Depth");
-                toPrintArrLIst.add(alg.getName()+" Generated");
-//                toPrintArrLIst.add(alg.getName()+" Expanded");
-                toPrintArrLIst.add(alg.getName()+" Cpu Time");
-//                toPrintArrLIst.add(alg.getName()+" Wall Time");
+//            OutputResult output = new OutputResult(summarySheetName+"_"+fileEnd, null, -1, -1, null, false, overwriteSummary);//never overwrite
+//            ArrayList<String> toPrintArrLIst = new ArrayList<>();
+//            String toPrint;
+            String[] resultAllColsNames = {"WG","WH","All Solved"};
+            String[] resultAlgoColsNames = {"Success Rate","Depth","Generated","Expanded","Cpu Time","Wall Time"};
+//            String[] resultAlgoColsNames = {"Solved","Depth"};
+
+            for(int r = 0 ; r < resultAllColsNames.length ; r++){
+//                toPrintArrLIst.add(resultAllColsNames[r]);
+                label = new Label(currentCol++, currentRow, resultAllColsNames[r]);
+                wsheet.addCell(label);
             }
-            toPrint = toPrintArrLIst.toString();
+            for(int r = 0 ; r < resultAlgoColsNames.length ; r++){
+                for (int i = 0 ; i < algoNum ; i++) {
+//                    toPrintArrLIst.add(SearchAlgorithmArr[i].getName()+" "+resultAlgoColsNames[r]);
+                    label = new Label(currentCol++, currentRow, SearchAlgorithmArr[i].getName()+" "+resultAlgoColsNames[r]);
+                    wsheet.addCell(label);
+                }
+            }
+
+/*            toPrint = toPrintArrLIst.toString();
             toPrint = toPrint.substring(1, toPrint.length()-1);
-            output.writeln(toPrint);
+            output.writeln(toPrint);*/
             for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
                 w = ws;
                 totalWeight = w.wh / w.wg;
+                currentRow++;
+
                 String resultsAlgoColumn[][] = new String[algoNum][];
                 System.out.println("Summary "+domainName + "\tweight: wg : " + w.wg + " wh: " + w.wh);
                 //read the files to resultsAlgoColumn[i] where i is the algorithm
@@ -329,73 +353,71 @@ public class MainDaniel {
                     }
                 }
 
-                double[] resultArr = new double[toPrintArrLIst.size()];
+                double[] resultArr = new double[currentCol];
                 for (int j = 1; j <= instancesNum; j++) {
                     boolean allExist = true;
                     String[] line = new String[algoNum];
-                    double[][] tempRes = new double[algoNum][];
-                    double[] tempS = new double[algoNum];
-                    double[] tempD = new double[algoNum];
-                    double[] tempG = new double[algoNum];
-                    double[] tempE = new double[algoNum];
-                    double[] tempC = new double[algoNum];
-                    double[] tempW = new double[algoNum];
+                    double[][] tempRes = new double[algoNum][resultAlgoColsNames.length];
                     for (int i = 0; i < algoNum; i++) {//check if all algo solved successfully
                         line[i] = resultsAlgoColumn[i][j];
                         String[] lineSplit = line[i].split(",");
-/*                        for(int k=0;k<resultColNum;k++){
-                            tempRes[i][k] = Double.parseDouble(lineSplit[k]);
-                        }*/
-                        tempS[i] = Double.parseDouble(lineSplit[1]);//found-solved
-                        tempD[i] = Double.parseDouble(lineSplit[2]);//Depth
-                        tempG[i] = Double.parseDouble(lineSplit[3]);//Generated
-                        tempE[i] = Double.parseDouble(lineSplit[4]);//Expanded
-                        tempC[i] = Double.parseDouble(lineSplit[5]);//Cpu Time
-                        tempW[i] = Double.parseDouble(lineSplit[6]);//Wall Time
-                        if (tempS[i] != 1.0) {
+                        for (int r = 0; r < resultAlgoColsNames.length; r++) {
+                            tempRes[i][r] = Double.parseDouble(lineSplit[r + 1]);//from 1 to skip instance number
+                        }
+                        if (tempRes[i][0] != 1.0) {
                             allExist = false;
                         }
                     }
+                    resultArr[0] = w.wg;//WG
+                    resultArr[1] = w.wh;//WH
                     if (allExist) {//save to summary
-                        int pos = 0;
-                        resultArr[pos++] =w.wg;//WG
-                        resultArr[pos++] =w.wh;//WH
-                        resultArr[pos++] +=1;//found
-/*                        for(int k=0;k<resultColNum;k++){
+                        resultArr[2] += 1;//found-solved by all
+                    }
+                    for (int i = 0; i < algoNum; i++) {
+                        resultArr[3 + i] += tempRes[i][0];//found-solved
+                    }
+                    if (allExist) {//save to summary
+                        for (int r = 1; r < resultAlgoColsNames.length; r++) {//skip each algo solved
                             for (int i = 0; i < algoNum; i++) {
-                                resultArr[pos++] = tempRes[i][k];
+                                resultArr[3 + r * algoNum + i] += tempRes[i][r];//column-value, r+1:skip each algo solved
                             }
-                        }*/
-                        for (int i = 0; i < algoNum; i++) {
-//                            resultArr[pos++] += tempS[i];//solved
-//                            resultArr[pos++] += tempD[i];//Depth
-                            resultArr[pos++] += tempG[i];//Generated
-//                            resultArr[pos++] += tempE[i];//Expanded
-                            resultArr[pos++] += tempC[i];//Cpu Time
-//                            resultArr[pos++] += tempW[i];//Wall Time
                         }
                     }
                 }
-
-                //Calculate Average skip WG,WH,found
-                toPrintArrLIst = new ArrayList<>();
-                toPrintArrLIst.add(Double.toString(resultArr[0]));
-                toPrintArrLIst.add(Double.toString(resultArr[1]));
-                toPrintArrLIst.add(Double.toString(resultArr[2]));
-                for (int k = 3; k < resultArr.length; k++) {
-                    resultArr[k] =resultArr[k]/resultArr[2];// value/found
-                    DecimalFormat formatter = new DecimalFormat("#,###");
-                    String s = formatter.format(resultArr[k]).replace(",","'");
-                    toPrintArrLIst.add(s);
+                // add WG,WH,found
+//                toPrintArrLIst = new ArrayList<>();
+                currentCol = 0;
+                for(int r = 0 ; r < resultAllColsNames.length ; r++){
+//                    toPrintArrLIst.add(Double.toString(resultArr[r]));
+                    wsheet.addCell(new Number(currentCol++, currentRow, resultArr[r]));
                 }
-                //print result to file
-                toPrint = toPrintArrLIst.toString();
-                toPrint = toPrint.substring(1, toPrint.length()-1);
-                output.writeln(toPrint);
+                //Calculate Average skip WG,WH,found
+
+                //success Rate
+                for (int k = resultAllColsNames.length; k < resultAllColsNames.length+resultAlgoColsNames.length; k++) {
+                      WritableCell cell = new Number(currentCol++, currentRow, resultArr[k]);
+                    wsheet.addCell(cell);
+                }
+                //from success Rate
+                for (int k = resultAllColsNames.length+resultAlgoColsNames.length; k < resultArr.length; k++) {
+                    resultArr[k] =resultArr[k]/resultArr[2];// value/found
+                    NumberFormat nubmerFormat;
+                    if(resultArr[k] > 1000) nubmerFormat = new NumberFormat("#,###");
+                    else nubmerFormat = new NumberFormat("#,###.000");
+                    WritableCellFormat cellFormat = new WritableCellFormat(nubmerFormat);
+                    WritableCell cell = new Number(currentCol++, currentRow, resultArr[k],cellFormat);
+                    wsheet.addCell(cell);
+                }
             }
-            output.close();
+            wworkbook.write();
+            wworkbook.close();
+//            output.close();
         } catch (IOException e) {
-            throw new IOException("File " + summaryPath + " already Exist, or Folder is missing");
+            throw new IOException("File " + summarySheetName + " already Exist, or Folder is missing");
+        } catch (RowsExceededException e) {
+            e.printStackTrace();
+        } catch (WriteException e) {
+            e.printStackTrace();
         }
     }
 
@@ -415,10 +437,10 @@ public class MainDaniel {
             }
         }
         //create summary over algo and weight
-        createSummary();
+//        createSummary();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, WriteException, BiffException {
 //        manipulateFiles();
 //        domainName = "GridPathFinding";
 
@@ -426,11 +448,11 @@ public class MainDaniel {
         overwriteSummary = true;
         appendToFile = true;//do not calculate again if already exist
         useBestFR = false;
-        instancesNum = 100;
-        String summaryFolder = "7.3.2016";
+        instancesNum = 43;
+        summaryName = "7.3.2016";
 
         String[] domains = {
-                "Pancakes",
+//                "Pancakes",
 //            "VacuumRobot",
             "FifteenPuzzle",
 //            "DockyardRobot",
@@ -439,12 +461,11 @@ public class MainDaniel {
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
-                new DP(),
+//                new DP(),
                 new EES(1),
                 new WAStar(),
         };
         SearchAlgorithmArr = AlgoArr;
-
 
 
 
@@ -457,19 +478,22 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     System.out.println("Solving FifteenPuzzle");
-//                    filePrefix = "heavy";
-                    filePrefix = "invr";
+//                    filePrefix = "invr";
 //                    filePrefix = "sqrt";
+                    filePrefix = "heavy";
 //                    filePrefix = "unit";
                     domainParams.put("cost-function", filePrefix);
+                    filePrefix += "_";
+//                    filePrefix = "";
                     inputPath = relPath + "input/FifteenPuzzle/states15";
-                    outputPath = relPath + "results/FifteenPuzzle/results_7.3.2016/"+filePrefix+"_";
-                    summaryPath = relPath + "results/summary/"+summaryFolder+"/"+filePrefix+"_FifteenPuzzle";
+//                    outputPath = relPath + "results/FifteenPuzzle/results_7.3.2016/"+filePrefix;
+                    outputPath = relPath + "results/tests/"+filePrefix;
+                    summarySheetName = filePrefix+"FifteenPuzzle";
                     afterSetDomain();
                     break;
                 }
                 case "Pancakes": {
-                    int[] pancakesNum = new int[]{10, 12, 16, 20, 40};
+                    int[] pancakesNum = new int[]{10, 12, 16};
 //                    int[] pancakesNum = new int[]{20,40};
 //                    int[] pancakesNum = new int[]{20};
                     int GAPK = 2;
@@ -478,10 +502,11 @@ public class MainDaniel {
                     for (int j = 0; j < pancakesNum.length; j++) {
                         num = pancakesNum[j];
                         System.out.println("Solving Pancakes " + num);
+//                        filePrefix = num + "_";
                         filePrefix = num + "_GAP-"+GAPK+"_";
                         inputPath = relPath + "input/pancakes/generated-" + num;
                         outputPath = relPath + "results/pancakes/" + num + "/" + filePrefix;
-                        summaryPath = relPath + "results/summary/"+summaryFolder+"/"+ filePrefix +"pancakes";
+                        summarySheetName = filePrefix +"pancakes";
                         afterSetDomain();
                     }
                     break;
@@ -494,7 +519,7 @@ public class MainDaniel {
                         filePrefix = "";
                         inputPath = relPath + "input/VacuumRobot/generated-" + dirts[j] + "-dirt";
                         outputPath = relPath + "results/VacuumRobot/" + dirts[j] + "-dirt/"+filePrefix;
-                        summaryPath = relPath + "results/summary/"+summaryFolder+"/VacuumRobot-" + dirts[j] + "-dirt";
+                        summarySheetName = "VacuumRobot-" + dirts[j] + "-dirt";
                         afterSetDomain();
                     }
                     break;
@@ -504,7 +529,7 @@ public class MainDaniel {
                     filePrefix = "";
                     inputPath = relPath + "input/dockyard-robot-max-edge-2-out-of-place-30/";
                     outputPath = relPath + "results/dockyard-robot-max-edge-2-out-of-place-30/"+filePrefix;
-                    summaryPath = relPath + "results/summary/"+summaryFolder+"/dockyard-robot-max-edge-2-out-of-place-30";
+                    summarySheetName = "dockyard-robot-max-edge-2-out-of-place-30";
                     afterSetDomain();
                     break;
                 }
@@ -513,7 +538,7 @@ public class MainDaniel {
                     System.out.println("Solving VacuumRobot");
                     inputPath = relPath + "input/GridPathFinding/" + gridName;
                     outputPath = relPath + "results/GridPathFinding/" + gridName;
-                    summaryPath = relPath + "results/summary/GridPathFinding/" + gridName + "/";
+                    summarySheetName = gridName;
                     filePrefix = "";
                     afterSetDomain();
                     break;
