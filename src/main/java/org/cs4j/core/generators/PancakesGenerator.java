@@ -9,7 +9,7 @@ import java.util.*;
  * This class generated instances of the Pancakes domain
  */
 public class PancakesGenerator extends GeneralInstancesGenerator {
-    private static final int RANDOM_FLIP_COUNT_FOR_PROBLEM = 20;
+    private static final int RANDOM_FLIP_COUNT_FOR_PROBLEM = 1000;
 
 
     /**
@@ -37,7 +37,7 @@ public class PancakesGenerator extends GeneralInstancesGenerator {
      * @param op The operator for the operation (represented by an integer number)
      */
     private void _flipTopStackPortion(int[] pancakes, int op) {
-        System.out.println("[INFO] Flipping top " + op + " pancakes");
+//        System.out.println("[INFO] Flipping top " + op + " pancakes");
         // Assert the operator is valid
         assert (op > 0);
         assert (op < pancakes.length);
@@ -133,17 +133,18 @@ public class PancakesGenerator extends GeneralInstancesGenerator {
         int size;
         String previousInstancesDir = null;
         int previousInstancesCount = 0;
+        int pancakesNum = 201;
 
         // In case no arguments were given - let's specify them here
         if (args.length == 0) {
             args = new String[3];
             System.out.println("[WARNING] Using local arguments");
             // Output directory
-            args[0] = "input\\pancakes\\generated-17";
-            // Count of pancakes
+            args[0] = "C:\\Users\\Daniel\\Documents\\gilond\\Master\\ResearchData\\input\\pancakes\\generated-"+pancakesNum;
+            // Count of pancakes (number of instances)
             args[1] = "100";
             // Size of problem
-            args[2] = "17";
+            args[2] = pancakesNum+"";
             // Previous instance ID
             //args[3] = "input\\pancakes\\generated";
         }

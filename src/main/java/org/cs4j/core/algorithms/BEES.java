@@ -254,7 +254,7 @@ public class BEES implements SearchAlgorithm {
             SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
             List<Operator> path = new ArrayList<>();
             List<State> statesPath = new ArrayList<>();
-            System.out.println("[INFO] Solved - Generating output path.");
+//            System.out.println("[INFO] Solved - Generating output path.");
             double cost = 0;
 
             State currentPacked = domain.unpack(goal.packed);

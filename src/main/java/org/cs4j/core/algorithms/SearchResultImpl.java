@@ -19,10 +19,7 @@ package org.cs4j.core.algorithms;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchDomain.Operator;
@@ -52,16 +49,20 @@ public class SearchResultImpl implements SearchResult {
     private long stopWallTimeMillis;
     private long stopCpuTimeMillis;
 
-    private HashMap<String, Long> arrStartCpuTimeMillis;
-
-    private HashMap<String, Long> arrCpuTimeMillis;
+    private TreeMap<String, Long> arrStartCpuTimeMillis = new TreeMap<>();;
+    private TreeMap<String, Long> arrCpuTimeMillis = new TreeMap<>();
+    private TreeMap<String, Long> arrCpuTimeMillisCalled = new TreeMap<>();
+    private TreeMap extras = new TreeMap();
 
     public List<Iteration> iterations = new ArrayList<>();
     private List<Solution> solutions = new ArrayList<>();
 
-    public SearchResultImpl() {
-        arrCpuTimeMillis = new HashMap<>();
-        arrStartCpuTimeMillis = new HashMap<>();
+    public void setExtras(String key,String val){
+        extras.put(key,val);
+    }
+
+    public TreeMap<String,String> getExtras(){
+        return extras;
     }
 
     public void startArrCpuTimeMillis(String name){
@@ -81,14 +82,25 @@ public class SearchResultImpl implements SearchResult {
         }
         totalPassed +=passed;
         arrCpuTimeMillis.put(name,totalPassed);
+
+        long called = 0;
+        if(arrCpuTimeMillisCalled.containsKey(name)) {
+            called = arrCpuTimeMillisCalled.get(name);
+        }
+        called +=1;
+        arrCpuTimeMillisCalled.put(name,called);
     }
 
     public void printArrCpuTimeMillis(){
         DecimalFormat formatter = new DecimalFormat("#,###");
         long val;
+        long called = 0;
         for(Map.Entry<String, Long> entry : arrCpuTimeMillis.entrySet()) {
+            if(arrCpuTimeMillisCalled.containsKey(entry.getKey())) {
+                called = arrCpuTimeMillisCalled.get(entry.getKey());
+            }
             val = (long) (entry.getValue() * 0.000001);
-            System.out.println(entry.getKey() +"\t: "+formatter.format(val));
+            System.out.println(entry.getKey() +"\t: "+formatter.format(val)+"\tcalled: "+formatter.format(called));
             entry.getKey();
             entry.getValue();
         }
@@ -186,7 +198,20 @@ public class SearchResultImpl implements SearchResult {
         this.stopCpuTimeMillis = getCpuTime();
     }
 
-    public long getCpuTime() {
+    public boolean checkMinTimeOut(){
+        return getWallTimePassedInMS() < 5*60*1000;
+    }
+
+    public long getWallTimePassedInMS(){
+        return System.currentTimeMillis() - this.startWallTimeMillis;
+    }
+
+    public long getCpuTimePassedInMs(){
+        long ret = (long)((getCpuTime() - startCpuTimeMillis) * 0.000001);
+        return ret;
+    }
+
+    private long getCpuTime() {
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         return bean.isCurrentThreadCpuTimeSupported() ?
                 bean.getCurrentThreadCpuTime() : -1L;
@@ -325,6 +350,8 @@ public class SearchResultImpl implements SearchResult {
             StringBuffer sb = new StringBuffer();
             for (State state: this.states) {
                 sb.append(state.dumpState());
+//                sb.append(state.dumpStateShort());
+//                sb.append("\n");
             }
             return sb.toString();
         }

@@ -217,24 +217,31 @@ public class Weights {
 
     public SingleWeight[] NATURAL_WEIGHTS = {
 /*        new SingleWeight(1, 100),
-        new SingleWeight(1, 24),
-        new SingleWeight(1, 15),
-        new SingleWeight(1, 7),*/
+        new SingleWeight(1, 50),
+        new SingleWeight(1, 25),
+        new SingleWeight(1, 25),
+        new SingleWeight(1, 15),*/
+//        new SingleWeight(1, 10),
+
         new SingleWeight(1, 3),
-/*        new SingleWeight(3, 7),
+        new SingleWeight(4, 11),
+        new SingleWeight(3, 8),
+        new SingleWeight(3, 7),
         new SingleWeight(1, 2),
+
         new SingleWeight(9, 16),
         new SingleWeight(2, 3),
+
         new SingleWeight(3, 4),
-        new SingleWeight(4, 5),
+//        new SingleWeight(4, 5),
         new SingleWeight(5, 6),
-        new SingleWeight(6, 7),
-        new SingleWeight(7, 8),
-        new SingleWeight(8, 9),
-        new SingleWeight(9, 10),
-        new SingleWeight(10, 11),*/
-//        new SingleWeight(20, 21),
-//        new SingleWeight(40, 41),
+//        new SingleWeight(6, 7),
+//        new SingleWeight(7, 8),
+/*        new SingleWeight(8, 9),
+        new SingleWeight(9, 10),*/
+//        new SingleWeight(10, 11),
+/*        new SingleWeight(20, 21),
+        new SingleWeight(40, 41),*/
 //        new SingleWeight(1, 1),
     };
 }

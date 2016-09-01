@@ -10,17 +10,10 @@ import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.collections.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EES implements SearchAlgorithm {
     private static final int CLEANUP_ID = 0;
@@ -37,7 +30,8 @@ public class EES implements SearchAlgorithm {
     private BinHeap<Node> cleanup;
     // Closed list
     // private LongObjectOpenHashMap<Node> closed;
-    private Map<PackedElement, Node> closed;
+    private TreeMap<PackedElement, Node> closed;
+//    private Map<PackedElement, Node> closed;
 
     private SearchResultImpl result;
 
@@ -45,6 +39,10 @@ public class EES implements SearchAlgorithm {
      * Initializes all the data structures required for the search, especially OPEN, FOCAL, CLEANUP and CLOSED lists
      */
     private void _initDataStructures() {
+        //this.closed = new LongObjectOpenHashMap<>();
+        this.closed = new TreeMap<>();
+//        this.closed = new HashMap<>();
+
         this.gequeue =
                 new GEQueue<>(
                         this.openComparator,
@@ -55,9 +53,6 @@ public class EES implements SearchAlgorithm {
                 new BinHeap<>(
                         new CleanupNodeComparator(),
                         EES.CLEANUP_ID);
-
-        //this.closed = new LongObjectOpenHashMap<>();
-        this.closed = new HashMap<>();
     }
 
 
@@ -79,6 +74,12 @@ public class EES implements SearchAlgorithm {
      */
     public EES(double weight) {
         this(weight, true);
+    }
+
+    public EES(SearchDomain domain) {
+        this.weight = 1;
+        this.reopen = true;
+        this.domain = domain;
     }
 
     @Override
@@ -121,6 +122,7 @@ public class EES implements SearchAlgorithm {
         this.gequeue.add(node, oldBest);
         this.cleanup.add(node);
         this.closed.put(node.packed, node);
+//        this.closed.put(node.packed, node);
     }
 
     /**
@@ -204,9 +206,10 @@ public class EES implements SearchAlgorithm {
         // Initialize the result
         result = new SearchResultImpl();
         result.startTimer();
-        result.startArrCpuTimeMillis("Level0.0");
+        result.startArrCpuTimeMillis("0000");
 
         try {
+//            result.startArrCpuTimeMillis("1000");
             // Create the initial state and node
             State initState = domain.initialState();
             Node initNode = new Node(initState, null, null, null, null);
@@ -214,9 +217,11 @@ public class EES implements SearchAlgorithm {
             this._insertNode(initNode, initNode);
             // Update FOCAL with the inserted node (no change in f^) - required since oldBest is null in this case
             this.gequeue.updateFocal(null, initNode, 0);
-
+//            result.stopArrCpuTimeMillis("1000");
+            result.startArrCpuTimeMillis("2000");
             // Loop while there is some node in open
-            while (!this.gequeue.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize()) {
+            while (!this.gequeue.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize() && result.checkMinTimeOut()) {
+                result.startArrCpuTimeMillis("2100");
                 // First, take the best node from the open list (best f^)
                 Node oldBest = this.gequeue.peekOpen();
                 // Now this node is in closed only, and not in open
@@ -237,36 +242,44 @@ public class EES implements SearchAlgorithm {
                 // Here, we decided to expand the node
                 ++result.expanded;
                 int numOps = domain.getNumOperators(state);
-
+                result.stopArrCpuTimeMillis("2100");
+                result.startArrCpuTimeMillis("2200");
                 // Go over all the possible operators
                 for (int i = 0; i < numOps; ++i) {
+                    result.startArrCpuTimeMillis("2210");
                     Operator op = domain.getOperator(state, i);
                     // Bypass reverse operations
                     if (op.equals(bestNode.pop)) {
                         continue;
                     }
                     ++result.generated;
-                    /*if(result.getGenerated() % 1000 == 0){
+/*                    if(result.getGenerated() % 10000 == 0){
                         DecimalFormat formatter = new DecimalFormat("#,###");
-                        System.out.println("[INFO] EES Generated:" + formatter.format(result.getGenerated()));
+                        System.out.println("[INFO] EES Generated:" + formatter.format(result.getGenerated())
+                                +"\tCPU Time:" + formatter.format(result.getCpuTimePassedInMs())
+                                +"\tWall Time:" + formatter.format(result.getWallTimePassedInMS()));
                     }*/
                     // Apply the operator and extract the child state
                     State childState = domain.applyOperator(state, op);
                     // Create the child node
                     Node childNode = new Node(childState, bestNode, state, op, op.reverse(state));
-
+                    result.stopArrCpuTimeMillis("2210");
+                    result.startArrCpuTimeMillis("2220");
                     // merge duplicates
-
                     // ==> This means it is in CLOSED (and maybe in OPEN too!) - a duplicate was found!
-                    result.startArrCpuTimeMillis("closed.containsKey");
-                    boolean contains = this.closed.containsKey(childNode.packed);
-                    result.stopArrCpuTimeMillis("closed.containsKey");
+                    boolean contains = true;
+                    Node testNode = this.closed.get(childNode.packed);
+                    if(testNode == null){
+                        contains = false;
+                    }
+                    result.stopArrCpuTimeMillis("2220");
+                    result.startArrCpuTimeMillis("2230");
+//                    contains = this.closed.containsKey(childNode.packed);
                     if (contains) {
+                        result.startArrCpuTimeMillis("2231");
                         ++result.duplicates;
                         // Extract the duplicate
-                        result.startArrCpuTimeMillis("closed.get");
                         Node dupChildNode = this.closed.get(childNode.packed);
-                        result.stopArrCpuTimeMillis("closed.get");
                         // In case the node should be re-considered
                         if (dupChildNode.f > childNode.f) {
                             // This must be true (since h values are the same) - however, PathMax ...
@@ -319,26 +332,41 @@ public class EES implements SearchAlgorithm {
                                 }
                             }
                         }
+                        result.stopArrCpuTimeMillis("2231");
                         // New node - not in CLOSED
                     } else {
+                        result.startArrCpuTimeMillis("2232");
                         this._insertNode(childNode, oldBest);
                         bestNode.children.put(childNode.packed, childNode);
+                        result.stopArrCpuTimeMillis("2232");
                     }
+                    result.stopArrCpuTimeMillis("2230");
                 }
-
+                result.stopArrCpuTimeMillis("2200");
+                result.startArrCpuTimeMillis("2300");
+                result.startArrCpuTimeMillis("2301");
                 // After the old-best node was expanded, let's update the best node in OPEN and FOCAL
                 Node newBest = this.gequeue.peekOpen();
+                result.stopArrCpuTimeMillis("2301");
+                result.startArrCpuTimeMillis("2302");
                 int fHatChange = this.openComparator.compareIgnoreTies(newBest, oldBest);
+                result.stopArrCpuTimeMillis("2302");
+                result.startArrCpuTimeMillis("2303");
                 this.gequeue.updateFocal(oldBest, newBest, fHatChange);
+                result.stopArrCpuTimeMillis("2303");
+                result.stopArrCpuTimeMillis("2300");
             }
+            result.stopArrCpuTimeMillis("2000");
         } catch (OutOfMemoryError e) {
             System.out.println("[INFO] EES OutOfMemory :-( "+e);
             System.out.println("[INFO] OutOfMemory EES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
         }
         result.stopTimer();
-        System.out.println("closed Size:\t"+this.closed.size());
-        result.stopArrCpuTimeMillis("Level0.0");
-        result.printArrCpuTimeMillis();
+        result.stopArrCpuTimeMillis("0000");
+//        System.out.println("Generated:\t"+result.getGenerated());
+//        System.out.println("closed Size:\t"+this.closed.size());
+/*        System.out.println();
+        result.printArrCpuTimeMillis();*/
 
         // If a goal was found: update the solution
         if (goal != null) {
@@ -481,6 +509,10 @@ public class EES implements SearchAlgorithm {
         }
     }
 
+    public Node createNode(State state, Node parent, State parentState, Operator op, final Operator pop){
+        return new Node(state, parent, parentState, op, pop);
+    }
+
     /**
      * The EES node is more complicated than other nodes;
      * It is currently responsible for computing single step error corrections and dHat and hHat values.
@@ -489,16 +521,16 @@ public class EES implements SearchAlgorithm {
      * TODO: implement other methods for SSE correction and design the necessary abstractions to move out of the
      * TODO: node class.
      */
-    private class Node extends SearchQueueElementImpl implements RBTreeElement<Node, Node>, Comparable<Node> {
+    public class Node extends SearchQueueElementImpl implements RBTreeElement<Node, Node>, Comparable<Node> {
         private double f;
         private double g;
-        private double d;
-        private double h;
+        public double d;
+        public double h;
         private double sseH;
         private double sseD;
         private double fHat;
-        private double hHat;
-        private double dHat;
+        public double hHat;
+        public double dHat;
 
         private int depth;
         private Operator op;
