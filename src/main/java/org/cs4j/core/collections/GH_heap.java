@@ -2,6 +2,7 @@ package org.cs4j.core.collections;
 
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.algorithms.DP;
+import org.cs4j.core.algorithms.SearchResultImpl;
 
 import java.util.*;
 
@@ -15,33 +16,28 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 //    private BinHeap<E> heap;
     private TreeMap<gh_node,ArrayList<E>> tree;
     private double fmin;
+    private boolean isOptimal;
     private double w;
     private gh_node bestNode;
     private ArrayList<E> bestList;
     private ghNodeComparator comparator;
     private int GH_heapSize;
-    private SearchDomain domain;
     private Comparator<E> NodePackedComparator;
+    private SearchResultImpl result;
 //    private boolean withFComparator;
 
-    public GH_heap(int key, SearchDomain domain, double w, Comparator<E> NodePackedComparator) {
-        this.domain = domain;
-        this.fmin = domain.initialState().getH();
+    public GH_heap(double w, int key, double fmin, boolean isOptimal , Comparator<E> NodePackedComparator,SearchResultImpl result) {
+        this.w = w;
         this.key = key;
+        this.fmin = fmin;
+        this.isOptimal = isOptimal;
         this.comparator = new ghNodeComparator();
         this.tree = new TreeMap<>(this.comparator);
-        this.w = w;
         this.NodePackedComparator = NodePackedComparator;
+        this.result =result;
 //        this.heap = new BinHeap<>(new FComparator(), this.key);
 //        this.withFComparator = true;
     }
-
-/*    public GH_heap(int key, SearchDomain domain, Comparator<E> Comparator) {
-        this.fmin = domain.initialState().getH();
-        this.key = key;
-        this.heap = new BinHeap<>(Comparator, this.key);
-        this.withFComparator = false;
-    }*/
 
     public double getFmin(){
 //        test();
@@ -84,12 +80,14 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             countF.put(Val,countF.get(Val)+1);
         else {
             countF.put(Val, 1);
-            if(tree.size() == 0){//tree is empty
-                fmin = Val;
-            }
-            if(Val < fmin){//new lowest fmin ???
-                fmin = Val;
-                reorder();
+            if(!isOptimal) {//fmin might change/decrease
+                if (tree.size() == 0) {//tree is empty
+                    fmin = Val;
+                }
+                if (Val < fmin) {//new lowest fmin ???
+                    fmin = Val;
+                    reorder();
+                }
             }
         }
     }
@@ -102,6 +100,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     @Override
     public E peek() {
+        if(bestList.get(0) == null){
+            System.out.println("GH_heap peek error");
+        }
         return bestList.get(0);
     }
 
@@ -139,16 +140,20 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
 
     private void reorder(){
+        int buckets = tree.size();//for debug
+        int nodes = 0;//for debug
         TreeMap<gh_node,ArrayList<E>> tempTree = new TreeMap<>(comparator);
 
         for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
             Map.Entry<gh_node,ArrayList<E>> entry = it.next();
             gh_node node = entry.getKey();
             ArrayList<E> list = entry.getValue();
+                nodes +=list.size();
             it.remove();
             node.calcPotential();
             tempTree.put(node,list);
         }
+        result.setExtras(buckets+"",nodes+"");//for paper debug
         tree = tempTree;
     }
 
@@ -205,20 +210,22 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         countF.put(Val,countF.get(Val)-1);
         if(countF.get(Val)==0){
             countF.remove(Val);
-            if(Val==fmin && tree.size()>0){//find next lowest fmin
-                fmin = Integer.MAX_VALUE;
-                Iterator it = countF.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry pair = (Map.Entry)it.next();
-                    double key = (double) pair.getKey();
-                    if(fmin >= key){
-                        fmin = key;
-                    }
+            if(!isOptimal) {//fmin might change/increase
+                if (Val == fmin && tree.size() > 0) {//find next lowest
+                    fmin = Integer.MAX_VALUE;
+                    Iterator it = countF.entrySet().iterator();
+                    while (it.hasNext()) {
+                        Map.Entry pair = (Map.Entry) it.next();
+                        double key = (double) pair.getKey();
+                        if (fmin >= key) {
+                            fmin = key;
+                        }
 //                        System.out.println(pair.getKey() + " = " + pair.getValue());
 //                        it.remove(); // avoids a ConcurrentModificationException
-                }
-                reorder();
+                    }
+                    reorder();
 //             System.out.println(fmin);
+                }
             }
         }
     }
@@ -266,7 +273,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         }
 
         public void calcPotential(){
-            this.potential = (w*fmin-this.g)/this.h;
+            if(this.h == 0){
+                this.potential = Double.MAX_VALUE;
+            }
+            else{
+                this.potential = (w*fmin-this.g)/this.h;
+            }
         }
 
     }
@@ -278,15 +290,15 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
         @Override
         public int compare(final gh_node a, final gh_node b) {
-            // First compare by potential (bigger is preferred), then by f (smaller is preferred), then by g (bigger is preferred)
+            // First compare by potential (bigger is preferred), then by f (smaller is preferred), then by g (smaller is preferred)
             if (a.potential > b.potential) return -1;
             if (a.potential < b.potential) return 1;
 
             if (a.h < b.h) return -1;
             if (a.h > b.h) return 1;
 
-            if (a.g > b.g) return -1;
-            if (a.g < b.g) return 1;
+            if (a.g < b.g) return -1;
+            if (a.g > b.g) return 1;
             return 0;
         }
     }

@@ -8,7 +8,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -28,6 +27,7 @@ public class DP  implements SearchAlgorithm {
         DP.DPPossibleParameters.put("weight", Double.class);
         DP.DPPossibleParameters.put("reopen", Boolean.class);
         DP.DPPossibleParameters.put("FR", Integer.class);
+        DP.DPPossibleParameters.put("optimalSolution", Double.class);
     }
 
     // The domain for the search
@@ -37,7 +37,8 @@ public class DP  implements SearchAlgorithm {
     private GH_heap<Node> open;//gh_heap
 //    private BinHeapF<Node> openF;
     // Closed list (seen states)
-    private Map<PackedElement, Node> closed;
+    private TreeMap<PackedElement, Node> closed;
+//    private Map<PackedElement, Node> closed;
     //the result to return
     private SearchResultImpl result;
 
@@ -57,6 +58,8 @@ public class DP  implements SearchAlgorithm {
     private int FR;
     private NodeComparator NC;
     private NodePackedComparator NPC;
+
+    private double optimalSolution;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -99,23 +102,31 @@ public class DP  implements SearchAlgorithm {
         return "DP";
     }
 
-    private void _initDataStructures() {
+    private void _initDataStructures(SearchDomain domain) {
+        this.domain = domain;
+        this.result = new SearchResultImpl();
         this.NC = new NodeComparator();
         this.NPC = new NodePackedComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
-        this.open = new GH_heap<>(open_ID,domain,weight,NPC);//gh_heap
+        //for cases where we want to set the fmin start
+        if(this.optimalSolution == 0) {
+            this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), false, NPC, result);//no oracle
+        }
+        else{
+            this.open = new GH_heap<>(weight, open_ID, optimalSolution, true, NPC, result);//with oracle
+        }
 //        this.openF = new BinHeapF<>(openF_ID,domain);
         //this.open = buildHeap(heapType, 100);
-        this.closed = new HashMap<>();
+        this.closed = new TreeMap<>();
+//        this.closed = new HashMap<>();
     }
 
     @Override
     public SearchResult search(SearchDomain domain) {
-        this.domain = domain;
         Node goal = null;
         // Initialize all the data structures required for the search
-        this._initDataStructures();
-        result = new SearchResultImpl();
+        this._initDataStructures(domain);
+
         result.startTimer();
 
         // Let's instantiate the initial state
@@ -127,7 +138,7 @@ public class DP  implements SearchAlgorithm {
         _addNode(initNode);
 
         try{
-            while (!this.open.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize()) {
+            while (!this.open.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize() && result.checkMinTimeOut()) {
 
                 // Take the first state (still don't remove it)
                 Node currentNode = _selectNode();
@@ -253,6 +264,10 @@ public class DP  implements SearchAlgorithm {
                 this.FR = Integer.parseInt(value);
                 break;
             }
+            case "optimalSolution": {
+                this.optimalSolution = Double.parseDouble(value);
+                break;
+            }
             default: {
                 throw new NotImplementedException();
             }
@@ -374,7 +389,7 @@ public class DP  implements SearchAlgorithm {
     /**
      * The node class
      */
-    protected final class Node extends SearchQueueElementImpl implements BucketHeap.BucketHeapElement {
+    protected final class Node extends SearchQueueElementImpl{
         private double f;
         private double g;
         private double h;
@@ -472,7 +487,7 @@ public class DP  implements SearchAlgorithm {
             this(state, null, null, null, null);
         }
 
-
+/*
         @Override
         public void setSecondaryIndex(int key, int index) {
             this.secondaryIndex[key] = index;
@@ -486,7 +501,7 @@ public class DP  implements SearchAlgorithm {
         @Override
         public double getRank(int level) {
             return (level == 0) ? this.f : this.g;
-        }
+        }*/
 
         @Override
         public double getF() {
@@ -512,9 +527,7 @@ public class DP  implements SearchAlgorithm {
 
         @Override
         public int compare(final Node a, final Node b) {
-            // First compare by potential (bigger is preferred), then by f (smaller is preferred), then by g (bigger is preferred)
-/*            if (a.potential > b.potential) return -1;
-            if (a.potential < b.potential) return 1;*/
+            // First compare by f (smaller is preferred), then by g (bigger is preferred)
 
             if (a.f < b.f) return -1;
             if (a.f > b.f) return 1;

@@ -50,7 +50,6 @@ public class IDAstar implements SearchAlgorithm {
     }
 
     protected IDAstar(double weight) {
-        this.solution = new SolutionImpl();
         this.weight = weight;
     }
 
@@ -66,12 +65,27 @@ public class IDAstar implements SearchAlgorithm {
 
     @Override
     public void setAdditionalParameter(String parameterName, String value) {
-        throw new NotImplementedException();
+        switch (parameterName) {
+            case "weight": {
+                this.weight = Double.parseDouble(value);
+                if (this.weight < 1.0d) {
+                    System.out.println("[ERROR] The weight must be >= 1.0");
+                    throw new IllegalArgumentException();
+                } else if (this.weight == 1.0d) {
+                    System.out.println("[WARNING] Weight of 1.0 is equivalent to A*");
+                }
+                break;
+            }
+            default:{
+                throw new NotImplementedException();
+            }
+        }
     }
 
     @Override
     public SearchResult search(SearchDomain domain) {
         this.result = new SearchResultImpl();
+        this.solution = new SolutionImpl();
         State root = domain.initialState();
         this.result.startTimer();
         this.bound = this.weight * root.getH();
@@ -132,6 +146,7 @@ public class IDAstar implements SearchAlgorithm {
             boolean goal = this.dfs(domain, child, op.getCost(child, parent) + cost, op.reverse(parent));
             if (goal) {
                 this.solution.addOperator(op);
+                this.solution.addState(parent);
                 return true;
             }
         }

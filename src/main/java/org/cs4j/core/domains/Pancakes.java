@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * The pancake problem is a famous search problem where the objective is to sort a sequence of
@@ -17,7 +18,7 @@ public class Pancakes implements SearchDomain {
     private COST_FUNCTION costFunction;
     // The parameter k for GAP-k heuristic (means that k pancakes are ignored during heuristic calculation
     // [starting from 0])
-    private int k;
+    private double k;
 
     private static final Map<String, Class> PancakesPossibleParameters;
 
@@ -27,6 +28,8 @@ public class Pancakes implements SearchDomain {
         PancakesPossibleParameters = new HashMap<String, Class>();
         PancakesPossibleParameters.put("GAP-k", Integer.class);
     }
+    // the actual parameters that have been set
+    private TreeMap<String,String> parameters = new TreeMap<>();
 
     // The possible cost functions
     public enum COST_FUNCTION {
@@ -172,7 +175,8 @@ public class Pancakes implements SearchDomain {
             return (!useK || cakes[n] >= (this.k - 1)) && cakes[n] != n;
         }
         // Support GAP-k heuristic
-        if (useK && (cakes[n] < this.k || cakes[n+1] < this.k)) {
+        //for cases of half gap do not count cakes[n+1]
+        if (useK && (cakes[n] < this.k || cakes[n+1] < this.k - 0.5)) {
             return false;
         }
 
@@ -298,14 +302,26 @@ public class Pancakes implements SearchDomain {
     /**
      * Calculates the cost of the given operator according to the given cost function
      *
-     * @param op The operator whose cost should be calculated
-     * @return The calculated cost of the operator
+     *
+     * @param state
+     * @param parent
+     *@param op The operator whose cost should be calculated  @return The calculated cost of the operator
      */
-    private double computeCost(int op) {
+    private double computeCost(State state, State parent, int op) {
         double value = 1.0;
         switch (this.costFunction) {
             case HEAVY:
-                value = 1 + op;
+                PancakeState ps = (PancakeState)state;
+                int separated = ps.cakes[0];
+                int bottom;
+                if(op < this.numCakes-1) {
+                    bottom = ps.cakes[op + 1];
+                }
+                else {
+                    bottom = ps.cakes[op];
+                }
+                value = 1 + Math.max(separated,bottom);
+//                value = 1 + op;
                 break;
             case UNIT:
             default:
@@ -330,10 +346,19 @@ public class Pancakes implements SearchDomain {
         /**
          * Debug
          */
-        if  (!Arrays.equals(ps.cakes, ((PancakeState)this.unpack(toReturn)).cakes)) {
+        PancakeState ups = ((PancakeState)this.unpack(toReturn));
+        if  (!Arrays.equals(ps.cakes, ups.cakes)) {
+            System.out.println("******************Pancakes pack problem:*********************");
+/*            for(int j=this.numCakes-1 ; j >=0 ; j--){
+                if(ps.cakes[j] != ups.cakes[j]){
+                    System.out.println(ps.cakes[j] +"-"+ ups.cakes[j]);
+                }
+                else{
+                    System.out.println("all ok");
+                }
+            }*/
             System.out.println(Arrays.toString(ps.cakes));
-            System.out.println(Arrays.toString(((PancakeState)this.unpack(toReturn)).cakes));
-            assert false;
+            System.out.println(Arrays.toString(ups.cakes));
         }
         return toReturn;
     }
@@ -506,7 +531,11 @@ public class Pancakes implements SearchDomain {
 
         @Override
         public String dumpStateShort() {
-            return Arrays.toString(this.cakes);
+            String[] array = new String[this.cakes.length];
+            for (int i = 0; i < this.cakes.length; ++i) {
+                array[i] = String.valueOf(cakes[i]);
+            }
+            return String.join(" ", array);
         }
     }
 
@@ -523,8 +552,14 @@ public class Pancakes implements SearchDomain {
 
         @Override
         public double getCost(State state, State parent) {
-            PancakeState ps = (PancakeState)state;
-            return Pancakes.this.computeCost(ps.cakes[value]);
+            double cost = computeCost(state,parent,value);
+/*            if(Math.abs(state.getH()-parent.getH()) > cost){
+                System.out.println("[WARNING] Pancake Current Heuristic should be consistent but is not!");
+                unpack(pack(state));
+                unpack(pack(parent));
+                computeCost(state,parent,value);
+            }*/
+            return cost;
         }
 
         @Override
@@ -533,7 +568,6 @@ public class Pancakes implements SearchDomain {
             // the same operator on the state
             return this;
         }
-
     }
 
     public String dumpStatesCollection(State[] states) {
@@ -547,9 +581,21 @@ public class Pancakes implements SearchDomain {
 
     @Override
     public void setAdditionalParameter(String parameterName, String value) {
+        parameters.put(parameterName,value);
         switch (parameterName) {
+            case "cost-function": {
+                switch (value) {
+                    case "heavy":
+                        this.costFunction = COST_FUNCTION.HEAVY;
+                    break;
+                    default: {
+                        throw new IllegalArgumentException("Invalid cost-function value: " + parameterName);
+                    }
+                }
+                break;
+            }
             case "GAP-k": {
-                this.k = Integer.parseInt(value);
+                this.k = Double.parseDouble(value);
                 assert this.k >= 0 && this.k < this.numCakes;
                 break;
             } default: {
