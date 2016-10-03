@@ -34,11 +34,12 @@ public class VacuumRobot implements SearchDomain {
     private static final int NUM_MOVES = 4;
 
     private GridMap map;
-    private boolean heavy = false;
+    private boolean isNonUnitCost = false;
 
     private int robotLocationBits;
     private long robotLocationBitMask;
     private long singleBitMask;
+    private static double alpha;
 
     public enum COST_FUNCTION {HEAVY, LITE, UNIT};
 
@@ -46,6 +47,15 @@ public class VacuumRobot implements SearchDomain {
     // locations (any combination is defined by a binary vector)
     // NOTE: The location of the robot is not considered while building the array
     double [][] lookupMST_heavy;
+
+    private static final Map<String, Class> VacuumPossibleParameters;
+
+    // Declare the parameters that can be tunes before running the search
+    static
+    {
+        VacuumPossibleParameters = new HashMap<>();
+        VacuumPossibleParameters.put("cost-function", COST_FUNCTION.class);
+    }
 
     /**
      * Whether the i'th location (among all the dirty initials) is dirty
@@ -119,7 +129,7 @@ public class VacuumRobot implements SearchDomain {
 
     /**
      * The function calculates h and d values for every possible combination of the dirty
-     * vectors which allows to quickly calculate the actual h and d values for heavy Vacuum
+     * vectors which allows to quickly calculate the actual h and d values for isNonUnitCost Vacuum
      * Robot problems
      */
     private void _preComputeMSTHeavy() {
@@ -143,14 +153,17 @@ public class VacuumRobot implements SearchDomain {
         }
     }
 
+    public VacuumRobot(InputStream stream,COST_FUNCTION costfunction) {
+        throw new NotImplementedException();
+    }
+
     /**
      * The constructor of the general VacuumRobot World domain
      *
      * @param stream The input stream for parsing the instance
-     * @param costFunction The type of the cost function
      */
-    public VacuumRobot(InputStream stream, COST_FUNCTION costFunction) {
-        this.heavy = (costFunction == COST_FUNCTION.HEAVY);
+    public VacuumRobot(InputStream stream) {
+        //        this.isNonUnitCost = (costFunction == COST_FUNCTION.HEAVY);
         // Initialize the input-reader to allow parsing the state
         BufferedReader in = new BufferedReader(new InputStreamReader(stream));
         try {
@@ -184,7 +197,7 @@ public class VacuumRobot implements SearchDomain {
                         case '#': {
                             this.map.setBlocked(this.map.index(x, y));
                             break;
-                        // Dirty location
+                            // Dirty location
                         } case '*': {
                             // Map between the dirty locations vector and the dirty locations index
                             this.dirt[map.index(x, y)] = this.dirtyLocations.size();
@@ -197,17 +210,17 @@ public class VacuumRobot implements SearchDomain {
                             this.startX = x;
                             this.startY = y;
                             break;
-                        // End of line
+                            // End of line
                         }
                         case '.':
                         case '_':
                         case ' ': {
                             break;
-                        // Net line
+                            // Net line
                         } case '\n': {
                             assert x == chars.length;
                             break;
-                        // Something strange
+                            // Something strange
                         } default: {
                             Utils.fatal("Unknown character" + c);
                         }
@@ -241,23 +254,21 @@ public class VacuumRobot implements SearchDomain {
             System.err.println("Too many bits required: " + totalRequiredBits);
             System.exit(1);
         }
+        //initialize the parameters concerning the cost function
+        initializeCost();
+    }
+
+    private void initializeCost(){
+        this.isNonUnitCost = (alpha != 0);
+
 //        System.out.println("[Init] Initializes reverse operators");
         // Initialize the array of reverse operators
         this._initializeReverseOperatorsArray();
 //        System.out.println("[Done] (Initializes reverse operators)");
-//        System.out.println("[Init] Initializes MST for heavy calculation");
+//        System.out.println("[Init] Initializes MST for isNonUnitCost calculation");
         // Pre-compute the {h, d} pairs for all the possible combinations of dirty vectors
         this._preComputeMSTHeavy();
-//        System.out.println("[Done] (Initializes MST for heavy calculation)");
-    }
-
-    /**
-     * The constructor of the general VacuumRobot World domain
-     *
-     * @param stream The input stream for parsing the instance
-     */
-    public VacuumRobot(InputStream stream) {
-        this(stream, COST_FUNCTION.UNIT);
+//        System.out.println("[Done] (Initializes MST for isNonUnitCost calculation)");
     }
 
     /**
@@ -735,7 +746,7 @@ public class VacuumRobot implements SearchDomain {
         double d = 0.0d;
 
         // Calculate the number of locations that are CLEAN
-        // This value is used for the heavy operation - it is calculated by applying some function
+        // This value is used for the isNonUnitCost operation - it is calculated by applying some function
         // on the number of the locations cleaned by the robot
 
         // The idea behind that calculation is that the robot is consuming fuel during the clean
@@ -744,9 +755,9 @@ public class VacuumRobot implements SearchDomain {
         int robotHeavyAddend = (this.maximumDirtyLocationsCount - (remainingDirt)) + 1;
         // Here we define the cost of a single operation that the robot should perform
         // (either MOVE or VACUUM) which normally costs 1.0
-        // In case heavy mode is applied, the operation will cost 1 + some function applied on the
+        // In case isNonUnitCost mode is applied, the operation will cost 1 + some function applied on the
         // number of required operations
-        double robotOperationCost = (heavy) ? (this.heavy(robotHeavyAddend) + 1.0d) : 1.0d;
+        double robotOperationCost = (isNonUnitCost) ? (this.heavy(robotHeavyAddend) + 1.0d) : 1.0d;
 
         // Now, let's calculate the h and d values
         for (MSTEdge edge : mstEdgesDirty) {
@@ -757,7 +768,7 @@ public class VacuumRobot implements SearchDomain {
             // Increase the number of locations passed by robot and update the cost of its single
             // operation
             ++robotHeavyAddend;
-            robotOperationCost = (heavy) ? heavy(robotHeavyAddend) + 1.0d : 1.0d;
+            robotOperationCost = (isNonUnitCost) ? heavy(robotHeavyAddend) + 1.0d : 1.0d;
         }
         // Finally, we got the h and d values, so, let's return them
         return new double[]{h, d};
@@ -768,7 +779,7 @@ public class VacuumRobot implements SearchDomain {
      * moving the robot to closest dirty locations
      *
      * @param s The current VacuumRobot state (required in order to know the current number of
-     *          dirty locations - for calculating the heavy value)
+     *          dirty locations - for calculating the isNonUnitCost value)
      * @param ignoreIndexes An array of location indexes that should be ignored while traversing all
      *                      the locations (optional)
      * NOTE: The size of ignoreIndexes (ignoreIndexes.length) must be equal to the total number of
@@ -793,9 +804,9 @@ public class VacuumRobot implements SearchDomain {
             closestLocationIndex[0] = closestDirtAndDistance[0];
         }
         int shortestDistance = closestDirtAndDistance[1];
-        // In case of heavy calculation - the cost of robot operation is
+        // In case of isNonUnitCost calculation - the cost of robot operation is
         // 1 + number of edges already considered (number of cleaned states)
-        double robotOperationCost = (this.heavy) ? (heavy(s) + 1.0d) : 1.0d;
+        double robotOperationCost = (this.isNonUnitCost) ? (heavy(s) + 1.0d) : 1.0d;
         // Cost of operations: MOVE * FUEL + SUCK
         double hAddend = (shortestDistance * robotOperationCost + robotOperationCost);
         // Number of operations: MOVE + SUCK
@@ -810,7 +821,7 @@ public class VacuumRobot implements SearchDomain {
      * {@see __getHDAddendToClosestDirtyLocation}
      *
      * @param s The current VacuumRobot state (required in order to know the current number of
-     *          dirty locations - for calculating the heavy value)
+     *          dirty locations - for calculating the isNonUnitCost value)
      *
      * @return An pair of h and d addends (in a form of a double array) - {h, d}
      */
@@ -905,7 +916,7 @@ public class VacuumRobot implements SearchDomain {
     */
 
     /**
-     * Calculate the h and d values for heavy vacuum problems:
+     * Calculate the h and d values for isNonUnitCost vacuum problems:
      *  1. Compute the minimum spanning tree (MST) of the isDirty piles
      *  2. Order the edges by greatest length first
      *  3. Multiply the edge weights by the current weight of the robot plus the number of edges
@@ -997,7 +1008,7 @@ public class VacuumRobot implements SearchDomain {
      * cost of moving the robot to the closest dirty location is calculated, then, moving it to the
      * next closest location etc.
      *
-     * For heavy Vacuum Robot problems, the weight of each edge is multiplied by the current weight
+     * For isNonUnitCost Vacuum Robot problems, the weight of each edge is multiplied by the current weight
      * of the robot plus the number of edges already considered
      *
      * @param s The state whose heuristic values should be calculated
@@ -1062,9 +1073,9 @@ public class VacuumRobot implements SearchDomain {
             ++numberOfCleanLocations;
         }
 
-        // For h on the heavy vacuum problems, multiply the edge weights by the current
+        // For h on the isNonUnitCost vacuum problems, multiply the edge weights by the current
         // weight of the robot plus the number of edges already considered
-        if (this.heavy) {
+        if (this.isNonUnitCost) {
             return new double[]{h, d};
         } else {
             // Estimate the cost of a greedy traversal of the dirt piles: Calculate the number of
@@ -1105,7 +1116,7 @@ public class VacuumRobot implements SearchDomain {
      */
     private double[] computeHD(VacuumRobotState s) {
         /*
-        if (this.heavy) {
+        if (this.isNonUnitCost) {
             return computeHD_jordan(s);
         } else {
             return computeHD_greedy(s);
@@ -1114,7 +1125,7 @@ public class VacuumRobot implements SearchDomain {
     }
 
     /**
-     * The heavy function for Explicit Estimation Search
+     * The isNonUnitCost function for Explicit Estimation Search
      *
      * @param ndirt The number of dirty location that were ALREADY CLEAN BY THE ROBOT
      *
@@ -1122,11 +1133,12 @@ public class VacuumRobot implements SearchDomain {
      * already cleaned)
      */
     private double heavy(int ndirt) {
-        return ((double)ndirt);
+        double ret = Math.pow(ndirt,this.alpha);
+        return ret;
     }
 
     /**
-     * The heavy function for Explicit Estimation Search
+     * The isNonUnitCost function for Explicit Estimation Search
      *
      * @param state The state for which the function should be calculated
      *
@@ -1587,7 +1599,7 @@ public class VacuumRobot implements SearchDomain {
 
     }
 
-    private final class VacuumRobotOperator implements Operator {
+    public final class VacuumRobotOperator implements Operator {
         // UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3
         public static final int SUCK = 4;
         public static final int NOP = -1;
@@ -1621,7 +1633,7 @@ public class VacuumRobot implements SearchDomain {
         public double getCost(State s, State parent) {
             VacuumRobotState vrs = (VacuumRobotState) s;
             double cost = 1.0d;
-            if (VacuumRobot.this.heavy) {
+            if (VacuumRobot.this.isNonUnitCost) {
                 cost += VacuumRobot.this.heavy(vrs);
             }
             return cost;
@@ -1788,12 +1800,36 @@ public class VacuumRobot implements SearchDomain {
 
     @Override
     public Map<String, Class> getPossibleParameters() {
-        return null;
+        return VacuumRobot.VacuumPossibleParameters;
     }
 
     @Override
     public void setAdditionalParameter(String parameterName, String value) {
-        throw new NotImplementedException();
+        switch (parameterName) {
+            case "cost-function": {
+                this.alpha = Double.parseDouble(value);
+                initializeCost();
+                break;
+            }
+            case "shrinkTo": {
+                int upto = Integer.parseInt(value);
+                for(int i=this.maximumDirtyLocationsCount-1 ; i >= upto ; i--){
+                    PairInt p = this.dirtyLocations.remove(i);
+                    int pos = map.index(p.first, p.second);
+                    this.dirt[pos] = -1;
+/*                    // Map between the dirty locations vector and the dirty locations index
+                    this.dirt[map.index(x, y)] = this.dirtyLocations.size();
+                    this.dirtyLocations.add(new PairInt(x, y)); */
+                }
+
+                // Set the number of the dirty locations (according to the read value) after all location are set
+                this.maximumDirtyLocationsCount = this.dirtyLocations.size();
+                initializeCost();
+                break;
+            } default: {
+                throw new IllegalArgumentException("Invalid parameter: " + parameterName);
+            }
+        }
     }
 
 }

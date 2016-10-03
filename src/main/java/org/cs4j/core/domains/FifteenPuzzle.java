@@ -31,6 +31,7 @@ import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * The 4x4 sliding-tiles domain class.
@@ -66,7 +67,8 @@ public final class FifteenPuzzle implements SearchDomain {
         HEAVY
     }
 
-    private COST_FUNCTION costFunction;
+//    private COST_FUNCTION costFunction;
+    private double costAlpha;
 
     private enum HeuristicType {
         MD,
@@ -124,6 +126,8 @@ public final class FifteenPuzzle implements SearchDomain {
         FifteenPuzzlePossibleParameters.put("use-reflection", Boolean.class);
         FifteenPuzzlePossibleParameters.put("cost-function", String.class);
     }
+    // the actual parameters that have been set
+    private TreeMap<String,String> parameters = new TreeMap<>();
 
     /**
      * The function calculates Manhattan distance between two given tiles
@@ -150,21 +154,8 @@ public final class FifteenPuzzle implements SearchDomain {
      * @return The computed _getTileCost
      */
     private double _getTileCost(int tile) {
-        double value = 1.0;
         // Compute the _getTileCost according to the type of the _getTileCost function used in the search
-        switch (this.costFunction) {
-            case HEAVY:
-                value = tile;
-                break;
-            case SQRT:
-                value = Math.sqrt(tile);
-                break;
-            case INVR:
-                value = 1.0d / tile;
-                break;
-            case UNIT:
-                break;
-        }
+        double value=Math.pow(tile,this.costAlpha);
         return value;
     }
 
@@ -179,8 +170,7 @@ public final class FifteenPuzzle implements SearchDomain {
             double cost = this._getTileCost(currentTile);
             for (int otherTile = 0; otherTile < this.tilesNumber; ++otherTile) {
                 // Calculate the Manhattan distance between the tiles
-                this.mdUnit[currentTile][otherTile] =
-                        this._computeManhattanDistance(currentTile, otherTile);
+                this.mdUnit[currentTile][otherTile] = this._computeManhattanDistance(currentTile, otherTile);
                 this.md[currentTile][otherTile] = this.mdUnit[currentTile][otherTile] * cost;
             }
         }
@@ -190,31 +180,34 @@ public final class FifteenPuzzle implements SearchDomain {
         // possible operator)
         for (int t = 1; t < this.tilesNumber; t++) {
             for (int d = 0; d < this.tilesNumber; d++) {
-                double previousDistance = this.md[t][d];
+                double previousWeightedMD = this.md[t][d];
+                int previousMD = this.mdUnit[t][d];
                 for (int s = 0; s < this.tilesNumber; s++) {
                     this.mdAddends[t][d][s] = -100; // some invalid value.
                     // Moving Up
                 } if (d >= this.width) {
                     // d-width is the index of tile we are on if moving UP
-                    this.mdAddends[t][d][d - this.width] =
-                            this.md[t][d - this.width] - previousDistance;
-                    this.mdAddendsUnit[t][d][d - this.width] = (int)this.mdAddends[t][d][d - this.width];
+                    this.mdAddends[t][d][d - this.width] =  this.md[t][d - this.width] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d - this.width] = (int)this.mdAddends[t][d][d - this.width];
+                    this.mdAddendsUnit[t][d][d - this.width] = this.mdUnit[t][d - this.width] - previousMD;
                     // Moving Left
                 } if (d % this.width > 0) {
                     // d-1 is the index of the tile we are on if moving Left
-                    this.mdAddends[t][d][d - 1] = this.md[t][d - 1] - previousDistance;
-                    this.mdAddendsUnit[t][d][d - 1] = (int)this.mdAddends[t][d][d - 1];
+                    this.mdAddends[t][d][d - 1] = this.md[t][d - 1] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d - 1] = (int)this.mdAddends[t][d][d - 1];
+                    this.mdAddendsUnit[t][d][d - 1] = this.mdUnit[t][d - 1] - previousMD;
                     // Moving Right
                 } if (d % this.width < this.width - 1) {
                     // d+1 is the index of the tile we are on if moving right
-                    this.mdAddends[t][d][d + 1] = this.md[t][d + 1] - previousDistance;
-                    this.mdAddendsUnit[t][d][d + 1] = (int)this.mdAddends[t][d][d + 1];
+                    this.mdAddends[t][d][d + 1] = this.md[t][d + 1] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d + 1] = (int)this.mdAddends[t][d][d + 1];
+                    this.mdAddendsUnit[t][d][d + 1] = this.mdUnit[t][d + 1] - previousMD;
                     // Moving Down
                 } if (d < this.tilesNumber - this.width) {
                     // d+width is the index of the tile we are on if moving down
-                    this.mdAddends[t][d][d + this.width] =
-                            this.md[t][d + this.width] - previousDistance;
-                    this.mdAddendsUnit[t][d][d + this.width] = (int)this.mdAddends[t][d][d + this.width];
+                    this.mdAddends[t][d][d + this.width] = this.md[t][d + this.width] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d + this.width] = (int)this.mdAddends[t][d][d + this.width];
+                    this.mdAddendsUnit[t][d][d + this.width] = this.mdUnit[t][d + this.width] - previousMD;
                 }
             }
         }
@@ -260,8 +253,7 @@ public final class FifteenPuzzle implements SearchDomain {
         }
     }
 
-    private void _init(COST_FUNCTION cost) {
-        this.costFunction = cost;
+    private void _init() {
         this._initMD();
         this._initOperators();
         // Create a new operator for each possible tile - i is the position of blank
@@ -311,7 +303,7 @@ public final class FifteenPuzzle implements SearchDomain {
             this.init[t] = t;
         }
         // Initialize the rest
-        this._init(COST_FUNCTION.UNIT);
+        this._init();
     }
 
     /**
@@ -357,7 +349,7 @@ public final class FifteenPuzzle implements SearchDomain {
             Utils.fatal("Error reading input file");
         }
         // Call the init function and initialize the domain and the instance, according to the read values
-        this._init(costFunction);
+        this._init();
     }
 
     /**
@@ -398,11 +390,11 @@ public final class FifteenPuzzle implements SearchDomain {
      *
      * @param blank The position of the blank in the given state
      * @param tiles The tiles configuration
-     * @param function The _getTileCost function to apply on the calculated value
+     * @param isWeighted The _getTileCost function to apply on the calculated value
      *
      * @return The calculated Manhattan distance
      */
-    private double _computeTotalMD(int blank, int tiles[], COST_FUNCTION function) {
+    private double _computeTotalMD(int blank, int tiles[], boolean isWeighted) {
         double sum = 0;
         // Go over all the tiles and summarize the distances between them and the goals
         for (int i = 0; i < this.tilesNumber; i++) {
@@ -412,9 +404,25 @@ public final class FifteenPuzzle implements SearchDomain {
                 continue;
             }
             // The md array already contains the _getTileCost to moving the tile to the goal
-            sum += this.md[i][tiles[i]];
+            if(isWeighted) {
+                sum += this.md[tiles[i]][i];
+            }
+            else {
+                sum += this.mdUnit[tiles[i]][i];
+            }
         }
         return sum;
+
+/*        // First, calculate Manhattan distance between each pair of tiles
+        for (int currentTile = 1; currentTile < this.tilesNumber; ++currentTile) {
+            // Calculate the _getTileCost of the tile (important for 'heavy' state)
+            double cost = this._getTileCost(currentTile);
+            for (int otherTile = 0; otherTile < this.tilesNumber; ++otherTile) {
+                // Calculate the Manhattan distance between the tiles
+                this.mdUnit[currentTile][otherTile] = this._computeManhattanDistance(currentTile, otherTile);
+                this.md[currentTile][otherTile] = this.mdUnit[currentTile][otherTile] * cost;
+            }
+        }*/
     }
 
     private double[] _computeHDNoMDFromDisk(TileState state) {
@@ -476,8 +484,8 @@ public final class FifteenPuzzle implements SearchDomain {
         switch (this.heuristicType) {
             case MD: {
                 // Let's calculate the heuristic values (h and d)
-                h = this._computeTotalMD(state.blank, state.tiles, this.costFunction);
-                d = this._computeTotalMD(state.blank, state.tiles, COST_FUNCTION.UNIT);
+                h = this._computeTotalMD(state.blank, state.tiles, true);
+                d = this._computeTotalMD(state.blank, state.tiles, false);
                 break;
             }
             default: {
@@ -571,7 +579,16 @@ public final class FifteenPuzzle implements SearchDomain {
     @Override
     public boolean isGoal(State state) {
         // The state is a goal if the estimated number of tile shifts, between it and the goal, is 0
-        return ((TileState) state).d == 0;
+        boolean ret = false;
+        if(((TileState) state).d == 0){
+            for(int i=0;i<tilesNumber;i++){
+                if(((TileState) state).tiles[i] != i){
+                    System.out.println("[WARNING] Wrong goal state found");
+                }
+            }
+            ret = true;
+        }
+        return ret;
     }
 
     /*
@@ -946,7 +963,11 @@ public final class FifteenPuzzle implements SearchDomain {
 
         @Override
         public String dumpStateShort() {
-            return null;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < FifteenPuzzle.this.tilesNumber; ++i) {
+                sb.append(this.tiles[i] +" ");
+            }
+            return sb.toString();
         }
     }
 
@@ -1065,6 +1086,7 @@ public final class FifteenPuzzle implements SearchDomain {
 
     @Override
     public void setAdditionalParameter(String parameterName, String value) {
+        parameters.put(parameterName,value);
         switch (parameterName) {
             case "heuristic": {
                 switch (value) {
@@ -1153,28 +1175,8 @@ public final class FifteenPuzzle implements SearchDomain {
                 break;
             }
             case "cost-function": {
-                switch (value) {
-                    case "unit": {
-                        _init(COST_FUNCTION.UNIT);
-                        break;
-                    }
-                    case "sqrt": {
-                        _init(COST_FUNCTION.SQRT);
-                        break;
-                    }
-                    case "invr": {
-                        _init(COST_FUNCTION.INVR);
-                        break;
-                    }
-                    case "heavy": {
-                        _init(COST_FUNCTION.HEAVY);
-                        break;
-                    }
-                    default: {
-                        System.err.println("Illegal heuristic type for FifteenPuzzle domain: " + value);
-                        throw new IllegalArgumentException();
-                    }
-                }
+                this.costAlpha = Double.parseDouble(value);
+                    _init();
                 break;
             }
             default: {

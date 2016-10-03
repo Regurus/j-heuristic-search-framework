@@ -19,7 +19,9 @@ package org.cs4j.core;
 import org.cs4j.core.SearchDomain.Operator;
 import org.cs4j.core.SearchDomain.State;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 /**
  * The search result interface.
@@ -83,6 +85,12 @@ public interface SearchResult {
      * @return reopened count
      */
     public long getReopened();
+
+    /**
+     *
+     * @return extra parameters for this search;
+     */
+    public TreeMap<String,String> getExtras();
 
     /**
      * Returns the wall time in milliseconds.

@@ -4,7 +4,7 @@ package org.cs4j.core.collections;
  * Created by sepetnit on 11/8/2015.
  *
  */
-public class PackedElement {
+public class PackedElement implements Comparable{
     private long[] internal;
 
     public PackedElement(long internal) {
@@ -71,6 +71,30 @@ public class PackedElement {
             return true;
         } catch (ClassCastException e) {
             return false;
+        }
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        try {
+            PackedElement other = (PackedElement)o;
+            if (other.internal.length > this.internal.length) {
+                return -1;
+            }
+            if (other.internal.length < this.internal.length) {
+                return 1;
+            }
+            for (int i = 0; i < this.internal.length; ++i) {
+                if (other.internal[i] > this.internal[i]) {
+                    return -1;
+                }
+                if (other.internal[i] < this.internal[i]) {
+                    return 1;
+                }
+            }
+            return 0;
+        } catch (ClassCastException e) {
+            return -2;
         }
     }
 }
