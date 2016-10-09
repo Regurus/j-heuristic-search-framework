@@ -1,7 +1,5 @@
 package org.cs4j.core.collections;
 
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.algorithms.DP;
 import org.cs4j.core.algorithms.SearchResultImpl;
 
 import java.util.*;
@@ -12,7 +10,7 @@ import java.util.*;
 public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     private final int key;
-    private HashMap<Double, Integer> countF = new HashMap<>();
+    private HashMap<Double, Double> countF = new HashMap<>();
 //    private BinHeap<E> heap;
     private TreeMap<gh_node,ArrayList<E>> tree;
     private double fmin;
@@ -24,6 +22,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     private int GH_heapSize;
     private Comparator<E> NodePackedComparator;
     private SearchResultImpl result;
+    private double sseHTotal = 0;
+    private double sseDTotal = 0;
+    private int counterTotal = 0;
 //    private boolean withFComparator;
 
     public GH_heap(double w, int key, double fmin, boolean isOptimal , Comparator<E> NodePackedComparator,SearchResultImpl result) {
@@ -40,15 +41,15 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     }
 
     public double getFmin(){
-//        test();
+//        testHat();
         return fmin;
     }
 
     public void add(E e) {
-//    test();
+//    testHat();
         countF_add(e.getF());
 
-        gh_node node = new gh_node(e.getG(),e.getH());
+        gh_node node = new gh_node(e);
         ArrayList<E> list;
 
         if(tree.containsKey(node)){
@@ -71,7 +72,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             bestNode = node;
             bestList = list;
         }
-//    test();
+//    testHat();
     }
 
     private void countF_add(double Val){
@@ -79,7 +80,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         if(countF.containsKey(Val))
             countF.put(Val,countF.get(Val)+1);
         else {
-            countF.put(Val, 1);
+            countF.put(Val, 1.0);
             if(!isOptimal) {//fmin might change/decrease
                 if (tree.size() == 0) {//tree is empty
                     fmin = Val;
@@ -100,6 +101,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     @Override
     public E peek() {
+        if(bestList == null){
+            System.out.println("GH_heap peek error");
+        }
         if(bestList.get(0) == null){
             System.out.println("GH_heap peek error");
         }
@@ -140,8 +144,8 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
 
     private void reorder(){
-        int buckets = tree.size();//for debug
-        int nodes = 0;//for debug
+        int buckets = tree.size();//for paper debug
+        int nodes = 0;//for paper debug
         TreeMap<gh_node,ArrayList<E>> tempTree = new TreeMap<>(comparator);
 
         for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
@@ -172,12 +176,14 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     @Override
     public E remove(E e) {
-        gh_node node = new gh_node(e.getG(),e.getH());
+//        testHat();
+        gh_node node = new gh_node(e);
         ArrayList<E> list = tree.get(node);
 
-        if(list.isEmpty()){
-            System.out.println("Empty list, can not remove");
-        }
+        if(list == null)
+            System.out.println("list == null, can not remove");
+        if(list.isEmpty())
+            System.out.println("list is empty, can not remove");
         list.remove(e);
         e.setIndex(this.key,-1);
 
@@ -199,13 +205,14 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         }
 
         countF_remove(e.getF());
+//        testHat();
         return e;
     }
 
     private void countF_remove(double Val){
         GH_heapSize--;
         if(!countF.containsKey(Val)){
-            countF.put(Val,0);
+            countF.put(Val,0.0);
         }
         countF.put(Val,countF.get(Val)-1);
         if(countF.get(Val)==0){
@@ -235,17 +242,46 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         return this.key;
     }
 
+    public void testHat(){
+        for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
+            Map.Entry<gh_node,ArrayList<E>> entry = it.next();
+            ArrayList<E> list = entry.getValue();
+            for(int i=list.size()-1 ; i>=0 ; i--){
+                double Val = list.get(i).getF();
+                if(Val < fmin){
+                    System.out.println("test Failed! Val < fmin");
+                }
+                countF.put(Val,countF.get(Val)-1);
+                if(countF.get(Val)<0){
+                    System.out.println("test failed! countF.get("+Val+")<0");
+                }
+            }
+        }
+
+        for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
+            Map.Entry<gh_node,ArrayList<E>> entry = it.next();
+            ArrayList<E> list = entry.getValue();
+            for(int i=list.size()-1 ; i>=0 ; i--){
+                double Val = list.get(i).getF();
+                if(Val < fmin){
+                    System.out.println("test Failed! Val < fmin");
+                }
+                countF.put(Val,countF.get(Val)+list.size());
+            }
+        }
+    }
+
 /*    public void test(){
         for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
             Map.Entry<gh_node,ArrayList<E>> entry = it.next();
             ArrayList<E> list = entry.getValue();
             double Val = list.get(0).getF();
             if(Val < fmin){
-                System.out.println("test Failed!");
+                System.out.println("test Failed! Val < fmin");
             }
             countF.put(Val,countF.get(Val)-list.size());
             if(countF.get(Val)<0){
-                System.out.println("test failed");
+                System.out.println("test failed! countF.get("+Val+")<0");
             }
         }
 
@@ -254,7 +290,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             ArrayList<E> list = entry.getValue();
             double Val = list.get(0).getF();
             if(Val < fmin){
-                System.out.println("test Failed!");
+                System.out.println("test Failed! Val < fmin");
             }
             countF.put(Val,countF.get(Val)+list.size());
         }
@@ -266,18 +302,24 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         double h;
         double potential;
 
-        public gh_node(double g, double h) {
-            this.g = g;
-            this.h = h;
+        double hHat;
+        double d;
+
+        public gh_node(E e) {
+            this.g = e.getG();
+            this.h = e.getH();
+            this.hHat = e.getHhat();
+            this.d = e.getD();//for debugging only
             calcPotential();
         }
 
         public void calcPotential(){
-            if(this.h == 0){
+            double hVal = this.hHat;
+            if(hVal == 0){
                 this.potential = Double.MAX_VALUE;
             }
             else{
-                this.potential = (w*fmin-this.g)/this.h;
+                this.potential = (w*fmin-this.g)/hVal;
             }
         }
 
@@ -291,11 +333,15 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         @Override
         public int compare(final gh_node a, final gh_node b) {
             // First compare by potential (bigger is preferred), then by f (smaller is preferred), then by g (smaller is preferred)
-            if (a.potential > b.potential) return -1;
-            if (a.potential < b.potential) return 1;
+            if (a.potential > b.potential){
+                return -1;
+            }
+            if (a.potential < b.potential){
+                return 1;
+            }
 
-            if (a.h < b.h) return -1;
-            if (a.h > b.h) return 1;
+            if (a.hHat < b.hHat) return -1;
+            if (a.hHat > b.hHat) return 1;
 
             if (a.g < b.g) return -1;
             if (a.g > b.g) return 1;

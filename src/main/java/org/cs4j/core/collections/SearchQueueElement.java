@@ -23,38 +23,60 @@ package org.cs4j.core.collections;
  */
 public interface SearchQueueElement {
 
-  /**
-   * Sets the indexes of this object in the data structure.
-   * 
-   * @param key
-   * @param index
-   */
-  public void setIndex(int key, int index);
-  
-  /**
-   * Returns the index of this object in the data structure.
-   * 
-   * @return
-   */
-  public int getIndex(int key);
+    /**
+    * Sets the indexes of this object in the data structure.
+    *
+    * @param key
+    * @param index
+    */
+    public void setIndex(int key, int index);
 
-  /**
-   *
-   * @return Elements F value;
-   */
-  public double getF();
+    /**
+    * Returns the index of this object in the data structure.
+    *
+    * @return
+    */
+    public int getIndex(int key);
 
-  /**
-   *
-   * @return Elements G value;
-   */
-  public double getG();
+    /**
+    *
+    * @return Elements F value;
+    */
+    public double getF();
 
-  /**
-   *
-   * @return Elements H value;
-   */
-  public double getH();
+    /**
+    *
+    * @return Elements G value;
+    */
+    public double getG();
 
+    /**
+    *
+    * @return Elements H value;
+    */
+    public double getH();
 
+    /**
+    *
+    * @return Elements D value;
+    */
+    public double getD();
+
+    /**
+     *
+     * @return Elements Hhat value;
+     */
+    public double getHhat();
+
+    /**
+     *
+     * @return Elements Dhat value;
+     */
+    public double getDhat();
+
+    /**
+     *
+     * @return Elements parent;
+     */
+    SearchQueueElement getParent();
 }

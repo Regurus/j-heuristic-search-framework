@@ -739,5 +739,21 @@ public class EES2 implements SearchAlgorithm {
         public double getH() {
             return this.h;
         }
+
+        @Override
+        public double getD() {return this.d;}
+
+        @Override
+        public double getHhat() {
+            return 0;
+        }
+
+        @Override
+        public double getDhat() {
+            return 0;
+        }
+
+        @Override
+        public SearchQueueElement getParent() {return this.parent;}
     }
 }

@@ -5,10 +5,7 @@ import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchDomain.Operator;
 import org.cs4j.core.SearchDomain.State;
 import org.cs4j.core.SearchResult;
-import org.cs4j.core.collections.BinHeap;
-import org.cs4j.core.collections.BucketHeap;
-import org.cs4j.core.collections.PackedElement;
-import org.cs4j.core.collections.SearchQueue;
+import org.cs4j.core.collections.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
@@ -360,6 +357,7 @@ public class PTS implements SearchAlgorithm {
     private final class Node extends SearchQueueElementImpl implements BucketHeap.BucketHeapElement {
         private double g;
         private double h;
+        private double d;
 
         private Operator op;
         private Operator pop;
@@ -392,6 +390,7 @@ public class PTS implements SearchAlgorithm {
             // FUNCTION IN ORDER TO GET THE OPERATOR VALUE ...
             double cost = (op != null) ? op.getCost(state, parentState) : 0;
             this.h = state.getH();
+            this.d = state.getD();
             this.g = (parent != null)? parent.g + cost : cost;
             this.parent = parent;
             this.packed = domain.pack(state);
@@ -415,6 +414,22 @@ public class PTS implements SearchAlgorithm {
         public double getH() {
             return this.h;
         }
+
+        @Override
+        public double getD() {return this.d;}
+
+        @Override
+        public double getHhat() {
+            return 0;
+        }
+
+        @Override
+        public double getDhat() {
+            return 0;
+        }
+
+        @Override
+        public SearchQueueElement getParent() {return this.parent;}
 
         /**
          * Default constructor which creates the node from some given state

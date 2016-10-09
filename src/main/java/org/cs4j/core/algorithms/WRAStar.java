@@ -22,11 +22,8 @@ import org.cs4j.core.SearchDomain.Operator;
 import org.cs4j.core.SearchDomain.State;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
-import org.cs4j.core.collections.BinHeap;
+import org.cs4j.core.collections.*;
 import org.cs4j.core.collections.BucketHeap.BucketHeapElement;
-import org.cs4j.core.collections.PackedElement;
-import org.cs4j.core.collections.Pair;
-import org.cs4j.core.collections.SearchQueue;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
@@ -611,6 +608,24 @@ public class WRAStar implements SearchAlgorithm {
         public double getH() {
             return this.h;
         }
+
+        @Override
+        public double getD() {
+            return 0;
+        }
+
+        @Override
+        public double getHhat() {
+            return 0;
+        }
+
+        @Override
+        public double getDhat() {
+            return 0;
+        }
+
+        @Override
+        public SearchQueueElement getParent() {return this.parent;}
     }
 
     /**

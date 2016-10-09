@@ -171,6 +171,9 @@ public class DP  implements SearchAlgorithm {
                     }
                     // Here we actually generate a new state
                     ++result.generated;
+/*                    if(result.generated >= 4660) {
+                        System.out.println("generated: " + result.generated);
+                    }*/
                     SearchDomain.State childState = domain.applyOperator(currentState, op);
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
 /*                    if(result.getGenerated() % 1000 == 0){
@@ -310,7 +313,7 @@ public class DP  implements SearchAlgorithm {
         // check if the potential has changed
 //        dupChildNode.reCalcValue();
         // Take the h value from the previous version of the node (for case of randomization of h values)
-        childNode.computeNodeValue(dupChildNode.h);
+        childNode.computeNodeValue(dupChildNode.h,dupChildNode.d);
         // check which child is better
         int compared = NC.compare(childNode, dupChildNode);
         // childNode is better, need to update dupChildNode
@@ -367,9 +370,18 @@ public class DP  implements SearchAlgorithm {
     private void _copyNodeValues(Node oldNode,Node newNode) {
         oldNode.f = newNode.f;
         oldNode.g = newNode.g;
+        oldNode.h = newNode.h;
         oldNode.op = newNode.op;
         oldNode.pop = newNode.pop;
         oldNode.parent = newNode.parent;
+
+        oldNode.d = newNode.d;
+        oldNode.sseH = newNode.sseH;
+        oldNode.sseD = newNode.sseD;
+        oldNode.fHat = newNode.fHat;
+        oldNode.hHat = newNode.hHat;
+        oldNode.dHat = newNode.dHat;
+        oldNode.depth = newNode.depth;
 //        oldNode.potential = newNode.potential;
     }
 
@@ -393,6 +405,13 @@ public class DP  implements SearchAlgorithm {
         private double f;
         private double g;
         private double h;
+        private double d;
+        private double sseH;
+        private double sseD;
+        private double fHat;
+        private double hHat;
+        private double dHat;
+        private int depth;
 //        private double potential;
 
         private SearchDomain.Operator op;
@@ -410,10 +429,16 @@ public class DP  implements SearchAlgorithm {
             this.secondaryIndex = new int[(heapType == HeapType.BUCKET) ? 2 : 1];
             double cost = (op != null) ? op.getCost(state, parentState) : 0;
             // If each operation costs something, we should add the cost to the g value of the parent
-            this.g = (parent != null) ? parent.g + cost : cost;
+            this.g = cost;
+            this.depth = 1;
+            // Our g equals to the cost + g value of the parent
+            if (parent != null) {
+                this.g += parent.g;
+                this.depth += parent.depth;
+            }
 
             // Update potential, h and f values
-            this.computeNodeValue(state.getH());
+            this.computeNodeValue(state.getH(),state.getD());
 
             // Parent node
             this.parent = parent;
@@ -421,6 +446,101 @@ public class DP  implements SearchAlgorithm {
             this.pop = pop;
             this.op = op;
 
+            // Compute the actual values of sseH and sseD
+            this._computePathHats(parent, cost);
+
+        }
+
+        /**
+         * Use the Path Based Error Model by calculating the mean one-step error only along the current search
+         * path: The cumulative single-step error experienced by a parent node is passed down to all of its children
+
+         * @return The calculated sseHMean
+         */
+        private double __calculateSSEMean(double totalSSE) {
+            return (this.g == 0) ? totalSSE : totalSSE / this.depth;
+        }
+
+        /**
+         * @return The mean value of sseH
+         */
+        private double _calculateSSEHMean() {
+            return this.__calculateSSEMean(this.sseH);
+        }
+
+        /**
+         * @return The mean value of sseD
+         */
+        private double _calculateSSEDMean() {
+            return this.__calculateSSEMean(this.sseD);
+        }
+
+        /**
+         * @return The calculated hHat value
+         *
+         * NOTE: if our estimate of sseDMean is ever as large as one, we assume we have infinite cost-to-go.
+         */
+        private double _computeHHat() {
+//            double hHat = Double.MAX_VALUE;
+            double hHat = this.h;
+            double sseDMean = this._calculateSSEDMean();
+            if (sseDMean < 1) {
+                double sseHMean = this._calculateSSEHMean();
+                hHat = this.h + ( (this.d / (1 - sseDMean)) * sseHMean );
+            }
+/*            else{
+                System.out.println("sseDMean: "+sseDMean);
+                hHat = this.h;
+            }*/
+            return hHat;
+        }
+
+        /**
+         * @return The calculated dHat value
+         *
+         * NOTE: if our estimate of sseDMean is ever as large as one, we assume we have infinite distance-to-go
+         */
+        private double _computeDHat() {
+            double dHat = Double.MAX_VALUE;
+            double sseDMean = this._calculateSSEDMean();
+            if (sseDMean < 1) {
+                dHat = this.d / (1 - sseDMean);
+            }
+            return dHat;
+        }
+
+        /**
+         * The function computes the values of dHat and hHat of this node, based on that values of the parent node
+         * and the cost of the operator that generated this node
+         *
+         * @param parent The parent node
+         * @param edgeCost The cost of the operation which generated this node
+         */
+        public void _computePathHats(Node parent, double edgeCost) {
+            if (parent != null) {
+                // Calculate the single step error caused when calculating h and d
+                this.sseH = parent.sseH + ((edgeCost + this.h) - parent.h);
+                this.sseD = parent.sseD + ((1 + this.d) - parent.d);
+/*                if(sseD < 0){
+                    System.out.println("sseD: "+sseD);
+                    System.out.println("this:"+this);
+                    System.out.println("parent:"+parent);
+                    SearchDomain.State State = domain.unpack(this.packed);
+                    SearchDomain.State parentState = domain.unpack(parent.packed);
+                    State.getD();
+                    System.out.println("sseD: "+sseD);
+                }*/
+            }
+
+            this.hHat = this._computeHHat();
+            this.dHat = this._computeDHat();
+            this.fHat = this.g + this.hHat;
+
+            // This must be true assuming the heuristic is consistent (fHat may only overestimate the cost to the goal)
+            if (domain.isCurrentHeuristicConsistent()) {
+                assert this.fHat >= this.f;
+            }
+            assert this.dHat >= 0;
         }
 
         @Override
@@ -431,6 +551,7 @@ public class DP  implements SearchAlgorithm {
             sb.append(", h: "+this.h);//h
             sb.append(", g: "+this.g);//g
             sb.append(", f: "+this.f);//f
+            sb.append(", d: "+this.d);//d
 //            sb.append(", potential: "+this.potential);//potential
 //            sb.append(", fcounterFmin: "+this.fcounterFmin);//fcounterFmin
             return sb.toString();
@@ -457,7 +578,7 @@ public class DP  implements SearchAlgorithm {
          *
          * @param updatedHValue The updated heuristic value
          */
-        public void computeNodeValue(double updatedHValue) {
+        public void computeNodeValue(double updatedHValue, double updatedDValue) {
 
             updatedHValue = new BigDecimal(updatedHValue).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
 
@@ -465,6 +586,7 @@ public class DP  implements SearchAlgorithm {
                 System.out.println("[INFO] GH_heap should update");
             }
             this.h = updatedHValue;
+            this.d = updatedDValue;
             this.f = this.g + this.h;
             this.fcounterFmin = open.getFmin();
 //            this.potential =  (this.fcounterFmin*DP.this.weight -this.g)/this.h;
@@ -518,6 +640,22 @@ public class DP  implements SearchAlgorithm {
             return this.h;
         }
 
+        @Override
+        public double getD() {
+            return this.d;
+        }
+
+        @Override
+        public double getHhat() {return this.hHat;}
+
+        @Override
+        public double getDhat() {return this.dHat;}
+
+        @Override
+        public SearchQueueElement getParent() {
+            return this.parent;
+        }
+
     }
 
     /**
@@ -534,6 +672,9 @@ public class DP  implements SearchAlgorithm {
 
             if (a.g > b.g) return -1;
             if (a.g < b.g) return 1;
+
+            if (a.hHat > b.hHat) return -1;
+            if (a.hHat < b.hHat) return 1;
             return 0;
         }
     }

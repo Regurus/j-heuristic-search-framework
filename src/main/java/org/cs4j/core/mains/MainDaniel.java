@@ -815,7 +815,7 @@ public class MainDaniel {
 
         String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "";
+        else globalPrefix = "server_test";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
@@ -823,7 +823,7 @@ public class MainDaniel {
         String[] domains = {
 //            "DockyardRobot",
 //            "VacuumRobot",
-//            "Pancakes",
+            "Pancakes",
 //            "FifteenPuzzle",
 //            "GridPathFinding"
         };
@@ -868,7 +868,7 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
 //                    pancakesNum = new int[]{10};
-                    pancakesNum = new int[]{40};
+//                    pancakesNum = new int[]{40};
                     for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;

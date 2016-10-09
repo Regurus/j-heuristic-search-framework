@@ -609,6 +609,11 @@ public class EES implements SearchAlgorithm {
                 // Calculate the single step error caused when calculating h and d
                 this.sseH = parent.sseH + ((edgeCost + this.h) - parent.h);
                 this.sseD = parent.sseD + ((1 + this.d) - parent.d);
+                if(sseD < 0){
+                    System.out.println("sseD: "+sseD);
+                    System.out.println("this:"+this);
+                    System.out.println("parent:"+parent);
+                }
             }
 
             this.hHat = this._computeHHat();
@@ -719,6 +724,20 @@ public class EES implements SearchAlgorithm {
         @Override
         public double getH() {
             return this.h;
+        }
+
+        @Override
+        public double getD() { return this.d; }
+
+        @Override
+        public double getHhat() { return this.hHat; }
+
+        @Override
+        public double getDhat() { return this.dHat; }
+
+        @Override
+        public SearchQueueElement getParent() {
+            return this.parent;
         }
     }
 }
