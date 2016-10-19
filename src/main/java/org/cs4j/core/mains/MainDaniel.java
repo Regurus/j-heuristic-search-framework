@@ -618,7 +618,158 @@ public class MainDaniel {
             e.printStackTrace();
         } catch (BiffException e) {
             e.printStackTrace();
+<<<<<<< HEAD
+=======
         }
+    }
+
+    private static void EESwalkPath(String savename){
+        System.out.println("EESwalkPath " + filePrefix);
+        OutputResult output=null;
+        try {
+            output = new OutputResult(relPath + "results/"+savename + fileEnd, null, -1, -1, null, false, true);
+            String headers = "Instance,d,dHat,h,hHat,d*,h*,Weight,EES Generated,DPS Generated,EES Cost,DPS Cost";
+            output.writeln(headers);
+            System.out.println(headers);
+
+/*            String alpha = outputPath.split("alpha")[1];
+            alpha = alpha.split("_")[0];*/
+
+            for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
+                w = ws;
+                String dpPath = outputPath+"DP_" + (int) w.wg + "_" + (int) w.wh + "_"+fileEnd+".csv";
+                String eesPath = outputPath+"ees_" + (int) w.wg + "_" + (int) w.wh + "_"+fileEnd+".csv";
+                InputStream dpStream = new FileInputStream(new File(dpPath));
+                InputStream eesStream = new FileInputStream(new File(eesPath));
+                BufferedReader dpReader = new BufferedReader(new InputStreamReader(dpStream));
+                BufferedReader eesReader = new BufferedReader(new InputStreamReader(eesStream));
+                String dpLine = dpReader.readLine();
+                String eesLine = eesReader.readLine();
+
+                for (int instance = startInstance; instance <= stopInstance; instance++) {
+//                    System.out.println("Walk path instance "+instance);
+                    String instancePath = inputPath + "/optimalOperators"+instance+".in";
+                    File optFile = new File(instancePath);
+                    if(!optFile.exists()) {
+                        System.out.println("[INFO] optimal operator not not found for instance "+instance);
+                        continue;
+                    }
+                    FileInputStream optimalOperatorsStream = new FileInputStream(new File(instancePath));
+                    BufferedReader optimalOperatorsReader = new BufferedReader(new InputStreamReader(optimalOperatorsStream));
+
+                    dpLine = dpReader.readLine();
+                    eesLine = eesReader.readLine();
+                    String dpCost = dpLine.split(",")[3];
+                    String eesCost = eesLine.split(",")[3];
+                    String dpGenerated = dpLine.split(",")[4];
+                    String eesGenerated = eesLine.split(",")[4];
+                    double hOPt = Double.parseDouble(dpCost);
+
+                    InputStream is = new FileInputStream(new File(inputPath + "/" + instance + ".in"));
+
+                    Class<?> cl = Class.forName("org.cs4j.core.domains."+domainName);
+                    Constructor<?> cons = cl.getConstructor(InputStream.class);
+                    SearchDomain domain = (SearchDomain) cons.newInstance(is);
+                    for(Map.Entry<String, String> entry : domainParams.entrySet()) {
+                        String key = entry.getKey();
+                        String value = entry.getValue();
+                        domain.setAdditionalParameter(key,value);
+                    }
+
+//                    SearchDomain domain = new Pancakes(is);
+                    EES ees = new EES(domain);
+
+                    SearchDomain.State parentState = domain.initialState();
+                    SearchDomain.State childState = null;
+                    EES.Node parentNode = ees.createNode(parentState, null, null, null, null);;
+
+                    int dOpt = -1;
+                    String optimalOperatorsLine = optimalOperatorsReader.readLine();
+                    while (optimalOperatorsLine != null) {
+                        dOpt++;
+                        optimalOperatorsLine = optimalOperatorsReader.readLine();
+                    }
+
+                    optimalOperatorsStream.getChannel().position(0);
+                    optimalOperatorsReader = new BufferedReader(new InputStreamReader(optimalOperatorsStream));
+                    optimalOperatorsLine = optimalOperatorsReader.readLine();
+                    while (dOpt > 0) {
+//                    System.out.println(parentState.dumpStateShort());
+                        int opPos = Integer.parseInt(optimalOperatorsLine);
+                        SearchDomain.Operator op = domain.getOperator(parentState, opPos);
+                        childState = domain.applyOperator(parentState, op);
+                        hOPt -= op.getCost(childState,parentState);
+                        EES.Node childNode = ees.createNode(childState, parentNode, parentState, op, op.reverse(parentState));
+
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(instance);
+                        sb.append(",");
+                        sb.append(childNode.d);
+                        sb.append(",");
+                        sb.append(childNode.dHat);
+                        sb.append(",");
+                        sb.append(childNode.h);
+                        sb.append(",");
+                        sb.append(childNode.hHat);
+                        sb.append(",");
+                        sb.append(dOpt);
+                        sb.append(",");
+                        sb.append(hOPt);
+                        sb.append(",");
+/*                        sb.append(w.wg);
+                        sb.append(",");
+                        sb.append(w.wh);
+                        sb.append(",");*/
+                        sb.append(w.wh/w.wg);
+                        sb.append(",");
+/*                        sb.append(alpha);
+                        sb.append(",");*/
+                        sb.append(eesGenerated);
+                        sb.append(",");
+                        sb.append(dpGenerated);
+                        sb.append(",");
+                        sb.append(eesCost);
+                        sb.append(",");
+                        sb.append(dpCost);
+
+                        String toPrint = String.valueOf(sb);
+                        output.writeln(toPrint);
+//                        System.out.println(toPrint);
+
+//                        System.out.println(parentState.dumpStateShort()+" ("+opPos+") "+childState.dumpStateShort());
+
+                        parentState = childState;
+                        parentNode = childNode;
+                        optimalOperatorsLine = optimalOperatorsReader.readLine();
+                        dOpt--;
+                    }
+
+                    int opPos = Integer.parseInt(optimalOperatorsLine);
+                    SearchDomain.Operator op = domain.getOperator(parentState, opPos);
+                    childState = domain.applyOperator(parentState, op);
+                    if(!domain.isGoal(childState)){
+                        System.out.println("[WARNING] Last state is NOT Goal");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        finally {
+            output.close();
+>>>>>>> 0d35f1011ab1aad8621da1f9b8bce770b5ce080b
+        }
+
     }
 
     private static void EESwalkPath(String savename){
@@ -815,15 +966,19 @@ public class MainDaniel {
 
         String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "server_test";
+        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
 
         String[] domains = {
 //            "DockyardRobot",
+<<<<<<< HEAD
+            "VacuumRobot",
+=======
 //            "VacuumRobot",
-            "Pancakes",
+>>>>>>> 0d35f1011ab1aad8621da1f9b8bce770b5ce080b
+//            "Pancakes",
 //            "FifteenPuzzle",
 //            "GridPathFinding"
         };
@@ -836,7 +991,11 @@ public class MainDaniel {
 
 //                new WAStar(),
 //                new EES(1),
+<<<<<<< HEAD
+//                new DP(),
+=======
                 new DP(),
+>>>>>>> 0d35f1011ab1aad8621da1f9b8bce770b5ce080b
         };
         SearchAlgorithmArr = AlgoArr;
 
@@ -868,7 +1027,7 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
 //                    pancakesNum = new int[]{10};
-//                    pancakesNum = new int[]{40};
+                    pancakesNum = new int[]{40};
                     for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
