@@ -35,20 +35,12 @@ public class DP  implements SearchAlgorithm {
     // Open list (frontier)
 //    private BinHeapF<Node> open;
     private GH_heap<Node> open;//gh_heap
-//    private BinHeapF<Node> openF;
+    //    private BinHeapF<Node> openF;
     // Closed list (seen states)
     private TreeMap<PackedElement, Node> closed;
-//    private Map<PackedElement, Node> closed;
+    //    private Map<PackedElement, Node> closed;
     //the result to return
     private SearchResultImpl result;
-
-    // TODO ...
-    private HeapType heapType;
-
-    // TODO ...
-    protected double maxCost;
-
-    public enum HeapType {BIN, BUCKET}
 
     // For Dynamic Potential Bound
     protected double weight;
@@ -60,6 +52,7 @@ public class DP  implements SearchAlgorithm {
     private NodePackedComparator NPC;
 
     private double optimalSolution;
+    private HashMap<String,Double> coefficients;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -71,28 +64,14 @@ public class DP  implements SearchAlgorithm {
         this.FR = Integer.MAX_VALUE;
     }
 
-    protected DP(double maxCost, HeapType heapType) {
-        this.maxCost = maxCost;
-        this.heapType = heapType;
+
+    /**
+     * A default constructor of the class
+     *
+     */
+    public DP(HashMap coefficients) {
+        this.coefficients = coefficients;
         this._initDefaultValues();
-    }
-
-    /**
-     * A constructor
-     *
-     * @param heapType the type of heap to use (BIN | BUCKET)
-     *
-     */
-    public DP(HeapType heapType) {
-        this(Double.MAX_VALUE, heapType);
-    }
-
-    /**
-     * A default constructor of the class (weight of 1.0, binary heap and AR)
-     *
-     */
-    public DP() {
-        this(Double.MAX_VALUE, HeapType.BIN);
     }
 
     @Override
@@ -108,12 +87,10 @@ public class DP  implements SearchAlgorithm {
         this.NC = new NodeComparator();
         this.NPC = new NodePackedComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
+        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), NPC, result,coefficients);//no oracle
         //for cases where we want to set the fmin start
-        if(this.optimalSolution == 0) {
-            this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), false, NPC, result);//no oracle
-        }
-        else{
-            this.open = new GH_heap<>(weight, open_ID, optimalSolution, true, NPC, result);//with oracle
+        if(this.optimalSolution != 0) {
+            this.open.setOptimal(optimalSolution);
         }
 //        this.openF = new BinHeapF<>(openF_ID,domain);
         //this.open = buildHeap(heapType, 100);
@@ -426,7 +403,7 @@ public class DP  implements SearchAlgorithm {
             // Size of key
             super(2);
             // TODO: Why?
-            this.secondaryIndex = new int[(heapType == HeapType.BUCKET) ? 2 : 1];
+            this.secondaryIndex = new int[1];
             double cost = (op != null) ? op.getCost(state, parentState) : 0;
             // If each operation costs something, we should add the cost to the g value of the parent
             this.g = cost;

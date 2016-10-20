@@ -552,7 +552,7 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-        SearchAlgorithm alg = new DP();
+        SearchAlgorithm alg = new EES(1);
 //        int[] pancakesNum = new int[] {10,12,16,20,40};
         int[] pancakesNum = new int[] {40};
         for(int j=0 ; j<pancakesNum.length;j++){
