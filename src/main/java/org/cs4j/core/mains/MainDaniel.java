@@ -826,7 +826,7 @@ public class MainDaniel {
         else fileEnd = "NoFr";
 
         String[] domains = {
-                "Pancakes",
+//                "Pancakes",
                 "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
@@ -856,7 +856,7 @@ public class MainDaniel {
             domainParams = new HashMap<>();
             switch (domainName) {
                 case "FifteenPuzzle": {
-                    for(int i = -1 ; i <= 0 ; i++) {
+                    for(int i = -1 ; i <= -1 ; i++) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
