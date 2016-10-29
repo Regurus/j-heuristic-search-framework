@@ -17,6 +17,9 @@ import org.cs4j.core.data.Weights;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +30,8 @@ public class MainDaniel {
     private static String fileEnd;
     private static String filePrefix;
     private static SearchAlgorithm alg;
-    private static String relPath = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/";
-
-//    private static String relPath = "C:/Users/gilond/Google Drive/gilond/Master/ResearchData/";
+    private static String[] relPathes = {"C:/Users/Daniel/Documents/gilond/Master/ResearchData/","C:/Users/gilond/Google Drive/gilond/Master/ResearchData/"};
+    private static String relPath;
     private static String inputPath;
     private static String outputPath;
     private static String summarySheetName;
@@ -802,6 +804,14 @@ public class MainDaniel {
 //        saveSolutionPathAsInstances();
 //        domainName = "GridPathFinding";
 
+        for(int i=0; i<relPathes.length; i++) {
+            Path path = Paths.get(relPathes[i]);
+            if (Files.exists(path)) {
+                relPath = relPathes[i];
+                System.out.println("path:"+relPath);
+            }
+        }
+
         overwriteFile = true;//if false throws error if file exists already
         overwriteSummary = true;
         appendToFile = true;//true: do not calculate instances again if already exist
@@ -821,7 +831,7 @@ public class MainDaniel {
 
         String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "DD_D";
+        else globalPrefix = "HH_D";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -836,15 +846,15 @@ public class MainDaniel {
         };
 
         HashMap<String,Double> coefficients = new HashMap<>();
-        coefficients.put("h",0.0);
-        coefficients.put("hHat",0.0);
-        coefficients.put("d",1.0);
-        coefficients.put("dHat",0.0);
+        coefficients.put("fmin" ,1.0);//H
+        coefficients.put("dmin" ,0.0);//D
+        coefficients.put("gCost",1.0);//H
+        coefficients.put("dCost",0.0);//D
 
-        coefficients.put("fmin",0.0);
-        coefficients.put("gCost",0.0);
-        coefficients.put("dmin",1.0);
-        coefficients.put("dCost",1.0);
+        coefficients.put("h"    ,0.0);//H
+        coefficients.put("hHat" ,0.0);//hHat
+        coefficients.put("d"    ,1.0);//D
+        coefficients.put("dHat" ,0.0);//dHat
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
