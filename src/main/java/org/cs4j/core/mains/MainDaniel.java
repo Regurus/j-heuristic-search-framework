@@ -25,8 +25,8 @@ public class MainDaniel {
     private static String fileEnd;
     private static String filePrefix;
     private static SearchAlgorithm alg;
-//    private static String relPath = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/";
-    private static String relPath = "C:/Users/gilond/Google Drive/gilond/Master/ResearchData/";
+    private static String relPath = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/";
+//    private static String relPath = "C:/Users/gilond/Google Drive/gilond/Master/ResearchData/";
     private static String inputPath;
     private static String outputPath;
     private static String summarySheetName;
