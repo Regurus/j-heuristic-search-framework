@@ -531,6 +531,11 @@ public class BEES implements SearchAlgorithm {
         }
 
         @Override
+        public double getDepth() {
+            return 0;
+        }
+
+        @Override
         public double getH() {
             return this.h;
         }

@@ -133,8 +133,14 @@ public class DP  implements SearchAlgorithm {
 
                 // Check for goal condition
                 if (domain.isGoal(currentState)) {
-                    goal = currentNode;
-                    break;
+                    double fmin = open.getFmin();
+                    if(currentNode.f < fmin*weight){
+                        goal = currentNode;
+                        break;
+                    }
+                    else{
+//                        System.out.print("\n[INFO] A goal was found but not under the bound:"+fmin*weight+" f:"+currentNode.f+", W:"+weight+", fmin:"+fmin);
+                    }
                 }
 
                 // Expand the current node
@@ -610,6 +616,11 @@ public class DP  implements SearchAlgorithm {
         @Override
         public double getG() {
             return this.g;
+        }
+
+        @Override
+        public double getDepth() {
+            return this.depth;
         }
 
         @Override

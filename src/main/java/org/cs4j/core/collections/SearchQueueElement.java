@@ -51,6 +51,12 @@ public interface SearchQueueElement {
     public double getG();
 
     /**
+     *
+     * @return Elements Depth value;
+     */
+    public double getDepth();
+
+    /**
     *
     * @return Elements H value;
     */

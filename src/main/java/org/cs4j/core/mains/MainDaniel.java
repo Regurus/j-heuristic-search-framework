@@ -821,7 +821,7 @@ public class MainDaniel {
 
         String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "";
+        else globalPrefix = "DD_D";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -836,10 +836,15 @@ public class MainDaniel {
         };
 
         HashMap<String,Double> coefficients = new HashMap<>();
-        coefficients.put("h",1.0);
+        coefficients.put("h",0.0);
         coefficients.put("hHat",0.0);
-        coefficients.put("d",0.0);
+        coefficients.put("d",1.0);
         coefficients.put("dHat",0.0);
+
+        coefficients.put("fmin",0.0);
+        coefficients.put("gCost",0.0);
+        coefficients.put("dmin",1.0);
+        coefficients.put("dCost",1.0);
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),

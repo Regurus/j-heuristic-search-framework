@@ -11,9 +11,11 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     private final int key;
     private HashMap<Double, Double> countF = new HashMap<>();
+    private HashMap<Double, Double> countD = new HashMap<>();
     //    private BinHeap<E> heap;
     private TreeMap<gh_node,ArrayList<E>> tree;
     private double fmin;
+    private double dmin;
     private boolean isOptimal;
     private double w;
     private gh_node bestNode;
@@ -26,6 +28,11 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     private double hHatCoefficient;
     private double dCoefficient;
     private double dHatCoefficient;
+
+    private double fminCoefficient;
+    private double dminCoefficient;
+    private double gCostCoefficient;
+    private double dCostCoefficient;
 //    private boolean withFComparator;
 
     public GH_heap(double w, int key, double fmin, Comparator<E> NodePackedComparator,SearchResultImpl result, HashMap<String,Double> coefficients) {
@@ -40,6 +47,10 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         this.hHatCoefficient = coefficients.get("hHat");
         this.dCoefficient = coefficients.get("d");
         this.dHatCoefficient = coefficients.get("dHat");
+        this.fminCoefficient = coefficients.get("fmin");
+        this.dminCoefficient = coefficients.get("dmin");
+        this.gCostCoefficient = coefficients.get("gCost");
+        this.dCostCoefficient = coefficients.get("dCost");
 //        this.heap = new BinHeap<>(new FComparator(), this.key);
 //        this.withFComparator = true;
     }
@@ -56,7 +67,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     public void add(E e) {
 //    testHat();
-        countF_add(e.getF());
+        count_add(e);
 
         gh_node node = new gh_node(e);
         ArrayList<E> list;
@@ -84,18 +95,35 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 //    testHat();
     }
 
-    private void countF_add(double Val){
+    private void count_add(E e){
+        double f = e.getF();
         GH_heapSize++;
-        if(countF.containsKey(Val))
-            countF.put(Val,countF.get(Val)+1);
+        if(countF.containsKey(f))
+            countF.put(f,countF.get(f)+1);
         else {
-            countF.put(Val, 1.0);
+            countF.put(f, 1.0);
             if(!isOptimal) {//fmin might change/decrease
                 if (tree.size() == 0) {//tree is empty
-                    fmin = Val;
+                    fmin = f;
                 }
-                if (Val < fmin) {//new lowest fmin ???
-                    fmin = Val;
+                if (fmin - f > 0) {//might occur due to rounding of f;
+                    fmin = f;
+                    reorder();
+                }
+            }
+        }
+        double fd = e.getD()+e.getDepth();
+        if(countD.containsKey(fd))
+            countD.put(fd,countD.get(fd)+1);
+        else {
+            countD.put(fd, 1.0);
+            if(!isOptimal) {//fmin might change/decrease
+                if (tree.size() == 0) {//tree is empty
+                    dmin = fd;
+                }
+                if (dmin - fd > 0) {//might occur due to rounding of d??? - this should never happen;
+                    System.out.println("[WARNING] dmin-d>0");
+                    dmin = fd;
                     reorder();
                 }
             }
@@ -178,6 +206,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     @Override
     public void clear() {
         countF.clear();
+        countD.clear();
         tree.clear();
         bestNode = null;
         bestList.clear();
@@ -213,21 +242,23 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             tree.put(node,list);
         }
 
-        countF_remove(e.getF());
+        count_remove(e);
 //        testHat();
         return e;
     }
 
-    private void countF_remove(double Val){
+    private void count_remove(E e){
+        double f = e.getF();
+        double fd = e.getD()+e.getDepth();
         GH_heapSize--;
-        if(!countF.containsKey(Val)){
-            countF.put(Val,0.0);
+        if(!countF.containsKey(f)){
+            countF.put(f,0.0);
         }
-        countF.put(Val,countF.get(Val)-1);
-        if(countF.get(Val)==0){
-            countF.remove(Val);
+        countF.put(f,countF.get(f)-1);
+        if(countF.get(f)==0){
+            countF.remove(f);
             if(!isOptimal) {//fmin might change/increase
-                if (Val == fmin && tree.size() > 0) {//find next lowest
+                if (f == fmin && tree.size() > 0) {//find next lowest
                     fmin = Integer.MAX_VALUE;
                     Iterator it = countF.entrySet().iterator();
                     while (it.hasNext()) {
@@ -236,11 +267,29 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                         if (fmin >= key) {
                             fmin = key;
                         }
-//                        System.out.println(pair.getKey() + " = " + pair.getValue());
-//                        it.remove(); // avoids a ConcurrentModificationException
                     }
                     reorder();
-//             System.out.println(fmin);
+                }
+            }
+        }
+        if(!countD.containsKey(fd)){
+            countD.put(fd,0.0);
+        }
+        countD.put(fd,countD.get(fd)-1);
+        if(countD.get(fd)==0){
+            countD.remove(fd);
+            if(!isOptimal) {//fmin might change/increase
+                if (fd == dmin && tree.size() > 0) {//find next lowest
+                    dmin = Integer.MAX_VALUE;
+                    Iterator it = countD.entrySet().iterator();
+                    while (it.hasNext()) {
+                        Map.Entry pair = (Map.Entry) it.next();
+                        double key = (double) pair.getKey();
+                        if (dmin >= key) {
+                            dmin = key;
+                        }
+                    }
+                    reorder();
                 }
             }
         }
@@ -311,6 +360,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         double h;
         double potential;
 
+        double depth;
         double hHat;
         double d;
         double dHat;
@@ -318,6 +368,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         public gh_node(E e) {
             this.g = e.getG();
             this.h = e.getH();
+            this.depth = e.getDepth();
             this.hHat = e.getHhat();
             this.d = e.getD();
             this.dHat = e.getDhat();
@@ -329,11 +380,14 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                     this.hHat * hHatCoefficient +
                     this.d * dCoefficient +
                     this.dHat * dHatCoefficient;
+
+            double lowerBound = fmin * fminCoefficient + dmin * dminCoefficient;
+            double cost = this.g * gCostCoefficient + this.depth * dCostCoefficient;
             if(dividor == 0){
                 this.potential = Double.MAX_VALUE;
             }
             else{
-                this.potential = (w*fmin-this.g)/dividor;
+                this.potential = (w*lowerBound-cost)/dividor;
                 //this.potential = Math.pow(this.potential,1);
             }
         }
