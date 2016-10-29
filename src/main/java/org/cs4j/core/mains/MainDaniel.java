@@ -819,7 +819,7 @@ public class MainDaniel {
 
         String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "D_";
+        else globalPrefix = "";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -834,9 +834,9 @@ public class MainDaniel {
         };
 
         HashMap<String,Double> coefficients = new HashMap<>();
-        coefficients.put("h",0.0);
+        coefficients.put("h",1.0);
         coefficients.put("hHat",0.0);
-        coefficients.put("d",1.0);
+        coefficients.put("d",0.0);
         coefficients.put("dHat",0.0);
 
         SearchAlgorithm[] AlgoArr = {
