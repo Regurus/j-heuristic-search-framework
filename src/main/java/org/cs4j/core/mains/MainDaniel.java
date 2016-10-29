@@ -1,6 +1,5 @@
 package org.cs4j.core.mains;
 
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
 import jxl.write.*;
@@ -10,15 +9,18 @@ import org.cs4j.core.OutputResult;
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
-import org.cs4j.core.algorithms.*;
+import org.cs4j.core.algorithms.DP;
+import org.cs4j.core.algorithms.EES;
 import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.data.Weights;
-import org.cs4j.core.domains.VacuumRobot;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class MainDaniel {
 
@@ -26,6 +28,7 @@ public class MainDaniel {
     private static String filePrefix;
     private static SearchAlgorithm alg;
     private static String relPath = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/";
+
 //    private static String relPath = "C:/Users/gilond/Google Drive/gilond/Master/ResearchData/";
     private static String inputPath;
     private static String outputPath;
@@ -34,7 +37,6 @@ public class MainDaniel {
     private static Weights.SingleWeight w;
     private static String domainName;
     private static Weights weights = new Weights();
-    private static boolean reopen = true;
     private static boolean overwriteSummary;
     private static boolean overwriteFile;
     private static boolean appendToFile;
