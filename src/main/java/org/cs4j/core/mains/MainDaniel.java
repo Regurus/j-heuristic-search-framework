@@ -11,6 +11,7 @@ import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.algorithms.DP;
 import org.cs4j.core.algorithms.EES;
+import org.cs4j.core.algorithms.WAStar;
 import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.data.Weights;
 
@@ -302,7 +303,7 @@ public class MainDaniel {
 
     private static void saveOptimalSolution(SearchResult result, int instance, SearchDomain domain){
 //        InputStream is = new FileInputStream(new File(inputPath + "/" + i + ".in"));
-        String savePath = inputPath+"/optimalSolutions.in";
+        String savePath = inputPath+"/optimalSolutions_alpha-1.in";
         File saveFile = new File(savePath);
         StringBuilder sb = new StringBuilder();
         int lineCounter = 0;
@@ -327,13 +328,14 @@ public class MainDaniel {
 
         if(lineCounter < instance){
             int dOpt = result.getSolutions().get(0).getLength();
-            sb.append(instance + ","+dOpt);
+            double hOpt = result.getSolutions().get(0).getCost();
+            sb.append(instance + "," + dOpt + "," + hOpt);
 //            System.out.println("[INFO] Optimal solution found:\tinstance: "+instance+"\tdepth: "+dOpt);
             sb.append(System.getProperty("line.separator"));
 
             try {
                 List<SearchDomain.Operator> operators = result.getSolutions().get(0).getOperators();
-                PrintWriter writer = new PrintWriter(inputPath + "/optimalOperators" + instance + ".in", "UTF-8");
+                PrintWriter writer = new PrintWriter(inputPath + "/optimalOperators_alpha-1_" + instance + ".in", "UTF-8");
                 SearchDomain.State parentState = domain.initialState();
                 SearchDomain.State childState = null;
                 for (int i = 0 ; i <=operators.size()-1; i++) {
@@ -778,7 +780,7 @@ public class MainDaniel {
     }
 
     private static void afterSetDomain() throws IOException{
-//        EESwalkPath("depth-pancakes");
+//        EESwalkPath("inverse15");
 //        if(true) return;
 
         //search over algo and weight
@@ -814,7 +816,7 @@ public class MainDaniel {
 
         overwriteFile = true;//if false throws error if file exists already
         overwriteSummary = true;
-        appendToFile = true;//true: do not calculate instances again if already exist
+        appendToFile = false;//true: do not calculate instances again if already exist
         useBestFR = false;
         useOracle = false;
         saveSolutionPath = false;
@@ -831,7 +833,7 @@ public class MainDaniel {
 
         String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "HH_D";
+        else globalPrefix = "";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -862,9 +864,9 @@ public class MainDaniel {
 //                new BEES(),
 //                new EES(1),
 
-//                new WAStar(),
+                new WAStar(),
 //                new EES(1),
-                new DP(coefficients),
+//                new DP(coefficients),
         };
         SearchAlgorithmArr = AlgoArr;
 
