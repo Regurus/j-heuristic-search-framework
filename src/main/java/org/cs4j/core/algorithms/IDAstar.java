@@ -24,6 +24,9 @@ import org.cs4j.core.SearchResult;
 import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -93,8 +96,8 @@ public class IDAstar implements SearchAlgorithm {
         do {
             this.minNextF = -1;
             boolean goalWasFound = this.dfs(domain, root, 0, null);
-            System.out.println("min next f: " + minNextF ) ;
-            System.out.println("next");
+/*            System.out.println("min next f: " + minNextF ) ;
+            System.out.println("next");*/
             this.result.addIteration(i, this.bound, this.result.expanded, this.result.generated);
             this.bound = this.minNextF;
             if (goalWasFound) {
@@ -102,7 +105,22 @@ public class IDAstar implements SearchAlgorithm {
             }
         } while (true);
         this.result.stopTimer();
-        this.result.addSolution(this.solution);
+
+        SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
+        List<SearchDomain.Operator> path = this.solution.getOperators();
+        List<SearchDomain.State> statesPath = this.solution.getStates();
+
+        path.remove(0);
+        Collections.reverse(path);
+        solution.addOperators(path);
+
+        statesPath.remove(0);
+        Collections.reverse(statesPath);
+        solution.addStates(statesPath);
+
+        solution.setCost(this.solution.getCost());
+        result.addSolution(solution);
+
         return this.result;
     }
 

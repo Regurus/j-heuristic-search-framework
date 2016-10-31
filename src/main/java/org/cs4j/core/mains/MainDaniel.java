@@ -11,6 +11,7 @@ import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.algorithms.DP;
 import org.cs4j.core.algorithms.EES;
+import org.cs4j.core.algorithms.IDAstar;
 import org.cs4j.core.algorithms.WAStar;
 import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.data.Weights;
@@ -816,7 +817,7 @@ public class MainDaniel {
 
         overwriteFile = true;//if false throws error if file exists already
         overwriteSummary = true;
-        appendToFile = false;//true: do not calculate instances again if already exist
+        appendToFile = true;//true: do not calculate instances again if already exist
         useBestFR = false;
         useOracle = false;
         saveSolutionPath = false;
@@ -839,14 +840,6 @@ public class MainDaniel {
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
 
-        String[] domains = {
-//                "Pancakes",
-                "FifteenPuzzle",
-//            "VacuumRobot",
-//            "DockyardRobot",
-//            "GridPathFinding"
-        };
-
         HashMap<String,Double> coefficients = new HashMap<>();
         coefficients.put("fmin" ,1.0);//H
         coefficients.put("dmin" ,0.0);//D
@@ -860,15 +853,22 @@ public class MainDaniel {
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
-//                new IDAstar(),
+                new IDAstar(),
 //                new BEES(),
-//                new EES(1),
 
-                new WAStar(),
+//                new WAStar(),
 //                new EES(1),
 //                new DP(coefficients),
         };
         SearchAlgorithmArr = AlgoArr;
+
+        String[] domains = {
+//                "Pancakes",
+                "FifteenPuzzle",
+//            "VacuumRobot",
+//            "DockyardRobot",
+//            "GridPathFinding"
+        };
 
         for (String dN : domains) {
             domainName = dN;
@@ -897,7 +897,7 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
-                    pancakesNum = new int[]{10,40,101};
+                    pancakesNum = new int[]{10};
 //                    pancakesNum = new int[]{40};
                     for(int gap=0 ; gap <=1  ; gap++) {
 //                        double GAPK = ((double)gap/2);
