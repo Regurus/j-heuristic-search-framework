@@ -846,19 +846,19 @@ public class MainDaniel {
         coefficients.put("gCost",1.0);//H
         coefficients.put("dCost",0.0);//D
 
-        coefficients.put("h"    ,0.0);//H
+        coefficients.put("h"    ,1.0);//H
         coefficients.put("hHat" ,0.0);//hHat
-        coefficients.put("d"    ,1.0);//D
+        coefficients.put("d"    ,0.0);//D
         coefficients.put("dHat" ,0.0);//dHat
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
-                new IDAstar(),
+//                new IDAstar(),
 //                new BEES(),
 
 //                new WAStar(),
-//                new EES(1),
-//                new DP(coefficients),
+                new EES(1),
+                new DP(coefficients),
         };
         SearchAlgorithmArr = AlgoArr;
 
