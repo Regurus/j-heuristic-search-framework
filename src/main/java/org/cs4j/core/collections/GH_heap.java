@@ -401,6 +401,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
         @Override
         public int compare(final gh_node a, final gh_node b) {
+            if (a.d < b.d){
+                return -1;
+            }
+            if (a.d > b.d){
+                return 1;
+            }
             // First compare by potential (bigger is preferred), then by f (smaller is preferred), then by g (smaller is preferred)
             if (a.potential > b.potential){
                 return -1;

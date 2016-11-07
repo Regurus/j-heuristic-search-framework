@@ -36,6 +36,7 @@ public class MainDaniel {
     private static String relPath;
     private static String inputPath;
     private static String outputPath;
+    private static String globalPrefix;
     private static String summarySheetName;
     private static String summaryName;
     private static Weights.SingleWeight w;
@@ -537,31 +538,23 @@ public class MainDaniel {
             int currentCol = 0;
             int currentRow = 0;
 
-            String[] resultAllColsNames = {"WG","WH","Weight","All Solved"};
-            String[] resultAlgoColsNames = {"Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
-            int allColNum = resultAllColsNames.length;
-            int algoColNum = resultAlgoColsNames.length;
+            String[] headers = {"Weight","Prefix","Alg Name","Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
+            int indent = 3;//skip first XXX columns
 
-            for(int r = 0 ; r < allColNum ; r++){
-                label = new Label(currentCol++, currentRow, resultAllColsNames[r]);
+            for(int r = 0 ; r < headers.length ; r++){
+                label = new Label(currentCol++, currentRow, headers[r]);
                 writableSheet.addCell(label);
-            }
-            for(int r = 0 ; r < algoColNum ; r++){
-                for (int i = 0 ; i < algoNum ; i++) {
-                    label = new Label(currentCol++, currentRow, SearchAlgorithmArr[i].getName()+" "+resultAlgoColsNames[r]);
-                    writableSheet.addCell(label);
-                }
             }
 
             for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
                 w = ws;
                 totalWeight = w.wh / w.wg;
-                currentRow++;
 
-                String resultsAlgoColumn[][] = new String[algoNum][];
                 System.out.println("Summary "+domainName + "\tweight: wg : " + w.wg + " wh: " + w.wh);
                 for (int i = 0; i < algoNum; i++) {
                     alg = SearchAlgorithmArr[i];
+                    currentRow++;
+                    currentCol = 0;
                     String fileName = outputPath + alg.getName() + "_" + (int) w.wg + "_" + (int) w.wh + "_" + fileEnd + ".csv";
                     File file = new File(fileName);
                     if (file.exists()) {
@@ -570,52 +563,30 @@ public class MainDaniel {
                         fis.read(data);
                         fis.close();
                         String str = new String(data, "UTF-8");
-                        resultsAlgoColumn[i] = str.split("\n");
-                    }
-                }
+                        String resultsLine[] = str.split("\n");
 
-                double[] resultArr = new double[currentCol];
-                resultArr[0] = w.wg;//WG
-                resultArr[1] = w.wh;//WH
-                resultArr[2] = totalWeight;// (WH/WG)
-                for (int j = 1; j <= stopInstance; j++) {
-                    boolean allExist = true;
-                    String[] line = new String[algoNum];
-                    double[][] tempRes = new double[algoNum][algoColNum];
-                    for (int i = 0; i < algoNum; i++) {//check if all algo solved successfully
-                        line[i] = resultsAlgoColumn[i][j];
-                        String[] lineSplit = line[i].split(",");
-                        for (int r = 0; r < algoColNum; r++) {
-                            tempRes[i][r] = Double.parseDouble(lineSplit[r + 1]);//from 1 to skip instance number
-                        }
-                        if (tempRes[i][0] != 1.0) {
-                            allExist = false;
-                        }
-                    }
-                    if (allExist) {//save to summary
-                        resultArr[allColNum-1] += 1;//found-solved by all
-                    }
-                    for (int i = 0; i < algoNum; i++) {
-                        resultArr[allColNum + i] += tempRes[i][0];//found-solved, success-rate
-                    }
-                    if (allExist) {//save to summary
-                        for (int r = 1; r < algoColNum; r++) {//skip each algo solved
-                            for (int i = 0; i < algoNum; i++) {
-                                resultArr[allColNum + r * algoNum + i] += tempRes[i][r];//column-value, r+1:skip each algo solved
+                        writableSheet.addCell(new Number(currentCol++, currentRow, totalWeight, cellFormatDecimal));
+                        writableSheet.addCell(new Label (currentCol++, currentRow, globalPrefix    ));
+                        writableSheet.addCell(new Label (currentCol++, currentRow, alg.getName()    ));
+                        double[] solD = new double[ headers.length-indent];
+                        for (int j = 1; j <= stopInstance; j++) {
+                            String[] sol = resultsLine[j].split(",");
+                            for(int k = 0 ; k < headers.length-indent; k++){
+                                solD[k] += Double.parseDouble(sol[k+1]);
                             }
-                        }
-                    }
-                }
-                // calculate Average
-                for (int k = allColNum + algoNum; k < resultArr.length; k++) {
-                    resultArr[k] =resultArr[k]/resultArr[allColNum-1];// value/found
-                }
 
-                for(int k = 0 ; k < resultArr.length; k++){
-                    WritableCellFormat format = cellFormat1000;
-                    if(k== allColNum-2) format = cellFormatDecimal;//weight
-                    WritableCell cell = new Number(k, currentRow, resultArr[k],format);
-                    writableSheet.addCell(cell);
+                        }
+                        // calculate Average
+                        for(int k = 1 ; k < solD.length; k++){//skip Success rate
+                            solD[k] =solD[k]/solD[0];// value/found
+                        }
+                        for(int k = 0 ; k < solD.length; k++){
+                            WritableCellFormat format = cellFormat1000;
+//                                if(k==0) format = cellFormatDecimal;//weight
+                            writableSheet.addCell(new Number(k+indent, currentRow, solD[k],format));
+                        }
+
+                    }
                 }
             }
 
@@ -825,30 +796,29 @@ public class MainDaniel {
         stopInstance = 100;
 //        summaryName = "unit cost";
 //        summaryName = "GAP+W-MD";
-        summaryName = "D";
+        summaryName = "NEW SUMMARY";
 //        summaryName = "Oracle";
 //        summaryName = "Alpha";
 //        summaryName = "heavy pancakes";
 //        summaryName = "heavy Vacuum";
 //        summaryName = "optimal";
 
-        String globalPrefix;
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "";
+        else globalPrefix = "DD_D";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
 
         HashMap<String,Double> coefficients = new HashMap<>();
-        coefficients.put("fmin" ,1.0);//H
-        coefficients.put("dmin" ,0.0);//D
-        coefficients.put("gCost",1.0);//H
-        coefficients.put("dCost",0.0);//D
+        coefficients.put("fmin" ,0.0);//H
+        coefficients.put("dmin" ,1.0);//D
+        coefficients.put("gCost",0.0);//H
+        coefficients.put("dCost",1.0);//D
 
-        coefficients.put("h"    ,1.0);//H
+        coefficients.put("h"    ,0.0);//H
         coefficients.put("hHat" ,0.0);//hHat
-        coefficients.put("d"    ,0.0);//D
+        coefficients.put("d"    ,1.0);//D
         coefficients.put("dHat" ,0.0);//dHat
 
         SearchAlgorithm[] AlgoArr = {
@@ -857,14 +827,14 @@ public class MainDaniel {
 //                new BEES(),
 
 //                new WAStar(),
-                new EES(1),
+//                new EES(1),
                 new DP(coefficients),
         };
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-//                "Pancakes",
-                "FifteenPuzzle",
+                "Pancakes",
+//                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -897,9 +867,9 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
-                    pancakesNum = new int[]{10};
+                    pancakesNum = new int[]{10,20,40,100};
 //                    pancakesNum = new int[]{40};
-                    for(int gap=0 ; gap <=1  ; gap++) {
+                    for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
@@ -909,8 +879,8 @@ public class MainDaniel {
                             domainParams.put("GAP-k", GAPK + "");
                             filePrefix += "GAP-" + GAPK + "_";
 
-/*                            domainParams.put("cost-function", "heavy");
-                            filePrefix += "heavy_";*/
+                            domainParams.put("cost-function", "heavy");
+                            filePrefix += "heavy_";
 
                             System.out.println("Solving Pancakes " + num + " " + filePrefix);
                             inputPath = relPath + "input/pancakes/generated-" + num;
