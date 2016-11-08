@@ -50,6 +50,7 @@ public class MainDaniel {
     private static int stopInstance;
     private static boolean saveSolutionPath;
     private static boolean[] solvableInstances;
+    private static int solvableNum;
     private static SearchAlgorithm[] SearchAlgorithmArr;
     private static HashMap<String,String> domainParams;
 
@@ -129,15 +130,23 @@ public class MainDaniel {
                         if(Double.parseDouble(f) == 1.0){
                             found++;
                         }
-                        else{
+                        else if(solvableInstances[i-startInstance]){
+                            solvableNum--;
                             solvableInstances[i-startInstance] = false;
+                            int sul = 0;
+                            for(int s = 0; s<solvableInstances.length; s++){
+                                if(solvableInstances[s])
+                                    sul++;
+                            }
+                            if(sul!= solvableNum)
+                                System.out.println("[WARNING] solvable num incorrect i:"+i);
                         }
 /*                        retArray[0] += 1;
                         retArray[1] += Double.parseDouble(lineSplit[3]);
                         retArray[2] += Double.parseDouble(lineSplit[4]);*/
                     }
                     else {
-                        System.out.print("\rSolving " + domainName + " instance " + (found+1) +"/"+ i +"\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
+                        System.out.print("\rSolving " + domainName + " instance " + (found+1) +"/"+ i +" ("+solvableNum+")\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
                         SearchResult result = null;
                         if(solvableInstances[i-startInstance])
                             result = alg.search(domain);
@@ -170,6 +179,7 @@ public class MainDaniel {
                         }
                         else{
                             solvableInstances[i-startInstance] = false;
+                            solvableNum--;
                         }
                         if(save) {
                             d[0] = i;
@@ -755,7 +765,8 @@ public class MainDaniel {
     private static void afterSetDomain() throws IOException{
 //        EESwalkPath("inverse15");
 //        if(true) return;
-        solvableInstances = new boolean[100];
+        solvableNum = stopInstance-startInstance+1;
+        solvableInstances = new boolean[solvableNum];
         Arrays.fill(solvableInstances,true);
         //search over algo and weight
         for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
