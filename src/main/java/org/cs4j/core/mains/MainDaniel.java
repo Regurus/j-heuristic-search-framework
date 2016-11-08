@@ -17,15 +17,13 @@ import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.data.Weights;
 
 import java.io.*;
+import java.lang.Boolean;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class MainDaniel {
 
@@ -51,6 +49,7 @@ public class MainDaniel {
     private static int startInstance;
     private static int stopInstance;
     private static boolean saveSolutionPath;
+    private static boolean[] solvableInstances;
     private static SearchAlgorithm[] SearchAlgorithmArr;
     private static HashMap<String,String> domainParams;
 
@@ -98,7 +97,6 @@ public class MainDaniel {
             }
             //set algo total weight
             alg.setAdditionalParameter("weight", totalWeight + "");
-            double h0 = 0;
             int found = 0;
             //search on this domain and algo and weight the 100 instances
             for (int i = startInstance; i <= stopInstance; ++i) {
@@ -128,11 +126,11 @@ public class MainDaniel {
                         output.writeln(lines[i]);
                         String[] lineSplit = lines[i].split(",");
                         String f = lineSplit[1];
-                        double fd = Double.parseDouble(f);
-                        int intf = (int)fd;
-                        if(intf == 1){
+                        if(Double.parseDouble(f) == 1.0){
                             found++;
-                            h0+=domain.initialState().getH();
+                        }
+                        else{
+                            solvableInstances[i-startInstance] = false;
                         }
 /*                        retArray[0] += 1;
                         retArray[1] += Double.parseDouble(lineSplit[3]);
@@ -140,13 +138,15 @@ public class MainDaniel {
                     }
                     else {
                         System.out.print("\rSolving " + domainName + " instance " + (found+1) +"/"+ i +"\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
-                        SearchResult result = alg.search(domain);
-                        if (result.hasSolution()) {
-                            if(totalWeight == 1) saveOptimalSolution(result,i,domain);
+                        SearchResult result = null;
+                        if(solvableInstances[i-startInstance])
+                            result = alg.search(domain);
+                        if (result != null && result.hasSolution()) {
+                            if(totalWeight == 1)
+                                saveOptimalSolution(result,i,domain);
 //                            saveSolutionPathAsInstances(result,i);
-                            d[1] = 1;
                             found++;
-                            h0+=domain.initialState().getH();
+                            d[1] = 1;
                             d[2] = result.getSolutions().get(0).getLength();
                             d[3] = result.getSolutions().get(0).getCost();
                             d[4] = result.getGenerated();
@@ -167,6 +167,9 @@ public class MainDaniel {
 /*                            retArray[0] += 1;
                             retArray[1] += result.getGenerated();
                             retArray[2] += result.getSolutions().get(0).getLength();*/
+                        }
+                        else{
+                            solvableInstances[i-startInstance] = false;
                         }
                         if(save) {
                             d[0] = i;
@@ -191,8 +194,6 @@ public class MainDaniel {
                     e.printStackTrace();
                 }
             }
-            double avgh0 = h0/found;
-//            System.out.println("averageH="+avgh0+"\n");
         }  catch (IOException e) {
             System.out.println("[INFO] IOException At outputPath:"+outputPath);
             e.printStackTrace();
@@ -754,7 +755,8 @@ public class MainDaniel {
     private static void afterSetDomain() throws IOException{
 //        EESwalkPath("inverse15");
 //        if(true) return;
-
+        solvableInstances = new boolean[100];
+        Arrays.fill(solvableInstances,true);
         //search over algo and weight
         for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
             w = ws;
