@@ -653,16 +653,17 @@ public class DP  implements SearchAlgorithm {
 
         @Override
         public int compare(final Node a, final Node b) {
-            // First compare by f (smaller is preferred), then by g (bigger is preferred)
+            // First compare by f (smaller is preferred), then by h (smaller is preferred)
 
             if (a.f < b.f) return -1;
             if (a.f > b.f) return 1;
 
-            if (a.g > b.g) return -1;
-            if (a.g < b.g) return 1;
+            if (a.h < b.h) return -1;
+            if (a.h > b.h) return 1;
 
-            if (a.hHat > b.hHat) return -1;
-            if (a.hHat < b.hHat) return 1;
+            if (a.d < b.d) return -1;
+            if (a.d > b.d) return 1;
+
             return 0;
         }
     }
