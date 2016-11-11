@@ -817,7 +817,7 @@ public class MainDaniel {
 //        summaryName = "optimal";
 
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "DD_D";
+        else globalPrefix = "TEST";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -846,8 +846,8 @@ public class MainDaniel {
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-                "Pancakes",
-//                "FifteenPuzzle",
+//                "Pancakes",
+                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -858,7 +858,7 @@ public class MainDaniel {
             domainParams = new HashMap<>();
             switch (domainName) {
                 case "FifteenPuzzle": {
-                    for(int i = -1 ; i <= -1 ; i++) {
+                    for(int i = -1 ; i <= 1 ; i+=2) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
