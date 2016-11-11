@@ -133,13 +133,6 @@ public class MainDaniel {
                         else if(solvableInstances[i-startInstance]){
                             solvableNum--;
                             solvableInstances[i-startInstance] = false;
-                            int sul = 0;
-                            for(int s = 0; s<solvableInstances.length; s++){
-                                if(solvableInstances[s])
-                                    sul++;
-                            }
-                            if(sul!= solvableNum)
-                                System.out.println("[WARNING] solvable num incorrect i:"+i);
                         }
 /*                        retArray[0] += 1;
                         retArray[1] += Double.parseDouble(lineSplit[3]);
@@ -177,9 +170,17 @@ public class MainDaniel {
                             retArray[1] += result.getGenerated();
                             retArray[2] += result.getSolutions().get(0).getLength();*/
                         }
-                        else{
+                        else if(solvableInstances[i-startInstance]){
                             solvableInstances[i-startInstance] = false;
                             solvableNum--;
+                            
+                            int sul = 0;
+                            for(int s = 0; s<solvableInstances.length; s++){
+                                if(solvableInstances[s])
+                                    sul++;
+                            }
+                            if(sul!= solvableNum)
+                                System.out.println("[WARNING] solvable num incorrect i:"+i);
                         }
                         if(save) {
                             d[0] = i;
@@ -791,6 +792,18 @@ public class MainDaniel {
 //        saveSolutionPathAsInstances();
 //        domainName = "GridPathFinding";
 
+/*        String ANSI_RESET = "\u001B[0m";
+        String ANSI_BLACK = "\u001B[30m";
+        String ANSI_RED = "\u001B[31m";
+        String ANSI_GREEN = "\u001B[32m";
+        String ANSI_YELLOW = "\u001B[33m";
+        String ANSI_BLUE = "\u001B[34m";
+        String ANSI_PURPLE = "\u001B[35m";
+        String ANSI_CYAN = "\u001B[36m";
+        String ANSI_WHITE = "\u001B[37m";
+        System.out.println(ANSI_RED + "This text is red!" + ANSI_RESET);*/
+
+
         for(int i=0; i<relPathes.length; i++) {
             Path path = Paths.get(relPathes[i]);
             if (Files.exists(path)) {
@@ -880,26 +893,32 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
-                    pancakesNum = new int[]{10,20,40,100};
-//                    pancakesNum = new int[]{40};
+//                    pancakesNum = new int[]{10,20,40,100};
+                    pancakesNum = new int[]{10};
                     for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            filePrefix = globalPrefix+num+"_";
+                            for(int i = -1 ; i <= -1 ; i+=1) {
+                                double alpha = (double) i;
+                                filePrefix = globalPrefix + num + "_";
 
-                            domainParams.put("GAP-k", GAPK + "");
-                            filePrefix += "GAP-" + GAPK + "_";
+                                domainParams.put("GAP-k", GAPK + "");
+                                filePrefix += "GAP-" + GAPK + "_";
 
-                            domainParams.put("cost-function", "heavy");
-                            filePrefix += "heavy_";
+/*                                domainParams.put("cost-function", "heavy");
+                                filePrefix += "heavy_";*/
 
-                            System.out.println("Solving Pancakes " + num + " " + filePrefix);
-                            inputPath = relPath + "input/pancakes/generated-" + num;
-                            outputPath = relPath + "results/pancakes/" + num + "/" + filePrefix;
-                            summarySheetName = filePrefix + "pancakes";
-                            afterSetDomain();
+                                domainParams.put("cost-function", alpha + "");
+                                filePrefix += "alpha_" + alpha;  //for cost-function
+
+                                System.out.println("Solving Pancakes " + num + " " + filePrefix);
+                                inputPath = relPath + "input/pancakes/generated-" + num;
+                                outputPath = relPath + "results/pancakes/" + num + "/" + filePrefix;
+                                summarySheetName = filePrefix + "pancakes";
+                                afterSetDomain();
+                            }
                         }
                     }
                     break;

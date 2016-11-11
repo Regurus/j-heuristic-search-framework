@@ -2,6 +2,7 @@ package org.cs4j.core.domains;
 
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.collections.PackedElement;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
 import java.util.Arrays;
@@ -15,27 +16,22 @@ import java.util.TreeMap;
  */
 public class Pancakes implements SearchDomain {
 
-    private COST_FUNCTION costFunction;
     // The parameter k for GAP-k heuristic (means that k pancakes are ignored during heuristic calculation
     // [starting from 0])
     private double k;
+    private double alpha;// thw power of the real cost to use;
 
     private static final Map<String, Class> PancakesPossibleParameters;
 
     // Declare the parameters that can be tunes before running the search
     static
     {
-        PancakesPossibleParameters = new HashMap<String, Class>();
+        PancakesPossibleParameters = new HashMap<>();
         PancakesPossibleParameters.put("GAP-k", Integer.class);
     }
     // the actual parameters that have been set
     private TreeMap<String,String> parameters = new TreeMap<>();
 
-    // The possible cost functions
-    public enum COST_FUNCTION {
-        UNIT,
-        HEAVY
-    }
 
     protected int numCakes = 0;
 
@@ -90,11 +86,9 @@ public class Pancakes implements SearchDomain {
      * The constructor reads an instance of Pancakes problem from the specified input stream
      *
      * @param stream The input stream to read the problem from
-     * @param costFunction The computeCost function to use
      */
-    public Pancakes(InputStream stream, COST_FUNCTION costFunction) {
-        this.costFunction = costFunction;
-
+    public Pancakes(InputStream stream) {
+        this.k = 0;
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
             // Read the number of cakes
@@ -116,48 +110,17 @@ public class Pancakes implements SearchDomain {
     }
 
     /**
-     * The constructor reads an instance of Pancakes problem from the specified input stream.
-     * In this case, the UNIT cost function is used.
-     *
-     * @param stream the input stream to read
-     */
-    public Pancakes(InputStream stream) {
-        this(stream, COST_FUNCTION.UNIT);
-        // Default value for k
-        this.k = 0;
-    }
-
-    /**
      * This constructor receives the initial pancakes position
      *
      * @param init The initial position of the pancakes
-     * @param costFunction The computeCost function to use
      */
-    public Pancakes(int[] init, COST_FUNCTION costFunction) {
-        this.costFunction = costFunction;
+    public Pancakes(int[] init) {
         this.numCakes = init.length;
         this.init = new int[init.length];
         // Copy the given init array
         System.arraycopy(init, 0, this.init, 0, this.init.length);
         // System.out.println(Arrays.toString(this.init));
         this._initializeDataStructures();
-    }
-
-    /**
-     * This constructor receives the initial pancakes position
-     * In this case, the UNIT cost function is used.
-     *
-     * @param init The initial position of the pancakes
-     */
-    public Pancakes(int[] init) {
-        this(init, COST_FUNCTION.UNIT);
-    }
-
-    /**
-     * constructor with no initial state, it will be set later by setInstance(stream)
-     */
-    public Pancakes() {
-        this.costFunction = COST_FUNCTION.UNIT;
     }
 
     /**
@@ -190,26 +153,21 @@ public class Pancakes implements SearchDomain {
      * remove it
      *
      * @param cakes The pancakes array
-     * @param costFunction The cost function to apply
+     * @param pow The power of the cost function to apply (0=UNIT)
      * @param useK Whether to refer to the value of k during the calculation of gaps count
      *
      * @return The calculated gaps number, which allows to form the heuristic function
      */
-    private int _countGaps(int cakes[], COST_FUNCTION costFunction, boolean useK) {
-        int gapsCount = 0;
+    private double _countGaps(int cakes[], double pow, boolean useK) {
+        double gapsCount = 0;
         for (int i = Pancakes.MIN_PANCAKE_FOR_PDB; i <= this.maxPancakeForPDB; ++i) {
             if (this._hasGap(cakes, i, useK)) {
-                switch (costFunction) {
-                    case UNIT:
-                        ++gapsCount;
-                        break;
-                    case HEAVY:
-                        int a = cakes[i];
-                        int b = (i != this.numCakes - 1) ? cakes[i + 1] : Integer.MAX_VALUE;
-                        // Each gap costs the 1+the minimal cake
-                        gapsCount += (1 + Math.min(a, b));
-                        break;
-                }
+                int a = cakes[i];
+                int b = (i != this.numCakes - 1) ? cakes[i + 1] : Integer.MAX_VALUE;
+                // Each gap costs the 1+the minimal cake
+                double cost = (1 + Math.min(a, b));
+                double Wcost = Math.pow(cost,pow);
+                gapsCount += Wcost;
             }
         }
         return gapsCount;
@@ -219,25 +177,25 @@ public class Pancakes implements SearchDomain {
      * Same as the above _countGaps function, but the value of k is used
      *
      * @param cakes The pancakes array
-     * @param costFunction The cost function to apply
+     * @param pow The power of the cost function to apply (0=UNIT)
      *
      * @return The calculated gaps number, which allows to form the heuristic function
      */
-    private int _countGaps(int cakes[], COST_FUNCTION costFunction) {
-        return this._countGaps(cakes, costFunction, true);
+    private double _countGaps(int cakes[], double pow) {
+        return this._countGaps(cakes, pow, true);
     }
 
     @Override
     public PancakeState initialState() {
         PancakeState s = new PancakeState(this.numCakes);
         System.arraycopy(this.init, 0, s.cakes, 0, numCakes);
-        s.h = this._countGaps(s.cakes, this.costFunction);
-        s.d = this._countGaps(s.cakes, COST_FUNCTION.UNIT);
+        s.h = this._countGaps(s.cakes, alpha);
+        s.d = this._countGaps(s.cakes, 0);
         if (this.k == 0) {
             s.dNoGaps = s.d;
         } else {
             // Calc d without k
-            s.dNoGaps = this._countGaps(s.cakes, COST_FUNCTION.UNIT, false);
+            s.dNoGaps = this._countGaps(s.cakes, 0, false);
         }
         return s;
     }
@@ -283,13 +241,13 @@ public class Pancakes implements SearchDomain {
         int pancakeOperator = ((PancakeOperator)op).value;
         // Flip the top of the stack
         pancakeState.flipTopStackPortion(pancakeOperator);
-        pancakeState.h = this._countGaps(pancakeState.cakes, this.costFunction);
-        pancakeState.d = this._countGaps(pancakeState.cakes, COST_FUNCTION.UNIT);
+        pancakeState.h = this._countGaps(pancakeState.cakes, alpha);
+        pancakeState.d = this._countGaps(pancakeState.cakes, 0);
         if (this.k == 0) {
             pancakeState.dNoGaps = pancakeState.d;
         } else {
             // Calc d without k
-            pancakeState.dNoGaps = this._countGaps(pancakeState.cakes, COST_FUNCTION.UNIT, false);
+            pancakeState.dNoGaps = this._countGaps(pancakeState.cakes, 0, false);
         }
         return pancakeState;
     }
@@ -308,25 +266,18 @@ public class Pancakes implements SearchDomain {
      *@param op The operator whose cost should be calculated  @return The calculated cost of the operator
      */
     private double computeCost(State state, State parent, int op) {
-        double value = 1.0;
-        switch (this.costFunction) {
-            case HEAVY:
-                PancakeState ps = (PancakeState)state;
-                int separated = ps.cakes[0];
-                int bottom;
-                if(op < this.numCakes-1) {
-                    bottom = ps.cakes[op + 1];
-                }
-                else {
-                    bottom = ps.cakes[op];
-                }
-                value = 1 + Math.max(separated,bottom);
-//                value = 1 + op;
-                break;
-            case UNIT:
-            default:
-                break;
+        PancakeState ps = (PancakeState)state;
+        int separated = ps.cakes[0];
+        int bottom;
+        if(op < this.numCakes-1) {
+            bottom = ps.cakes[op + 1];
         }
+        else {
+            bottom = ps.cakes[op];
+        }
+
+        double cost = 1 + Math.max(separated,bottom);
+        double value = Math.pow(cost,alpha);
         return value;
     }
 
@@ -387,9 +338,9 @@ public class Pancakes implements SearchDomain {
                 state.cakes[index--] = p;
             }
         }
-        state.h = this._countGaps(state.cakes, this.costFunction);
-        state.d = this._countGaps(state.cakes, COST_FUNCTION.UNIT);
-        state.dNoGaps = this._countGaps(state.cakes, COST_FUNCTION.UNIT, false);
+        state.h = this._countGaps(state.cakes, alpha);
+        state.d = this._countGaps(state.cakes, 0);
+        state.dNoGaps = this._countGaps(state.cakes, 0, false);
         return state;
     }
 
@@ -553,12 +504,17 @@ public class Pancakes implements SearchDomain {
         @Override
         public double getCost(State state, State parent) {
             double cost = computeCost(state,parent,value);
-/*            if(Math.abs(state.getH()-parent.getH()) > cost){
+            if(Math.abs(state.getH()-parent.getH()) > cost){
                 System.out.println("[WARNING] Pancake Current Heuristic should be consistent but is not!");
+                System.out.println(state.dumpState());
+                System.out.println(parent.dumpState());
                 unpack(pack(state));
                 unpack(pack(parent));
                 computeCost(state,parent,value);
-            }*/
+                state.getH();
+                parent.getH();
+                throw new NotImplementedException();
+            }
             return cost;
         }
 
@@ -584,13 +540,9 @@ public class Pancakes implements SearchDomain {
         parameters.put(parameterName,value);
         switch (parameterName) {
             case "cost-function": {
-                switch (value) {
-                    case "heavy":
-                        this.costFunction = COST_FUNCTION.HEAVY;
-                    break;
-                    default: {
-                        throw new IllegalArgumentException("Invalid cost-function value: " + parameterName);
-                    }
+                this.alpha = Double.parseDouble(value);
+                if(alpha < 0){
+                    System.out.println("[WARNING] the cases for alpha < 0 are not consistent (look at [7,1,0]->[1,7,0]");
                 }
                 break;
             }
