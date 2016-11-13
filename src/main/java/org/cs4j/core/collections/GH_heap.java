@@ -218,8 +218,11 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         gh_node node = new gh_node(e);
         ArrayList<E> list = tree.get(node);
 
-        if(list == null)
+        if(list == null) {
+            System.out.println("\ne:"+e);
+            System.out.println("tree size:"+tree.size());
             System.out.println("list == null, can not remove");
+        }
         if(list.isEmpty())
             System.out.println("list is empty, can not remove");
         list.remove(e);

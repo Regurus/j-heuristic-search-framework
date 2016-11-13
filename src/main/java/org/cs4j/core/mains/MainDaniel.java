@@ -831,7 +831,7 @@ public class MainDaniel {
 //        summaryName = "optimal";
 
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "DD_D";
+        else globalPrefix = "";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -842,11 +842,21 @@ public class MainDaniel {
         coefficients.put("dmin" ,1.0);//D
         coefficients.put("gCost",0.0);//H
         coefficients.put("dCost",1.0);//D
-
         coefficients.put("h"    ,0.0);//H
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,1.0);//D
         coefficients.put("dHat" ,0.0);//dHat
+        globalPrefix = "DD_D";
+
+/*        coefficients.put("fmin" ,1.0);//H
+        coefficients.put("dmin" ,0.0);//D
+        coefficients.put("gCost",1.0);//H
+        coefficients.put("dCost",0.0);//D
+        coefficients.put("h"    ,1.0);//H
+        coefficients.put("hHat" ,0.0);//hHat
+        coefficients.put("d"    ,0.0);//D
+        coefficients.put("dHat" ,0.0);//dHat
+        globalPrefix = "";*/
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
