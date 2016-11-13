@@ -173,7 +173,7 @@ public class MainDaniel {
                         else if(solvableInstances[i-startInstance]){
                             solvableInstances[i-startInstance] = false;
                             solvableNum--;
-                            
+
                             int sul = 0;
                             for(int s = 0; s<solvableInstances.length; s++){
                                 if(solvableInstances[s])
@@ -550,8 +550,8 @@ public class MainDaniel {
             int currentCol = 0;
             int currentRow = 0;
 
-            String[] headers = {"Weight","Prefix","Alg Name","Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
-            int indent = 3;//skip first XXX columns
+            String[] headers = {"Weight","Alpha","Prefix","Alg Name","Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
+            int indent = 4;//skip first XXX columns
 
             for(int r = 0 ; r < headers.length ; r++){
                 label = new Label(currentCol++, currentRow, headers[r]);
@@ -578,6 +578,7 @@ public class MainDaniel {
                         String resultsLine[] = str.split("\n");
 
                         writableSheet.addCell(new Number(currentCol++, currentRow, totalWeight, cellFormatDecimal));
+                        writableSheet.addCell(new Number(currentCol++, currentRow, Double.parseDouble(domainParams.get("cost-function")), cellFormatDecimal));
                         writableSheet.addCell(new Label (currentCol++, currentRow, globalPrefix    ));
                         writableSheet.addCell(new Label (currentCol++, currentRow, alg.getName()    ));
                         double[] solD = new double[ headers.length-indent];
@@ -830,7 +831,7 @@ public class MainDaniel {
 //        summaryName = "optimal";
 
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "TEST";
+        else globalPrefix = "DD_D";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -859,8 +860,8 @@ public class MainDaniel {
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-//                "Pancakes",
-                "FifteenPuzzle",
+                "Pancakes",
+//                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -893,25 +894,20 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
-//                    pancakesNum = new int[]{10,20,40,100};
-                    pancakesNum = new int[]{10};
+                    pancakesNum = new int[]{10,20,40,100};
+//                    pancakesNum = new int[]{10};
                     for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = -1 ; i <= -1 ; i+=1) {
+                            for(int i = 1 ; i >= -1 ; i-=1) {
                                 double alpha = (double) i;
-                                filePrefix = globalPrefix + num + "_";
+                                domainParams.put("cost-function", alpha+"");
+                                filePrefix = globalPrefix + num + "_alpha" + alpha + "_";  //for cost-function
 
                                 domainParams.put("GAP-k", GAPK + "");
                                 filePrefix += "GAP-" + GAPK + "_";
-
-/*                                domainParams.put("cost-function", "heavy");
-                                filePrefix += "heavy_";*/
-
-                                domainParams.put("cost-function", alpha + "");
-                                filePrefix += "alpha_" + alpha;  //for cost-function
 
                                 System.out.println("Solving Pancakes " + num + " " + filePrefix);
                                 inputPath = relPath + "input/pancakes/generated-" + num;

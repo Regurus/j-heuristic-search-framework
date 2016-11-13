@@ -162,12 +162,12 @@ public class Pancakes implements SearchDomain {
         double gapsCount = 0;
         for (int i = Pancakes.MIN_PANCAKE_FOR_PDB; i <= this.maxPancakeForPDB; ++i) {
             if (this._hasGap(cakes, i, useK)) {
-                int a = cakes[i];
-                int b = (i != this.numCakes - 1) ? cakes[i + 1] : Integer.MAX_VALUE;
-                // Each gap costs the 1+the minimal cake
-                double cost = (1 + Math.min(a, b));
-                double Wcost = Math.pow(cost,pow);
-                gapsCount += Wcost;
+                double a = cakes[i];
+                double b = (i != this.numCakes - 1) ? cakes[i + 1] : Integer.MAX_VALUE;
+                // Each gap costs the the minimal cake+1
+                a = Math.pow(a+1.0,pow);
+                b = Math.pow(b+1.0,pow);
+                gapsCount += Math.min(a, b);
             }
         }
         return gapsCount;
@@ -267,8 +267,8 @@ public class Pancakes implements SearchDomain {
      */
     private double computeCost(State state, State parent, int op) {
         PancakeState ps = (PancakeState)state;
-        int separated = ps.cakes[0];
-        int bottom;
+        double separated = ps.cakes[0];
+        double bottom;
         if(op < this.numCakes-1) {
             bottom = ps.cakes[op + 1];
         }
@@ -276,8 +276,9 @@ public class Pancakes implements SearchDomain {
             bottom = ps.cakes[op];
         }
 
-        double cost = 1 + Math.max(separated,bottom);
-        double value = Math.pow(cost,alpha);
+        separated =  Math.pow(separated+1.0,alpha);
+        bottom =  Math.pow(bottom+1.0,alpha);
+        double value = Math.max(separated,bottom);
         return value;
     }
 
@@ -504,15 +505,14 @@ public class Pancakes implements SearchDomain {
         @Override
         public double getCost(State state, State parent) {
             double cost = computeCost(state,parent,value);
-            if(Math.abs(state.getH()-parent.getH()) > cost){
+            if(Math.abs(state.getH()-parent.getH()) > cost + 0.00000001){
                 System.out.println("[WARNING] Pancake Current Heuristic should be consistent but is not!");
                 System.out.println(state.dumpState());
                 System.out.println(parent.dumpState());
+                System.out.println(state.getH()-parent.getH());
                 unpack(pack(state));
                 unpack(pack(parent));
                 computeCost(state,parent,value);
-                state.getH();
-                parent.getH();
                 throw new NotImplementedException();
             }
             return cost;
@@ -541,9 +541,6 @@ public class Pancakes implements SearchDomain {
         switch (parameterName) {
             case "cost-function": {
                 this.alpha = Double.parseDouble(value);
-                if(alpha < 0){
-                    System.out.println("[WARNING] the cases for alpha < 0 are not consistent (look at [7,1,0]->[1,7,0]");
-                }
                 break;
             }
             case "GAP-k": {
