@@ -838,7 +838,7 @@ public class MainDaniel {
         else fileEnd = "NoFr";
 
         HashMap<String,Double> coefficients = new HashMap<>();
-        coefficients.put("fmin" ,0.0);//H
+/*        coefficients.put("fmin" ,0.0);//H
         coefficients.put("dmin" ,1.0);//D
         coefficients.put("gCost",0.0);//H
         coefficients.put("dCost",1.0);//D
@@ -846,9 +846,9 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,1.0);//D
         coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "DD_D";
+        globalPrefix = "DD_D";*/
 
-/*        coefficients.put("fmin" ,1.0);//H
+        coefficients.put("fmin" ,1.0);//H
         coefficients.put("dmin" ,0.0);//D
         coefficients.put("gCost",1.0);//H
         coefficients.put("dCost",0.0);//D
@@ -856,7 +856,7 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,0.0);//D
         coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "";*/
+        globalPrefix = "";
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
@@ -911,7 +911,7 @@ public class MainDaniel {
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 1 ; i >= -1 ; i-=1) {
+                            for(int i = -1 ; i <= 1 ; i+=2) {
                                 double alpha = (double) i;
                                 domainParams.put("cost-function", alpha+"");
                                 filePrefix = globalPrefix + num + "_alpha" + alpha + "_";  //for cost-function

@@ -8,6 +8,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -159,7 +160,16 @@ public class DP  implements SearchAlgorithm {
                     }*/
                     SearchDomain.State childState = domain.applyOperator(currentState, op);
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
-/*                    if(result.getGenerated() % 1000 == 0){
+/*                    if(childNode.getH() == 4.0 && childNode.getG() == 54 && childNode.getD() == 2){
+                        System.out.println("++++++++++++++++++++++");
+                        System.out.println(childState.dumpState());
+                        System.out.println(result.generated);
+                        System.out.println("++++++++++++++++++++++");
+                    }
+                    if(result.generated > 485){
+                        System.out.print("\r");
+                    }*/
+/*                    if(result.getGenerated() % 1 == 0){
                         DecimalFormat formatter = new DecimalFormat("#,###");
                         System.out.print("\r[INFO] DP Generated:" + formatter.format(result.getGenerated()));
                     }*/

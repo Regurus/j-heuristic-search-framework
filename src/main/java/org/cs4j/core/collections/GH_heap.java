@@ -33,6 +33,8 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     private double dminCoefficient;
     private double gCostCoefficient;
     private double dCostCoefficient;
+
+    private double lowerBound;
 //    private boolean withFComparator;
 
     public GH_heap(double w, int key, double fmin, Comparator<E> NodePackedComparator,SearchResultImpl result, HashMap<String,Double> coefficients) {
@@ -181,6 +183,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
 
     private void reorder(){
+        lowerBound = fmin * fminCoefficient + dmin * dminCoefficient;
         int buckets = tree.size();//for paper debug
         int nodes = 0;//for paper debug
         TreeMap<gh_node,ArrayList<E>> tempTree = new TreeMap<>(comparator);
@@ -215,6 +218,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     @Override
     public E remove(E e) {
 //        testHat();
+/*        if(e.getH() == 4.0 && e.getG() == 54 && e.getD() == 2){
+            System.out.println("++++++++++++++++++++++");
+            System.out.println(e);
+            System.out.println(result.generated);
+            System.out.println("++++++++++++++++++++++");
+        }*/
         gh_node node = new gh_node(e);
         ArrayList<E> list = tree.get(node);
 
@@ -368,6 +377,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         double d;
         double dHat;
 
+        double cost;
+        double dividor;
+
         public gh_node(E e) {
             this.g = e.getG();
             this.h = e.getH();
@@ -379,13 +391,13 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         }
 
         public void calcPotential(){
-            double dividor = this.h * hCoefficient +
+            dividor = this.h * hCoefficient +
                     this.hHat * hHatCoefficient +
                     this.d * dCoefficient +
                     this.dHat * dHatCoefficient;
 
-            double lowerBound = fmin * fminCoefficient + dmin * dminCoefficient;
-            double cost = this.g * gCostCoefficient + this.depth * dCostCoefficient;
+            lowerBound = fmin * fminCoefficient + dmin * dminCoefficient;
+            cost = this.g * gCostCoefficient + this.depth * dCostCoefficient;
             if(dividor == 0){
                 this.potential = Double.MAX_VALUE;
             }
@@ -408,11 +420,11 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             if (a.potential > b.potential) return -1;
             if (a.potential < b.potential) return 1;
 
-            if (a.d < b.d) return -1;
-            if (a.d > b.d) return 1;
+            if (a.cost < b.cost) return -1;
+            if (a.cost > b.cost) return 1;
 
-            if (a.g < b.g) return -1;
-            if (a.g > b.g) return 1;
+            if (a.dividor < b.dividor) return -1;
+            if (a.dividor > b.dividor) return 1;
 
             return 0;
         }
