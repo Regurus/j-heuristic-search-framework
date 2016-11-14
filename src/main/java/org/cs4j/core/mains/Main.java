@@ -8,11 +8,7 @@ import org.cs4j.core.algorithms.*;
 import org.cs4j.core.data.Weights;
 import org.cs4j.core.domains.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Arrays;
 
@@ -552,7 +548,7 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-        SearchAlgorithm alg = new EES(1);
+/*        SearchAlgorithm alg = new EES(1);
 //        int[] pancakesNum = new int[] {10,12,16,20,40};
         int[] pancakesNum = new int[] {40};
         for(int j=0 ; j<pancakesNum.length;j++){
@@ -564,7 +560,41 @@ public class Main {
 //        SearchAlgorithm alg = new EES(1);
                 Main.mainDP(args, pancakesNum[j], alg);
             }
+        }*/
+        String dir = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/input/fifteenpuzzle/fif1000";
+        String fileToRead = "fif1000.d";
+        File outputDirectory = new File(dir);
+
+        String nl = System.lineSeparator();
+
+        FileInputStream fileInputStream = new FileInputStream(new File(dir+"/"+fileToRead));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+        for(int k=0; k<1000; k++) {
+            String line = bufferedReader.readLine();
+            String[] lineArr = line.split(" ");
+            int[] tiles = new int[16];
+            int j = 0;
+
+            FileWriter fw = new FileWriter(new File(outputDirectory, (k+1)+".in"));
+            fw.write("15"+nl+nl);
+
+            for (int i = 0; i < lineArr.length; i++) {
+                if (lineArr[i].length() > 0) {
+                    if(j>0){
+                        int tile = Integer.parseInt(lineArr[i]);
+                        tiles[j-1] = tile;
+                        fw.write(tile+nl);
+                    }
+                    j++;
+                }
+            }
+            fw.write(nl);
+            for (int i = 0; i < 16; i++) {
+                fw.write(i+nl);
+            }
+            fw.close();
         }
+
         //Main.mainTopSpin12Domain(args);
         //Main.mainRawGraphDomain(args);
         //Main.mainFifteenPuzzleDomain(args);

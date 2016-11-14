@@ -317,7 +317,9 @@ public class MainDaniel {
 
     private static void saveOptimalSolution(SearchResult result, int instance, SearchDomain domain){
 //        InputStream is = new FileInputStream(new File(inputPath + "/" + i + ".in"));
-        String savePath = inputPath+"/optimalSolutions_alpha-1.in";
+        String alpha = domainParams.get("cost-function");
+        String optimalSolutionParam = "FIF"+alpha;
+        String savePath = inputPath+"/optimalSolutions_"+optimalSolutionParam+".in";
         File saveFile = new File(savePath);
         StringBuilder sb = new StringBuilder();
         int lineCounter = 0;
@@ -349,7 +351,7 @@ public class MainDaniel {
 
             try {
                 List<SearchDomain.Operator> operators = result.getSolutions().get(0).getOperators();
-                PrintWriter writer = new PrintWriter(inputPath + "/optimalOperators_alpha-1_" + instance + ".in", "UTF-8");
+                PrintWriter writer = new PrintWriter(inputPath + "/optimalOperators_"+optimalSolutionParam+"_" + instance + ".in", "UTF-8");
                 SearchDomain.State parentState = domain.initialState();
                 SearchDomain.State childState = null;
                 for (int i = 0 ; i <=operators.size()-1; i++) {
@@ -820,10 +822,11 @@ public class MainDaniel {
         useOracle = false;
         saveSolutionPath = false;
         startInstance = 1;
-        stopInstance = 100;
+        stopInstance = 1000;
 //        summaryName = "unit cost";
 //        summaryName = "GAP+W-MD";
-        summaryName = "NEW SUMMARY";
+//        summaryName = "15DP";
+        summaryName = "Pancakes";
 //        summaryName = "Oracle";
 //        summaryName = "Alpha";
 //        summaryName = "heavy pancakes";
@@ -831,7 +834,7 @@ public class MainDaniel {
 //        summaryName = "optimal";
 
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "";
+        else globalPrefix = "FIF1000";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -848,7 +851,7 @@ public class MainDaniel {
         coefficients.put("dHat" ,0.0);//dHat
         globalPrefix = "DD_D";*/
 
-        coefficients.put("fmin" ,1.0);//H
+/*        coefficients.put("fmin" ,1.0);//H
         coefficients.put("dmin" ,0.0);//D
         coefficients.put("gCost",1.0);//H
         coefficients.put("dCost",0.0);//D
@@ -856,22 +859,22 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,0.0);//D
         coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "";
+        globalPrefix = "";*/
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
 //                new IDAstar(),
 //                new BEES(),
 
-//                new WAStar(),
+                new WAStar(),
 //                new EES(1),
-                new DP(coefficients),
+//                new DP(coefficients),
         };
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-                "Pancakes",
-//                "FifteenPuzzle",
+//                "Pancakes",
+                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -888,7 +891,8 @@ public class MainDaniel {
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
 //                    filePrefix = "";  //for unit costs
                         System.out.println("Solving FifteenPuzzle " + filePrefix);
-                        inputPath = relPath + "input/FifteenPuzzle/states15";
+//                        inputPath = relPath + "input/FifteenPuzzle/states15";
+                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
 //                    inputPath = relPath + "input/FifteenPuzzle/states15InstanceByStep/43";
                         outputPath = relPath + "results/FifteenPuzzle/" + filePrefix;
 //                        outputPath = relPath + "results/tests/"+filePrefix;
