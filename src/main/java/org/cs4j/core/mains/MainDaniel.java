@@ -618,7 +618,10 @@ public class MainDaniel {
 
     private static void WalkPath(String savename){
         System.out.println("WalkPath " + filePrefix);
-        String optimalFileEnd = "_alpha1";
+        String alpha = domainParams.get("cost-function");
+        String optimalSolutionParam = "FIF"+alpha;
+        savename += alpha;
+//        String optimalFileEnd = "_alpha1";
         OutputResult output=null;
         try {
             output = new OutputResult(relPath + "results/"+savename + fileEnd, null, -1, -1, null, false, true);
@@ -626,7 +629,7 @@ public class MainDaniel {
             output.writeln(headers);
             System.out.println(headers);
 
-            String optimalSolutionsName = inputPath + "/optimalSolutions"+optimalFileEnd+".in";
+            String optimalSolutionsName = inputPath + "/optimalSolutions_"+optimalSolutionParam+".in";
             File optimalSolutionsFile = new File(optimalSolutionsName);
             if(!optimalSolutionsFile.exists()) {
                 System.out.println("[WARNING] optimalSolutions.in not not found!");
@@ -653,14 +656,14 @@ public class MainDaniel {
                     instance = Integer.parseInt(optimalSolutionsLineArr[0]);
                     System.out.println("Walk path instance "+instance);
 
-                    String instancePath = inputPath + "/optimalOperators"+optimalFileEnd+"_"+instance+".in";
+                    String instancePath = inputPath + "/optimalOperators_"+optimalSolutionParam+"_"+instance+".in";
                     File optFile = new File(instancePath);
                     if(!optFile.exists()) {
                         System.out.println("[INFO] optimal operator not not found for instance "+instance);
                         continue;
                     }
                     FileInputStream optimalOperatorsStream = new FileInputStream(new File(instancePath));
-                    BufferedReader optimalOperatorsReader = new BufferedReader(new InputStreamReader(optimalOperatorsStream));
+                    BufferedReader optimalOperatorsReader;
 
                     double solD = Double.parseDouble(optimalSolutionsLineArr[1]);
                     double solH = Double.parseDouble(optimalSolutionsLineArr[2]);
@@ -680,12 +683,14 @@ public class MainDaniel {
                     EES ees = new EES(domain);
 
                     SearchDomain.State parentState = domain.initialState();
-                    SearchDomain.State childState = null;
+                    SearchDomain.State childState;
                     EES.Node parentNode = ees.createNode(parentState, null, null, null, null);;
 
                     optimalOperatorsStream.getChannel().position(0);
                     optimalOperatorsReader = new BufferedReader(new InputStreamReader(optimalOperatorsStream));
                     String optimalOperatorsLine;
+                    boolean onlyInitialState = true;
+                    boolean printed = false;
                     while (solD > 1) {
 //                    System.out.println(parentState.dumpStateShort());
                     optimalOperatorsLine = optimalOperatorsReader.readLine();
@@ -715,8 +720,11 @@ public class MainDaniel {
                         sb.append(",");*/
 
                         String toPrint = String.valueOf(sb);
-                        output.writeln(toPrint);
-//                        System.out.println(toPrint);
+                        if((onlyInitialState && !printed) || !onlyInitialState) {
+                            output.writeln(toPrint);
+                            System.out.println(toPrint);
+                            printed = true;
+                        }
 
 //                        System.out.println(parentState.dumpStateShort()+" ("+opPos+") "+childState.dumpStateShort());
 
@@ -753,7 +761,7 @@ public class MainDaniel {
     }
 
     private static void afterSetDomain() throws IOException{
-        WalkPath("FIF1000-1");
+        WalkPath("FIF1000_");
         if(true) return;
 
         solvableNum = stopInstance-startInstance+1;
@@ -809,7 +817,7 @@ public class MainDaniel {
         useOracle = false;
         saveSolutionPath = false;
         startInstance = 1;
-        stopInstance = 100;
+        stopInstance = 1000;
 //        summaryName = "unit cost";
 //        summaryName = "GAP+W-MD";
 //        summaryName = "15DP";
@@ -860,8 +868,8 @@ public class MainDaniel {
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-                "Pancakes",
-//                "FifteenPuzzle",
+//                "Pancakes",
+                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -878,8 +886,8 @@ public class MainDaniel {
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
 //                    filePrefix = "";  //for unit costs
                         System.out.println("Solving FifteenPuzzle " + filePrefix);
-                        inputPath = relPath + "input/FifteenPuzzle/states15";
-//                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
+//                        inputPath = relPath + "input/FifteenPuzzle/states15";
+                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
 //                    inputPath = relPath + "input/FifteenPuzzle/states15InstanceByStep/43";
                         outputPath = relPath + "results/FifteenPuzzle/" + filePrefix;
 //                        outputPath = relPath + "results/tests/"+filePrefix;
