@@ -58,7 +58,7 @@ public class MainDaniel {
 //        boolean reopen = true;
         double retArray[] = {0,0,0};//solved,generated,expanded
         String[] resultColumnNames = {"InstanceID", "Found", "Depth", "Cost" , "Generated", "Expanded", "Cpu Time", "Wall Time"};
-        if(alg.getName() == "DP"){
+        if(alg.getName().equals("DP")){
             resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","times reordered","max Buckets reordered","max nodes on reorder"};
         }
         OutputResult output = null;
@@ -79,7 +79,6 @@ public class MainDaniel {
             if(appendToFile && save && file.exists()){
                 FileInputStream fis = new FileInputStream(file);
                 byte[] data = new byte[(int) file.length()];
-                fis.read(data);
                 fis.close();
                 str = new String(data, "UTF-8");
                 lines = str.split("\n");
@@ -156,7 +155,7 @@ public class MainDaniel {
                             d[6] = result.getCpuTimeMillis();
                             d[7] = result.getWallTimeMillis();
 //                            d[8] = domain.initialState().getH();
-                            if(alg.getName() == "DP"){
+                            if(alg.getName().equals("DP")){
                                 TreeMap extras = result.getExtras();
                                 d[8] = extras.size();
                                 if(d[8] != 0){
@@ -175,8 +174,8 @@ public class MainDaniel {
                             solvableNum--;
 
                             int sul = 0;
-                            for(int s = 0; s<solvableInstances.length; s++){
-                                if(solvableInstances[s])
+                            for (boolean solvableInstance : solvableInstances) {
+                                if (solvableInstance)
                                     sul++;
                             }
                             if(sul!= solvableNum)
@@ -491,8 +490,8 @@ public class MainDaniel {
 
             try {
                 PrintWriter writer = new PrintWriter(path+"/operators.in", "UTF-8");
-                for(int i=0;i<operators.size();i++){
-                    String toSave = operators.get(i).toString();
+                for (SearchDomain.Operator operator : operators) {
+                    String toSave = operator.toString();
                     writer.println(toSave);
                     System.out.println(toSave);
                 }
@@ -555,8 +554,8 @@ public class MainDaniel {
             String[] headers = {"Weight","Alpha","Prefix","Alg Name","Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
             int indent = 4;//skip first XXX columns
 
-            for(int r = 0 ; r < headers.length ; r++){
-                label = new Label(currentCol++, currentRow, headers[r]);
+            for (String header : headers) {
+                label = new Label(currentCol++, currentRow, header);
                 writableSheet.addCell(label);
             }
 
@@ -565,10 +564,9 @@ public class MainDaniel {
                 totalWeight = w.wh / w.wg;
 
                 System.out.println("Summary "+domainName + "\tweight: wg : " + w.wg + " wh: " + w.wh);
-                for (int i = 0; i < algoNum; i++) {
-                    alg = SearchAlgorithmArr[i];
+                for (SearchAlgorithm aSearchAlgorithmArr : SearchAlgorithmArr) {
+                    alg = aSearchAlgorithmArr;
                     currentRow++;
-                    currentCol = 0;
                     String fileName = outputPath + alg.getName() + "_" + (int) w.wg + "_" + (int) w.wh + "_" + fileEnd + ".csv";
                     File file = new File(fileName);
                     if (file.exists()) {
@@ -579,26 +577,26 @@ public class MainDaniel {
                         String str = new String(data, "UTF-8");
                         String resultsLine[] = str.split("\n");
 
-                        writableSheet.addCell(new Number(currentCol++, currentRow, totalWeight, cellFormatDecimal));
-                        writableSheet.addCell(new Number(currentCol++, currentRow, Double.parseDouble(domainParams.get("cost-function")), cellFormatDecimal));
-                        writableSheet.addCell(new Label (currentCol++, currentRow, globalPrefix    ));
-                        writableSheet.addCell(new Label (currentCol++, currentRow, alg.getName()    ));
-                        double[] solD = new double[ headers.length-indent];
+                        writableSheet.addCell(new Number(1, currentRow, totalWeight, cellFormatDecimal));
+                        writableSheet.addCell(new Number(2, currentRow, Double.parseDouble(domainParams.get("cost-function")), cellFormatDecimal));
+                        writableSheet.addCell(new Label(3, currentRow, globalPrefix));
+                        writableSheet.addCell(new Label(4, currentRow, alg.getName()));
+                        double[] solD = new double[headers.length - indent];
                         for (int j = 1; j <= stopInstance; j++) {
                             String[] sol = resultsLine[j].split(",");
-                            for(int k = 0 ; k < headers.length-indent; k++){
-                                solD[k] += Double.parseDouble(sol[k+1]);
+                            for (int k = 0; k < headers.length - indent; k++) {
+                                solD[k] += Double.parseDouble(sol[k + 1]);
                             }
 
                         }
                         // calculate Average
-                        for(int k = 1 ; k < solD.length; k++){//skip Success rate
-                            solD[k] =solD[k]/solD[0];// value/found
+                        for (int k = 1; k < solD.length; k++) {//skip Success rate
+                            solD[k] = solD[k] / solD[0];// value/found
                         }
-                        for(int k = 0 ; k < solD.length; k++){
-                            WritableCellFormat format = cellFormat1000;
+                        for (int k = 0; k < solD.length; k++) {
+//                            WritableCellFormat format = cellFormat1000;
 //                                if(k==0) format = cellFormatDecimal;//weight
-                            writableSheet.addCell(new Number(k+indent, currentRow, solD[k],format));
+                            writableSheet.addCell(new Number(k + indent, currentRow, solD[k], cellFormat1000));
                         }
 
                     }
@@ -822,7 +820,7 @@ public class MainDaniel {
         useOracle = false;
         saveSolutionPath = false;
         startInstance = 1;
-        stopInstance = 1000;
+        stopInstance = 100;
 //        summaryName = "unit cost";
 //        summaryName = "GAP+W-MD";
 //        summaryName = "15DP";
@@ -834,14 +832,14 @@ public class MainDaniel {
 //        summaryName = "optimal";
 
         if(useOracle) globalPrefix = "ORACLE_";
-        else globalPrefix = "FIF1000";
+        else globalPrefix = "";
 //        else globalPrefix = "";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
 
         HashMap<String,Double> coefficients = new HashMap<>();
-/*        coefficients.put("fmin" ,0.0);//H
+        coefficients.put("fmin" ,0.0);//H
         coefficients.put("dmin" ,1.0);//D
         coefficients.put("gCost",0.0);//H
         coefficients.put("dCost",1.0);//D
@@ -849,7 +847,7 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,1.0);//D
         coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "DD_D";*/
+        globalPrefix = "DD_D";
 
 /*        coefficients.put("fmin" ,1.0);//H
         coefficients.put("dmin" ,0.0);//D
@@ -866,15 +864,15 @@ public class MainDaniel {
 //                new IDAstar(),
 //                new BEES(),
 
-                new WAStar(),
+//                new WAStar(),
 //                new EES(1),
-//                new DP(coefficients),
+                new DP(coefficients),
         };
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-//                "Pancakes",
-                "FifteenPuzzle",
+                "Pancakes",
+//                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -891,8 +889,8 @@ public class MainDaniel {
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
 //                    filePrefix = "";  //for unit costs
                         System.out.println("Solving FifteenPuzzle " + filePrefix);
-//                        inputPath = relPath + "input/FifteenPuzzle/states15";
-                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
+                        inputPath = relPath + "input/FifteenPuzzle/states15";
+//                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
 //                    inputPath = relPath + "input/FifteenPuzzle/states15InstanceByStep/43";
                         outputPath = relPath + "results/FifteenPuzzle/" + filePrefix;
 //                        outputPath = relPath + "results/tests/"+filePrefix;
