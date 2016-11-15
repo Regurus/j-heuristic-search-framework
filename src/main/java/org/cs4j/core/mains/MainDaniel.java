@@ -616,32 +616,44 @@ public class MainDaniel {
         }
     }
 
-    private static void EESwalkPath(String savename){
-        System.out.println("EESwalkPath " + filePrefix);
+    private static void WalkPath(String savename){
+        System.out.println("WalkPath " + filePrefix);
+        String optimalFileEnd = "_alpha1";
         OutputResult output=null;
         try {
             output = new OutputResult(relPath + "results/"+savename + fileEnd, null, -1, -1, null, false, true);
-            String headers = "Instance,d,dHat,h,hHat,d*,h*,Weight,EES Generated,DPS Generated,EES Cost,DPS Cost";
+            String headers = "Instance,d,dHat,h,hHat,d*,h*";
             output.writeln(headers);
             System.out.println(headers);
+
+            String optimalSolutionsName = inputPath + "/optimalSolutions"+optimalFileEnd+".in";
+            File optimalSolutionsFile = new File(optimalSolutionsName);
+            if(!optimalSolutionsFile.exists()) {
+                System.out.println("[WARNING] optimalSolutions.in not not found!");
+            }
+
+            FileInputStream optimalSolutionsStream = new FileInputStream(new File(optimalSolutionsName));
+            BufferedReader optimalSolutionsReader = new BufferedReader(new InputStreamReader(optimalSolutionsStream));
 
 /*            String alpha = outputPath.split("alpha")[1];
             alpha = alpha.split("_")[0];*/
 
             for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
                 w = ws;
-                String dpPath = outputPath+"DP_" + (int) w.wg + "_" + (int) w.wh + "_"+fileEnd+".csv";
-                String eesPath = outputPath+"ees_" + (int) w.wg + "_" + (int) w.wh + "_"+fileEnd+".csv";
-                InputStream dpStream = new FileInputStream(new File(dpPath));
-                InputStream eesStream = new FileInputStream(new File(eesPath));
-                BufferedReader dpReader = new BufferedReader(new InputStreamReader(dpStream));
-                BufferedReader eesReader = new BufferedReader(new InputStreamReader(eesStream));
-                String dpLine = dpReader.readLine();
-                String eesLine = eesReader.readLine();
+/*                String path = outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd+".csv";
+                InputStream Stream = new FileInputStream(new File(path));
+                BufferedReader Reader = new BufferedReader(new InputStreamReader(Stream));
+                String Line = Reader.readLine();*/
 
                 for (int instance = startInstance; instance <= stopInstance; instance++) {
-//                    System.out.println("Walk path instance "+instance);
-                    String instancePath = inputPath + "/optimalOperators"+instance+".in";
+                    String optimalSolutionsLine = optimalSolutionsReader.readLine();
+                    if(optimalSolutionsLine == null)
+                        continue;
+                    String[]optimalSolutionsLineArr = optimalSolutionsLine.split(",");
+                    instance = Integer.parseInt(optimalSolutionsLineArr[0]);
+                    System.out.println("Walk path instance "+instance);
+
+                    String instancePath = inputPath + "/optimalOperators"+optimalFileEnd+"_"+instance+".in";
                     File optFile = new File(instancePath);
                     if(!optFile.exists()) {
                         System.out.println("[INFO] optimal operator not not found for instance "+instance);
@@ -650,13 +662,8 @@ public class MainDaniel {
                     FileInputStream optimalOperatorsStream = new FileInputStream(new File(instancePath));
                     BufferedReader optimalOperatorsReader = new BufferedReader(new InputStreamReader(optimalOperatorsStream));
 
-                    dpLine = dpReader.readLine();
-                    eesLine = eesReader.readLine();
-                    String dpCost = dpLine.split(",")[3];
-                    String eesCost = eesLine.split(",")[3];
-                    String dpGenerated = dpLine.split(",")[4];
-                    String eesGenerated = eesLine.split(",")[4];
-                    double hOPt = Double.parseDouble(dpCost);
+                    double solD = Double.parseDouble(optimalSolutionsLineArr[1]);
+                    double solH = Double.parseDouble(optimalSolutionsLineArr[2]);
 
                     InputStream is = new FileInputStream(new File(inputPath + "/" + instance + ".in"));
 
@@ -676,22 +683,17 @@ public class MainDaniel {
                     SearchDomain.State childState = null;
                     EES.Node parentNode = ees.createNode(parentState, null, null, null, null);;
 
-                    int dOpt = -1;
-                    String optimalOperatorsLine = optimalOperatorsReader.readLine();
-                    while (optimalOperatorsLine != null) {
-                        dOpt++;
-                        optimalOperatorsLine = optimalOperatorsReader.readLine();
-                    }
-
                     optimalOperatorsStream.getChannel().position(0);
                     optimalOperatorsReader = new BufferedReader(new InputStreamReader(optimalOperatorsStream));
-                    optimalOperatorsLine = optimalOperatorsReader.readLine();
-                    while (dOpt > 0) {
+                    String optimalOperatorsLine;
+                    while (solD > 1) {
 //                    System.out.println(parentState.dumpStateShort());
+                    optimalOperatorsLine = optimalOperatorsReader.readLine();
                         int opPos = Integer.parseInt(optimalOperatorsLine);
                         SearchDomain.Operator op = domain.getOperator(parentState, opPos);
                         childState = domain.applyOperator(parentState, op);
-                        hOPt -= op.getCost(childState,parentState);
+                        solH -= op.getCost(childState,parentState);
+                        solD--;
                         EES.Node childNode = ees.createNode(childState, parentNode, parentState, op, op.reverse(parentState));
 
                         StringBuilder sb = new StringBuilder();
@@ -705,25 +707,12 @@ public class MainDaniel {
                         sb.append(",");
                         sb.append(childNode.hHat);
                         sb.append(",");
-                        sb.append(dOpt);
+                        sb.append(solD);
                         sb.append(",");
-                        sb.append(hOPt);
+                        sb.append(solH);
                         sb.append(",");
-/*                        sb.append(w.wg);
-                        sb.append(",");
-                        sb.append(w.wh);
+/*                        sb.append(w.wh/w.wg);
                         sb.append(",");*/
-                        sb.append(w.wh/w.wg);
-                        sb.append(",");
-/*                        sb.append(alpha);
-                        sb.append(",");*/
-                        sb.append(eesGenerated);
-                        sb.append(",");
-                        sb.append(dpGenerated);
-                        sb.append(",");
-                        sb.append(eesCost);
-                        sb.append(",");
-                        sb.append(dpCost);
 
                         String toPrint = String.valueOf(sb);
                         output.writeln(toPrint);
@@ -733,10 +722,9 @@ public class MainDaniel {
 
                         parentState = childState;
                         parentNode = childNode;
-                        optimalOperatorsLine = optimalOperatorsReader.readLine();
-                        dOpt--;
                     }
 
+                        optimalOperatorsLine = optimalOperatorsReader.readLine();
                     int opPos = Integer.parseInt(optimalOperatorsLine);
                     SearchDomain.Operator op = domain.getOperator(parentState, opPos);
                     childState = domain.applyOperator(parentState, op);
@@ -765,8 +753,9 @@ public class MainDaniel {
     }
 
     private static void afterSetDomain() throws IOException{
-//        EESwalkPath("inverse15");
-//        if(true) return;
+        WalkPath("FIF1000-1");
+        if(true) return;
+
         solvableNum = stopInstance-startInstance+1;
         solvableInstances = new boolean[solvableNum];
         Arrays.fill(solvableInstances,true);
