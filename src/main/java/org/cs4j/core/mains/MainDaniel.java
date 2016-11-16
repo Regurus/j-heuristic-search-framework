@@ -59,7 +59,8 @@ public class MainDaniel {
         double retArray[] = {0,0,0};//solved,generated,expanded
         String[] resultColumnNames = {"InstanceID", "Found", "Depth", "Cost" , "Generated", "Expanded", "Cpu Time", "Wall Time"};
         if(alg.getName().equals("DP")){
-            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","times reordered","max Buckets reordered","max nodes on reorder"};
+//            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","times reordered","max Buckets reordered","max nodes on reorder"};
+            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","Nodes until First goal was reached"};
         }
         OutputResult output = null;
         Constructor<?> cons = null;
@@ -79,6 +80,7 @@ public class MainDaniel {
             if(appendToFile && save && file.exists()){
                 FileInputStream fis = new FileInputStream(file);
                 byte[] data = new byte[(int) file.length()];
+                fis.read(data);
                 fis.close();
                 str = new String(data, "UTF-8");
                 lines = str.split("\n");
@@ -157,11 +159,15 @@ public class MainDaniel {
 //                            d[8] = domain.initialState().getH();
                             if(alg.getName().equals("DP")){
                                 TreeMap extras = result.getExtras();
-                                d[8] = extras.size();
+/*                                d[8] = extras.size();
                                 if(d[8] != 0){
                                     int maxBuckets = Integer.parseInt(extras.lastKey().toString());
                                     d[9] = (double) maxBuckets;
                                     d[10] = Double.parseDouble(extras.get(maxBuckets+"").toString());
+                                }*/
+                                Object generatedFirst = extras.get("generatedFirst");
+                                if(generatedFirst != null){
+                                    d[8] = Double.parseDouble(generatedFirst.toString());
                                 }
                             }
 
@@ -761,8 +767,8 @@ public class MainDaniel {
     }
 
     private static void afterSetDomain() throws IOException{
-        WalkPath("FIF1000_");
-        if(true) return;
+/*        WalkPath("FIF1000_");
+        if(true) return;*/
 
         solvableNum = stopInstance-startInstance+1;
         solvableInstances = new boolean[solvableNum];
@@ -817,16 +823,9 @@ public class MainDaniel {
         useOracle = false;
         saveSolutionPath = false;
         startInstance = 1;
-        stopInstance = 1000;
-//        summaryName = "unit cost";
-//        summaryName = "GAP+W-MD";
-//        summaryName = "15DP";
-        summaryName = "Pancakes";
-//        summaryName = "Oracle";
-//        summaryName = "Alpha";
-//        summaryName = "heavy pancakes";
-//        summaryName = "heavy Vacuum";
-//        summaryName = "optimal";
+        stopInstance = 100;
+
+        summaryName = "NO-SUMMARY-SET";
 
         if(useOracle) globalPrefix = "ORACLE_";
         else globalPrefix = "";
@@ -880,14 +879,15 @@ public class MainDaniel {
             domainParams = new HashMap<>();
             switch (domainName) {
                 case "FifteenPuzzle": {
+                    summaryName = "15DP";
                     for(int i = -1 ; i <= 1 ; i+=2) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
 //                    filePrefix = "";  //for unit costs
                         System.out.println("Solving FifteenPuzzle " + filePrefix);
-//                        inputPath = relPath + "input/FifteenPuzzle/states15";
-                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
+                        inputPath = relPath + "input/FifteenPuzzle/states15";
+//                        inputPath = relPath + "input/FifteenPuzzle/fif1000";
 //                    inputPath = relPath + "input/FifteenPuzzle/states15InstanceByStep/43";
                         outputPath = relPath + "results/FifteenPuzzle/" + filePrefix;
 //                        outputPath = relPath + "results/tests/"+filePrefix;
@@ -898,6 +898,7 @@ public class MainDaniel {
                 }
                 case "Pancakes": {
                     int[] pancakesNum;
+                    summaryName = "Pancakes";
 //                    pancakesNum = new int[]{10, 12, 16, 20, 40};
 //                    pancakesNum = new int[]{10, 12, 16};
 //                    pancakesNum = new int[]{16,20,40};

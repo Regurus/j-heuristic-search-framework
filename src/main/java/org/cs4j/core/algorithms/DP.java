@@ -106,6 +106,7 @@ public class DP  implements SearchAlgorithm {
         this._initDataStructures(domain);
 
         result.startTimer();
+        result.setExtras("numOfGoalsFound",0+"");
 
         // Let's instantiate the initial state
         SearchDomain.State currentState = domain.initialState();
@@ -140,6 +141,12 @@ public class DP  implements SearchAlgorithm {
                         break;
                     }
                     else{
+                        TreeMap<String,String> extras = result.getExtras();
+                        if(extras.get("generatedFirst") == null){
+                            result.setExtras("generatedFirst",result.generated+"");
+                        }
+                        Double numOfGoalsFound = Double.parseDouble(extras.get("numOfGoalsFound"));
+                        result.setExtras("numOfGoalsFound",numOfGoalsFound+1+"");
 //                        System.out.print("\n[INFO] A goal was found but not under the bound:"+fmin*weight+" f:"+currentNode.f+", W:"+weight+", fmin:"+fmin);
                     }
                 }
