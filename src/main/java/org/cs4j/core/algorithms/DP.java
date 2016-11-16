@@ -102,6 +102,7 @@ public class DP  implements SearchAlgorithm {
     @Override
     public SearchResult search(SearchDomain domain) {
         Node goal = null;
+        Node bestGoalNode = null;
         // Initialize all the data structures required for the search
         this._initDataStructures(domain);
 
@@ -122,6 +123,7 @@ public class DP  implements SearchAlgorithm {
                 // Take the first state (still don't remove it)
                 Node currentNode = _selectNode();
 
+
 /*                if (currentNode.potential < DP.this.weight - 0.00001) {
 //                    System.out.println("\rPotential too low   \tFmin:" + this.open.getFmin() + "\tF:" +currentNode.f + "\tG:" + currentNode.g + "\tH:" + currentNode.h+ "\tPotential:" + currentNode.potential);
                     currentNode.reCalcValue();
@@ -141,6 +143,9 @@ public class DP  implements SearchAlgorithm {
                         break;
                     }
                     else{
+                        if(bestGoalNode == null || bestGoalNode.g > currentNode.g){
+                            bestGoalNode = currentNode;
+                        }
                         TreeMap<String,String> extras = result.getExtras();
                         if(extras.get("generatedFirst") == null){
                             result.setExtras("generatedFirst",result.generated+"");
@@ -189,6 +194,11 @@ public class DP  implements SearchAlgorithm {
                     }
                 }
                 _removeNode(currentNode);
+
+                if(bestGoalNode != null && bestGoalNode.f < open.getFmin()*weight){
+                    goal = currentNode;
+                    break;
+                }
             }
         } catch (OutOfMemoryError e) {
             System.out.println("[INFO] DP OutOfMemory :-( "+e);
