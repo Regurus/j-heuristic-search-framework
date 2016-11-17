@@ -53,14 +53,19 @@ public class MainDaniel {
     private static int solvableNum;
     private static SearchAlgorithm[] SearchAlgorithmArr;
     private static HashMap<String,String> domainParams;
+    private static String[] DPextraHeaders;
 
     private static double[] searchSave100FR(boolean save){
 //        boolean reopen = true;
         double retArray[] = {0,0,0};//solved,generated,expanded
         String[] resultColumnNames = {"InstanceID", "Found", "Depth", "Cost" , "Generated", "Expanded", "Cpu Time", "Wall Time"};
         if(alg.getName().equals("DP")){
-//            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","times reordered","max Buckets reordered","max nodes on reorder"};
-            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","Nodes until First goal was reached","number of times goal was found"};
+            int aLen = resultColumnNames.length;
+            int bLen = DPextraHeaders.length;
+            String [] temp = new String[aLen+bLen];
+            System.arraycopy(resultColumnNames, 0, temp, 0, aLen);
+            System.arraycopy(DPextraHeaders, 0, temp, aLen, bLen);
+            resultColumnNames = temp;
         }
         OutputResult output = null;
         Constructor<?> cons = null;
@@ -559,8 +564,14 @@ public class MainDaniel {
             int currentRow = 0;
 
             String[] headers = {"Weight","Alpha","Prefix","Alg Name","Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
-            if(alg.getName().equals("DP"))
-                headers = new String[]{"Weight", "Alpha", "Prefix", "Alg Name", "Success Rate", "Depth", "Cost", "Generated", "Expanded", "Cpu Time", "Wall Time"};
+            if(alg.getName().equals("DP")){
+                int aLen = headers.length;
+                int bLen = DPextraHeaders.length;
+                String [] temp = new String[aLen+bLen];
+                System.arraycopy(headers, 0, temp, 0, aLen);
+                System.arraycopy(DPextraHeaders, 0, temp, aLen, bLen);
+                headers = temp;
+            }
             int indent = 4;//skip first XXX columns
 
             for (String header : headers) {
@@ -837,6 +848,7 @@ public class MainDaniel {
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
 
+        DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};
         HashMap<String,Double> coefficients = new HashMap<>();
         coefficients.put("fmin" ,0.0);//H
         coefficients.put("dmin" ,1.0);//D
@@ -883,7 +895,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP";
-                    for(int i = -1 ; i <= 1 ; i+=2) {
+                    for(int i = -1 ; i <= -1 ; i+=2) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
