@@ -60,7 +60,7 @@ public class MainDaniel {
         String[] resultColumnNames = {"InstanceID", "Found", "Depth", "Cost" , "Generated", "Expanded", "Cpu Time", "Wall Time"};
         if(alg.getName().equals("DP")){
 //            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","times reordered","max Buckets reordered","max nodes on reorder"};
-            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","Nodes until First goal was reached"};
+            resultColumnNames = new String[]{"InstanceID", "Found", "Depth", "Cost" ,"Generated", "Expanded", "Cpu Time", "Wall Time","Nodes until First goal was reached","number of times goal was found"};
         }
         OutputResult output = null;
         Constructor<?> cons = null;
@@ -169,6 +169,7 @@ public class MainDaniel {
                                 if(generatedFirst != null){
                                     d[8] = Double.parseDouble(generatedFirst.toString());
                                 }
+                                d[9] = Double.parseDouble(extras.get("numOfGoalsFound").toString());
                             }
 
 /*                            retArray[0] += 1;
@@ -558,6 +559,8 @@ public class MainDaniel {
             int currentRow = 0;
 
             String[] headers = {"Weight","Alpha","Prefix","Alg Name","Success Rate","Depth","Cost","Generated","Expanded","Cpu Time","Wall Time"};
+            if(alg.getName().equals("DP"))
+                headers = new String[]{"Weight", "Alpha", "Prefix", "Alg Name", "Success Rate", "Depth", "Cost", "Generated", "Expanded", "Cpu Time", "Wall Time"};
             int indent = 4;//skip first XXX columns
 
             for (String header : headers) {
@@ -583,10 +586,10 @@ public class MainDaniel {
                         String str = new String(data, "UTF-8");
                         String resultsLine[] = str.split("\n");
 
-                        writableSheet.addCell(new Number(1, currentRow, totalWeight, cellFormatDecimal));
-                        writableSheet.addCell(new Number(2, currentRow, Double.parseDouble(domainParams.get("cost-function")), cellFormatDecimal));
-                        writableSheet.addCell(new Label(3, currentRow, globalPrefix));
-                        writableSheet.addCell(new Label(4, currentRow, alg.getName()));
+                        writableSheet.addCell(new Number(0, currentRow, totalWeight, cellFormatDecimal));
+                        writableSheet.addCell(new Number(1, currentRow, Double.parseDouble(domainParams.get("cost-function")), cellFormatDecimal));
+                        writableSheet.addCell(new Label(2, currentRow, globalPrefix));
+                        writableSheet.addCell(new Label(3, currentRow, alg.getName()));
                         double[] solD = new double[headers.length - indent];
                         for (int j = 1; j <= stopInstance; j++) {
                             String[] sol = resultsLine[j].split(",");

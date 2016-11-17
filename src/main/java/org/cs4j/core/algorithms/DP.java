@@ -17,7 +17,6 @@ import java.util.*;
 public class DP  implements SearchAlgorithm {
 
     private static final int open_ID = 1;
-    private static final int openF_ID = 0;
 
     private static final Map<String, Class> DPPossibleParameters;
 

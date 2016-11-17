@@ -235,11 +235,11 @@ public class Weights {
 //        new SingleWeight(5, 6),
         new SingleWeight(6, 7),
 //        new SingleWeight(7, 8),
-//        new SingleWeight(8, 9),
+        new SingleWeight(8, 9),
 //        new SingleWeight(9, 10),
-//        new SingleWeight(10, 11),
+        new SingleWeight(10, 11),
 //        new SingleWeight(20, 21),
-//        new SingleWeight(40, 41),
+        new SingleWeight(40, 41),
 //        new SingleWeight(1, 1),
     };
 }
