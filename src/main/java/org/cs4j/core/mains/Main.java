@@ -546,21 +546,7 @@ public class Main {
         summary.close();
     }
 
-
-    public static void main(String[] args) throws IOException {
-/*        SearchAlgorithm alg = new EES(1);
-//        int[] pancakesNum = new int[] {10,12,16,20,40};
-        int[] pancakesNum = new int[] {40};
-        for(int j=0 ; j<pancakesNum.length;j++){
-            for(int i = 3200 ; i >24  ; i = i / 2) {
-                System.out.println("emptyFocalRatio:"+i+", pancakesNum:"+pancakesNum[j]);
-                alg.setAdditionalParameter("emptyFocalRatio", i + "");
-//            alg.setAdditionalParameter("emptyFocalRatio", "200");
-//        SearchAlgorithm alg = new WAStar();
-//        SearchAlgorithm alg = new EES(1);
-                Main.mainDP(args, pancakesNum[j], alg);
-            }
-        }*/
+    public static void convertFifteenInstances(String[] args) throws IOException {
         String dir = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/input/fifteenpuzzle/fif1000";
         String fileToRead = "fif1000.d";
         File outputDirectory = new File(dir);
@@ -594,7 +580,134 @@ public class Main {
             }
             fw.close();
         }
+    }
 
+    public static void randomWalkFifteenInstances() throws IOException {
+
+        SearchAlgorithm alg = new WAStar();
+        int depth = 20;
+        int iterations = 1000;
+        FifteenPuzzle domain = new FifteenPuzzle();
+        domain.setAdditionalParameter("cost-function", 0.2+"");
+
+        SearchDomain.State goalState = domain.initialState();
+        OutputResult  output = new OutputResult("C:/Users/Daniel/Documents/gilond/Master/ResearchData/results/randomWalk", null, -1, -1, null, false, true);
+        String headers = "Instance,d,h,d*,h*";
+        output.writeln(headers);
+
+        SearchDomain.Operator randOperator;
+        SearchDomain.Operator reversedOperator = null;
+        int randOperatorNum;
+
+        for(int i=0; i<iterations; i++){
+            SearchDomain.State randomState = goalState;
+            for(int j=0; j<depth; j++){
+                int numOperators = domain.getNumOperators(randomState);
+                randOperatorNum = (int) (Math.random() * numOperators);
+                randOperator = domain.getOperator(randomState,randOperatorNum);
+                while( randOperator == reversedOperator ) {
+                    randOperatorNum = (int) (Math.random() * numOperators);
+                    randOperator = domain.getOperator(randomState,randOperatorNum);
+                }
+                reversedOperator = randOperator.reverse(randomState);
+                randomState = domain.applyOperator(randomState,randOperator);
+//                System.out.println(randomState.dumpState());
+            }
+            domain.setInitialState(randomState);
+//            System.out.println(domain.initialState().dumpState());
+
+            SearchResult result = alg.search(domain);
+            if (result.hasSolution()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(i);
+                sb.append(",");
+                sb.append(randomState.getD());
+                sb.append(",");
+                sb.append(randomState.getH());
+                sb.append(",");
+                sb.append(result.getSolutions().get(0).getLength());
+                sb.append(",");
+                sb.append(result.getSolutions().get(0).getCost());
+
+                String toPrint = String.valueOf(sb);
+                System.out.println(toPrint);
+                output.writeln(toPrint);
+//                System.out.println(Arrays.toString(d));
+//                System.out.println(result.getSolutions().get(0).dumpSolution());
+            } else {
+                System.out.println("No solution :-(");
+            }
+        }
+        output.close();
+
+
+/*        SearchResult result = alg.search(domain);
+        if (result.hasSolution()) {
+            double d[] = new double[]{
+                    1,
+                    1,
+                    result.getSolutions().get(0).getLength(),
+                    result.getSolutions().get(0).getCost(),
+                    result.getGenerated(),
+                    result.getExpanded(),
+                    ((SearchResultImpl) result).reopened};
+            System.out.println(Arrays.toString(d));
+            System.out.println(result.getSolutions().get(0).dumpSolution());
+        } else {
+            System.out.println("No solution :-(");
+        }
+
+        String dir = "C:/Users/Daniel/Documents/gilond/Master/ResearchData/input/fifteenpuzzle/fif1000";
+        String fileToRead = "fif1000.d";
+        File outputDirectory = new File(dir);
+
+        String nl = System.lineSeparator();
+
+        FileInputStream fileInputStream = new FileInputStream(new File(dir+"/"+fileToRead));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+        for(int k=0; k<1000; k++) {
+            String line = bufferedReader.readLine();
+            String[] lineArr = line.split(" ");
+            int[] tiles = new int[16];
+            int j = 0;
+
+            FileWriter fw = new FileWriter(new File(outputDirectory, (k+1)+".in"));
+            fw.write("15"+nl+nl);
+
+            for (int i = 0; i < lineArr.length; i++) {
+                if (lineArr[i].length() > 0) {
+                    if(j>0){
+                        int tile = Integer.parseInt(lineArr[i]);
+                        tiles[j-1] = tile;
+                        fw.write(tile+nl);
+                    }
+                    j++;
+                }
+            }
+            fw.write(nl);
+            for (int i = 0; i < 16; i++) {
+                fw.write(i+nl);
+            }
+            fw.close();
+        }*/
+    }
+
+    public static void main(String[] args) throws IOException {
+/*        SearchAlgorithm alg = new EES(1);
+//        int[] pancakesNum = new int[] {10,12,16,20,40};
+        int[] pancakesNum = new int[] {40};
+        for(int j=0 ; j<pancakesNum.length;j++){
+            for(int i = 3200 ; i >24  ; i = i / 2) {
+                System.out.println("emptyFocalRatio:"+i+", pancakesNum:"+pancakesNum[j]);
+                alg.setAdditionalParameter("emptyFocalRatio", i + "");
+//            alg.setAdditionalParameter("emptyFocalRatio", "200");
+//        SearchAlgorithm alg = new WAStar();
+//        SearchAlgorithm alg = new EES(1);
+                Main.mainDP(args, pancakesNum[j], alg);
+            }
+        }*/
+
+        Main.randomWalkFifteenInstances();
         //Main.mainTopSpin12Domain(args);
         //Main.mainRawGraphDomain(args);
         //Main.mainFifteenPuzzleDomain(args);

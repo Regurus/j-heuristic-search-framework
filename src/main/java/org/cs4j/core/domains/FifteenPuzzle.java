@@ -576,6 +576,11 @@ public final class FifteenPuzzle implements SearchDomain {
         return s;
     }
 
+    public void setInitialState(State tiles){
+        TileState s = (TileState) tiles;
+        this.init = s.tiles;
+    }
+
     @Override
     public boolean isGoal(State state) {
         // The state is a goal if the estimated number of tile shifts, between it and the goal, is 0
