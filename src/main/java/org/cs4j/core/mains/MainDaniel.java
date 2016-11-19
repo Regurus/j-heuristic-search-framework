@@ -858,7 +858,8 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,1.0);//D
         coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "DD_D";
+//        globalPrefix = "DD_D";
+        globalPrefix = "R";
 
 /*        coefficients.put("fmin" ,1.0);//H
         coefficients.put("dmin" ,0.0);//D
@@ -895,7 +896,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP";
-                    for(int i = -1 ; i <= -1 ; i+=2) {
+                    for(int i = 1 ; i <= 1 ; i+=2) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
