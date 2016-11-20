@@ -71,16 +71,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
     public void add(E e) {
 //    testHat();
+        debugNode(e,"add");
+
         count_add(e);
-
-/*        if(e.getH() == 71.0 && e.getG() == 360 && e.getD() == 8){
-            System.out.println("++++++++++++++++++++++");
-            System.out.println("[INFO] add:");
-            System.out.println(e);
-            System.out.println(result.generated);
-            System.out.println("++++++++++++++++++++++");
-        }*/
-
         gh_node node = new gh_node(e);
         TreeMap<gh_node,ArrayList<E>> treeOfNode = (node.inTree ? tree : outOfFocalTree);
 /*        if(!node.inTree){
@@ -104,10 +97,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                 if (this.comparator.compare(bestNode, node) > 0) {
                     bestNode = node;
                     bestList = list;
+                    debugNode(e,"add2");
                 }
             } else {
                 bestNode = node;
                 bestList = list;
+                debugNode(e,"add3");
             }
         }
 //    testHat();
@@ -163,9 +158,10 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             System.out.println("GH_heap peek error");
         }
         E e = bestList.get(0);
+        debugNode(e,"peek");
         if(e.getF() > w*fmin){
-            System.out.println(e);
-            System.out.println("\u001B[32m"+"[INFO] This Node is out of focal"+ "\u001B[0m");
+/*            System.out.println(e);
+            System.out.println("\u001B[32m"+"[INFO] This Node is out of focal"+ "\u001B[0m");*/
         }
         return e;
     }
@@ -253,13 +249,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     @Override
     public E remove(E e) {
 //        testHat();
-/*        if(e.getH() == 71.0 && e.getG() == 360 && e.getD() == 8){
-            System.out.println("++++++++++++++++++++++");
-            System.out.println("[INFO] remove:");
-            System.out.println(e);
-            System.out.println(result.generated);
-            System.out.println("++++++++++++++++++++++");
-        }*/
+        debugNode(e,"remove");
         gh_node node = new gh_node(e);
         TreeMap<gh_node,ArrayList<E>> treeOfNode = (node.inTree ? tree : outOfFocalTree);
         ArrayList<E> list = treeOfNode.get(node);
@@ -289,12 +279,15 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             treeOfNode.remove(node);
             if(this.comparator.compare(node,bestNode) <= 0 && node.inTree){
                 if(tree.isEmpty()){
+                    debugNode(e,"remove2");
                     bestNode = null;
                     bestList = null;
                 }
                 else {
+                    debugNode(e,"remove3");
                     bestNode = tree.firstKey();
                     bestList = tree.get(bestNode);
+                    debugNode(e,"remove4");
                 }
             }
         }
@@ -389,7 +382,25 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         }*/
     }
 
-    public void test(){
+    private void debugNode(E e, String from){
+/*        if(e.getH() == 2.294 && e.getD() == 11){
+            System.out.println("++++++++++++++++++++++");
+            System.out.println("[INFO] "+from+":");
+            System.out.println(e);
+            System.out.println(result.generated);
+            System.out.println("++++++++++++++++++++++");
+        }
+
+        if(bestNode != null && bestNode.inTree == false){
+            System.out.println("++++++++++++++++++++++");
+            System.out.println("[INFO] Best node not in Tree:");
+            System.out.println(e);
+            System.out.println(result.generated);
+            System.out.println("++++++++++++++++++++++");
+        }*/
+    }
+
+    private void test(){
         for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
             Map.Entry<gh_node,ArrayList<E>> entry = it.next();
             ArrayList<E> list = entry.getValue();
@@ -443,7 +454,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         double cost;
         double dividor;
 
-        boolean inTree;
+        boolean inTree = true;
 
         public gh_node(E e) {
             this.f = e.getF();
@@ -459,7 +470,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
         public void calcPotential(){
 
-            inTree = (this.f < w*fmin ? true : false);
+//            inTree = (this.f < w*fmin ? true : false);
             dividor = this.h * hCoefficient +
                     this.hHat * hHatCoefficient +
                     this.d * dCoefficient +

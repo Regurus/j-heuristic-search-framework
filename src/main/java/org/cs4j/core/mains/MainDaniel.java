@@ -858,8 +858,8 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,1.0);//D
         coefficients.put("dHat" ,0.0);//dHat
-//        globalPrefix = "DD_D";
-        globalPrefix = "R";
+        globalPrefix = "DD_D";
+        globalPrefix = "FlipedDD_D";
 
 /*        coefficients.put("fmin" ,1.0);//H
         coefficients.put("dmin" ,0.0);//D
@@ -869,6 +869,7 @@ public class MainDaniel {
         coefficients.put("hHat" ,0.0);//hHat
         coefficients.put("d"    ,0.0);//D
         coefficients.put("dHat" ,0.0);//dHat
+        globalPrefix = "Fliped";
         globalPrefix = "";*/
 
         SearchAlgorithm[] AlgoArr = {
@@ -920,14 +921,14 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
 //                    pancakesNum = new int[]{101};
-                    pancakesNum = new int[]{10,20,40,100};
+                    pancakesNum = new int[]{20};
 //                    pancakesNum = new int[]{10};
                     for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = -1 ; i <= 1 ; i+=2) {
+                            for(int i = 1 ; i <= 1 ; i+=2) {
                                 double alpha = (double) i;
                                 domainParams.put("cost-function", alpha+"");
                                 filePrefix = globalPrefix + num + "_alpha" + alpha + "_";  //for cost-function
