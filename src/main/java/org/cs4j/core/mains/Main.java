@@ -583,15 +583,17 @@ public class Main {
     }
 
     public static void randomWalkFifteenInstances() throws IOException {
-
-        SearchAlgorithm alg = new WAStar();
+        System.out.println("randomWalkFifteenInstances started");
+        SearchAlgorithm Astar = new WAStar();
         int depth = 20;
         int iterations = 1000;
         FifteenPuzzle domain = new FifteenPuzzle();
-        domain.setAdditionalParameter("cost-function", 0.2+"");
+//        domain.setAdditionalParameter("cost-function", 0.2+"");
 
+        String fileExt = "DiagonalInverse";
+        System.out.println(fileExt);
         SearchDomain.State goalState = domain.initialState();
-        OutputResult  output = new OutputResult("C:/Users/Daniel/Documents/gilond/Master/ResearchData/results/randomWalk", null, -1, -1, null, false, true);
+        OutputResult  output = new OutputResult("C:/Users/Daniel/Documents/gilond/Master/ResearchData/results/randomWalk"+fileExt, null, -1, -1, null, false, true);
         String headers = "Instance,d,h,d*,h*";
         output.writeln(headers);
 
@@ -600,6 +602,7 @@ public class Main {
         int randOperatorNum;
 
         for(int i=0; i<iterations; i++){
+            //randomizing
             SearchDomain.State randomState = goalState;
             for(int j=0; j<depth; j++){
                 int numOperators = domain.getNumOperators(randomState);
@@ -615,8 +618,8 @@ public class Main {
             }
             domain.setInitialState(randomState);
 //            System.out.println(domain.initialState().dumpState());
-
-            SearchResult result = alg.search(domain);
+            //solving
+            SearchResult result = Astar.search(domain);
             if (result.hasSolution()) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(i);
@@ -630,7 +633,7 @@ public class Main {
                 sb.append(result.getSolutions().get(0).getCost());
 
                 String toPrint = String.valueOf(sb);
-                System.out.println(toPrint);
+//                System.out.println(toPrint);
                 output.writeln(toPrint);
 //                System.out.println(Arrays.toString(d));
 //                System.out.println(result.getSolutions().get(0).dumpSolution());
@@ -690,6 +693,7 @@ public class Main {
             }
             fw.close();
         }*/
+        System.out.println("randomWalkFifteenInstances finished");
     }
 
     public static void main(String[] args) throws IOException {

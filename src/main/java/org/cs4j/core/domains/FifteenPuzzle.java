@@ -155,8 +155,8 @@ public final class FifteenPuzzle implements SearchDomain {
      */
     private double _getTileCost(int tile) {
         // Compute the _getTileCost according to the type of the _getTileCost function used in the search
-//        double[] tileCosts = {0, 15, 13, 10, 14, 12, 9, 6, 11, 8, 5, 3, 7, 4, 2, 1};
-        double[] tileCosts = {0, 1, 3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
+        double[] tileCosts = {0, 15, 13, 10, 14, 12, 9, 6, 11, 8, 5, 3, 7, 4, 2, 1};
+//        double[] tileCosts = {0, 1, 3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
         double cost = tileCosts[tile];//it was cost = tile;
 //        cost=Math.pow(cost,this.costAlpha);
         return cost;
