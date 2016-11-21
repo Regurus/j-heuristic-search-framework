@@ -54,6 +54,7 @@ public class DP  implements SearchAlgorithm {
     private double optimalSolution;
     private HashMap<String,Double> coefficients;
     private String name;
+    private boolean isFocalized;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -68,11 +69,14 @@ public class DP  implements SearchAlgorithm {
 
     /**
      * A default constructor of the class
-     *
+     * @param name the name of the algorithm
+     * @param coefficients for the algo
+     * @param isFocalized if the algoritm is focalized or not
      */
-    public DP(HashMap coefficients, String name) {
+    public DP(String name, HashMap coefficients, boolean isFocalized) {
         this.coefficients = coefficients;
         this.name = name;
+        this.isFocalized = isFocalized;
         this._initDefaultValues();
     }
 
@@ -89,7 +93,7 @@ public class DP  implements SearchAlgorithm {
         this.NC = new NodeComparator();
         this.NPC = new NodePackedComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
-        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), NPC, result,coefficients);//no oracle
+        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), NPC, result,coefficients,isFocalized);//no oracle
         //for cases where we want to set the fmin start
         if(this.optimalSolution != 0) {
             this.open.setOptimal(optimalSolution);

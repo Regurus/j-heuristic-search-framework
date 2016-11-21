@@ -871,21 +871,21 @@ public class MainDaniel {
         if(useOracle) globalPrefix = "ORACLE_";
         else globalPrefix = "";
 
-        globalPrefix = "DiagonalHeavy";
+//        globalPrefix = "DiagonalHeavy";
 //        globalPrefix = "DiagonalInverse";
+        globalPrefix = "D-1";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
 
         SearchAlgorithm[] AlgoArr = {
-//            new EES2(),
 //                new IDAstar(),
 //                new BEES(),
 
-                new WAStar(),
+                new DP("DPS",coefficientsF,false),
+                new DP("DPSU",coefficientsD,true),
                 new EES(1),
-                new DP(coefficientsD,"DPSU"),
-                new DP(coefficientsF,"DPS"),
+                new WAStar(),
         };
 
         SearchAlgorithmArr = AlgoArr;
@@ -904,7 +904,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP";
-                    for(int i = 1 ; i <= 1 ; i+=2) {
+                    for(int i = -2 ; i >= -2 ; i-=4) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function

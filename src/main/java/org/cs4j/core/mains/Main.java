@@ -585,12 +585,15 @@ public class Main {
     public static void randomWalkFifteenInstances() throws IOException {
         System.out.println("randomWalkFifteenInstances started");
         SearchAlgorithm Astar = new WAStar();
-        int depth = 20;
+        int iterationStep = 5;
+        int stepNum = 4;
         int iterations = 1000;
         FifteenPuzzle domain = new FifteenPuzzle();
-//        domain.setAdditionalParameter("cost-function", 0.2+"");
 
-        String fileExt = "DiagonalInverse";
+//        domain.setAdditionalParameter("cost-function", 1.0+"");
+//        String fileExt = "DiagonalHeavy";
+        String fileExt = "Regular";
+
         System.out.println(fileExt);
         SearchDomain.State goalState = domain.initialState();
         OutputResult  output = new OutputResult("C:/Users/Daniel/Documents/gilond/Master/ResearchData/results/randomWalk"+fileExt, null, -1, -1, null, false, true);
@@ -601,10 +604,11 @@ public class Main {
         SearchDomain.Operator reversedOperator = null;
         int randOperatorNum;
 
-        for(int i=0; i<iterations; i++){
+        for(int i=0; i<iterations*stepNum; i++){
             //randomizing
+            int currentStep = i/iterations + 1;
             SearchDomain.State randomState = goalState;
-            for(int j=0; j<depth; j++){
+            for(int j=0; j<iterationStep*currentStep; j++){
                 int numOperators = domain.getNumOperators(randomState);
                 randOperatorNum = (int) (Math.random() * numOperators);
                 randOperator = domain.getOperator(randomState,randOperatorNum);

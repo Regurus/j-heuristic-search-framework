@@ -15,6 +15,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     //    private BinHeap<E> heap;
     private TreeMap<gh_node,ArrayList<E>> tree;
     private TreeMap<gh_node,ArrayList<E>> outOfFocalTree;
+    private boolean isFocalized;
     private double fmin;
     private double dmin;
     private boolean isOptimal;
@@ -38,13 +39,14 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     private double lowerBound;
 //    private boolean withFComparator;
 
-    public GH_heap(double w, int key, double fmin, Comparator<E> NodePackedComparator,SearchResultImpl result, HashMap<String,Double> coefficients) {
+    public GH_heap(double w, int key, double fmin, Comparator<E> NodePackedComparator, SearchResultImpl result, HashMap<String, Double> coefficients, boolean isFocalized) {
         this.w = w;
         this.key = key;
         this.fmin = fmin;
         this.comparator = new ghNodeComparator();
         this.tree = new TreeMap<>(this.comparator);
         this.outOfFocalTree = new TreeMap<>(this.comparator);
+        this.isFocalized = isFocalized;
         this.NodePackedComparator = NodePackedComparator;
         this.result =result;
         this.hCoefficient = coefficients.get("h");
@@ -470,7 +472,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
         public void calcPotential(){
 
-//            inTree = (this.f < w*fmin ? true : false);
+            if(isFocalized) inTree = (this.f < w*fmin ? true : false);
             dividor = this.h * hCoefficient +
                     this.hHat * hHatCoefficient +
                     this.d * dCoefficient +
