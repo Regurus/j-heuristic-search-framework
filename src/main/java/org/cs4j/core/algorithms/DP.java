@@ -53,6 +53,7 @@ public class DP  implements SearchAlgorithm {
 
     private double optimalSolution;
     private HashMap<String,Double> coefficients;
+    private String name;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -69,8 +70,9 @@ public class DP  implements SearchAlgorithm {
      * A default constructor of the class
      *
      */
-    public DP(HashMap coefficients) {
+    public DP(HashMap coefficients, String name) {
         this.coefficients = coefficients;
+        this.name = name;
         this._initDefaultValues();
     }
 
@@ -78,7 +80,7 @@ public class DP  implements SearchAlgorithm {
     public String getName() {
 /*        if(this.FR==Integer.MAX_VALUE) return "DP";
         else return "DP"+this.FR;*/
-        return "DP";
+        return this.name;
     }
 
     private void _initDataStructures(SearchDomain domain) {

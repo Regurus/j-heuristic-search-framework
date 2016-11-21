@@ -606,6 +606,9 @@ public class MainDaniel {
                             String[] sol = resultsLine[j].split(",");
                             for (int k = 0; k < headers.length - indent; k++) {
                                 solD[k] += Double.parseDouble(sol[k + 1]);
+/*                                if(k==8 && Double.parseDouble(sol[k]) == 0.0){
+                                    solD[8] += Double.parseDouble(sol[4]);
+                                }*/
                             }
 
                         }
@@ -784,15 +787,17 @@ public class MainDaniel {
 /*        WalkPath("FIF1000_");
         if(true) return;*/
 
-        solvableNum = stopInstance-startInstance+1;
-        solvableInstances = new boolean[solvableNum];
-        Arrays.fill(solvableInstances,true);
         //search over algo and weight
-        for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
-            w = ws;
-            totalWeight = w.wh / w.wg;
-            for (SearchAlgorithm sa : SearchAlgorithmArr) {
-                alg = sa;
+        for (SearchAlgorithm sa : SearchAlgorithmArr) {
+            alg = sa;
+
+            solvableNum = stopInstance-startInstance+1;
+            solvableInstances = new boolean[solvableNum];
+            Arrays.fill(solvableInstances,true);
+
+            for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
+                w = ws;
+                totalWeight = w.wh / w.wg;
                 if (useBestFR) {
                     double resultArray[] = findBestFR();//solved,generated,expanded,bestFR
                 }
@@ -839,48 +844,50 @@ public class MainDaniel {
         startInstance = 1;
         stopInstance = 100;
 
+        DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};
+
+        HashMap<String,Double> coefficientsD = new HashMap<>();
+        coefficientsD.put("fmin" ,0.0);//H
+        coefficientsD.put("dmin" ,1.0);//D
+        coefficientsD.put("gCost",0.0);//H
+        coefficientsD.put("dCost",1.0);//D
+        coefficientsD.put("h"    ,0.0);//H
+        coefficientsD.put("hHat" ,0.0);//hHat
+        coefficientsD.put("d"    ,1.0);//D
+        coefficientsD.put("dHat" ,0.0);//dHat
+
+        HashMap<String,Double> coefficientsF = new HashMap<>();
+        coefficientsF.put("fmin" ,1.0);//H
+        coefficientsF.put("dmin" ,0.0);//D
+        coefficientsF.put("gCost",1.0);//H
+        coefficientsF.put("dCost",0.0);//D
+        coefficientsF.put("h"    ,1.0);//H
+        coefficientsF.put("hHat" ,0.0);//hHat
+        coefficientsF.put("d"    ,0.0);//D
+        coefficientsF.put("dHat" ,0.0);//dHat
+
         summaryName = "NO-SUMMARY-SET";
 
         if(useOracle) globalPrefix = "ORACLE_";
         else globalPrefix = "";
-//        else globalPrefix = "";
+
+        globalPrefix = "DiagonalHeavy";
+//        globalPrefix = "DiagonalInverse";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
-
-        DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};
-        HashMap<String,Double> coefficients = new HashMap<>();
-        coefficients.put("fmin" ,0.0);//H
-        coefficients.put("dmin" ,1.0);//D
-        coefficients.put("gCost",0.0);//H
-        coefficients.put("dCost",1.0);//D
-        coefficients.put("h"    ,0.0);//H
-        coefficients.put("hHat" ,0.0);//hHat
-        coefficients.put("d"    ,1.0);//D
-        coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "DD_D";
-        globalPrefix = "FlipedDD_D";
-
-/*        coefficients.put("fmin" ,1.0);//H
-        coefficients.put("dmin" ,0.0);//D
-        coefficients.put("gCost",1.0);//H
-        coefficients.put("dCost",0.0);//D
-        coefficients.put("h"    ,1.0);//H
-        coefficients.put("hHat" ,0.0);//hHat
-        coefficients.put("d"    ,0.0);//D
-        coefficients.put("dHat" ,0.0);//dHat
-        globalPrefix = "Fliped";
-        globalPrefix = "";*/
 
         SearchAlgorithm[] AlgoArr = {
 //            new EES2(),
 //                new IDAstar(),
 //                new BEES(),
 
-//                new WAStar(),
-//                new EES(1),
-                new DP(coefficients),
+                new WAStar(),
+                new EES(1),
+                new DP(coefficientsD,"DPSU"),
+                new DP(coefficientsF,"DPS"),
         };
+
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
