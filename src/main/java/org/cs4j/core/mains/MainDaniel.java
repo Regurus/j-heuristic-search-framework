@@ -532,7 +532,7 @@ public class MainDaniel {
     }
 
     private static void createSummary()throws IOException{
-        int algoNum = SearchAlgorithmArr.length;
+//        int algoNum = SearchAlgorithmArr.length;
         try {
             int num = 0;
             String path = relPath +"results/summary/"+summaryName+".xls";
@@ -607,7 +607,7 @@ public class MainDaniel {
                             for (int k = 0; k < headers.length - indent; k++) {
                                 solD[k] += Double.parseDouble(sol[k + 1]);
 /*                                if(k==8 && Double.parseDouble(sol[k]) == 0.0){
-                                    solD[8] += Double.parseDouble(sol[4]);
+                                    solD[7] += Double.parseDouble(sol[4]);
                                 }*/
                             }
 
@@ -808,7 +808,7 @@ public class MainDaniel {
         }
 
         //create summary over algo and weight
-        createSummary();
+//        createSummary();
     }
 
     public static void main(String[] args) throws IOException, WriteException, BiffException {
@@ -841,7 +841,7 @@ public class MainDaniel {
         useBestFR = false;
         useOracle = false;
         saveSolutionPath = false;
-        startInstance = 1;
+        startInstance = 2;
         stopInstance = 100;
 
         DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};
@@ -874,6 +874,7 @@ public class MainDaniel {
 //        globalPrefix = "DiagonalHeavy";
 //        globalPrefix = "DiagonalInverse";
         globalPrefix = "D-1";
+//        globalPrefix = "FlipedDD_D";
 
         if(useBestFR)fileEnd = "bestFR";
         else fileEnd = "NoFr";
@@ -882,10 +883,12 @@ public class MainDaniel {
 //                new IDAstar(),
 //                new BEES(),
 
-                new DP("DPS",coefficientsF,false),
-                new DP("DPSU",coefficientsD,true),
-                new EES(1),
-                new WAStar(),
+//                new DP("DP",coefficientsF,false),
+//                new DP("DPS",coefficientsF,false),
+//                new DP("DPSU",coefficientsD,false),
+                new DP("RDPSU",coefficientsD,true),
+//                new EES(1),
+//                new WAStar(),
         };
 
         SearchAlgorithmArr = AlgoArr;
@@ -903,8 +906,8 @@ public class MainDaniel {
             domainParams = new HashMap<>();
             switch (domainName) {
                 case "FifteenPuzzle": {
-                    summaryName = "15DP";
-                    for(int i = -2 ; i >= -2 ; i-=4) {
+                    summaryName = "15DP-TEST";
+                    for(int i = 2 ; i <= 2 ; i+=1) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function

@@ -155,6 +155,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     public E peek() {
         if(bestList == null){
             System.out.println("GH_heap peek error");
+            System.out.println(fmin);
+            System.out.println(countF);
+            System.out.println(countD);
         }
         if(bestList.get(0) == null){
             System.out.println("GH_heap peek error");
@@ -231,6 +234,10 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         }
         tree = tempTree;
         outOfFocalTree = tempOutOfFocalTreeTree;
+        if(bestNode == null){
+            bestNode = tree.firstKey();
+            bestList = tree.get(bestNode);
+        }
     }
 
     @Override
@@ -396,6 +403,20 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         if(bestNode != null && bestNode.inTree == false){
             System.out.println("++++++++++++++++++++++");
             System.out.println("[INFO] Best node not in Tree:");
+            System.out.println(e);
+            System.out.println(result.generated);
+            System.out.println("++++++++++++++++++++++");
+        }
+        String whatWentWrong = "";
+        if(bestList == null) whatWentWrong+="bestList == null,";
+        if(bestNode == null) whatWentWrong+="bestNode == null,";
+        if(tree.isEmpty()) whatWentWrong+="tree.isEmpty(),";
+//        if(outOfFocalTree.isEmpty()) whatWentWrong+="outOfFocalTree.isEmpty(),";
+        if(whatWentWrong != ""){
+            System.out.println("++++++++++++++++++++++");
+            System.out.println("SOMETHING WENT WRONG WITH THIS NODE");
+            System.out.println("What went wrong?:"+whatWentWrong);
+            System.out.println("[INFO] "+from+":");
             System.out.println(e);
             System.out.println(result.generated);
             System.out.println("++++++++++++++++++++++");

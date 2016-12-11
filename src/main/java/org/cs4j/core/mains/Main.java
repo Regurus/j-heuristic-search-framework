@@ -590,9 +590,10 @@ public class Main {
         int iterations = 1000;
         FifteenPuzzle domain = new FifteenPuzzle();
 
-//        domain.setAdditionalParameter("cost-function", 1.0+"");
+        domain.setAdditionalParameter("cost-function", -1.0+"");
 //        String fileExt = "DiagonalHeavy";
-        String fileExt = "Regular";
+//        String fileExt = "Regular";
+        String fileExt = "Inverse";
 
         System.out.println(fileExt);
         SearchDomain.State goalState = domain.initialState();
@@ -607,6 +608,7 @@ public class Main {
         for(int i=0; i<iterations*stepNum; i++){
             //randomizing
             int currentStep = i/iterations + 1;
+            System.out.print("\ri:"+i);
             SearchDomain.State randomState = goalState;
             for(int j=0; j<iterationStep*currentStep; j++){
                 int numOperators = domain.getNumOperators(randomState);

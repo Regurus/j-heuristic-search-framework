@@ -239,7 +239,7 @@ public class Weights {
 //        new SingleWeight(9, 10),
         new SingleWeight(10, 11),
 //        new SingleWeight(20, 21),
-//        new SingleWeight(40, 41),
+        new SingleWeight(40, 41),
 //        new SingleWeight(1, 1),
     };
 }
