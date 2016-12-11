@@ -841,7 +841,7 @@ public class MainDaniel {
         useBestFR = false;
         useOracle = false;
         saveSolutionPath = false;
-        startInstance = 2;
+        startInstance = 1;
         stopInstance = 100;
 
         DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};

@@ -305,6 +305,8 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         }
 
         count_remove(e);
+        if(bestNode == null)
+            reorder();
 //        testHat();
         return e;
     }
