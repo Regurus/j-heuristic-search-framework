@@ -199,11 +199,6 @@ public class DP  implements SearchAlgorithm {
                     }
                 }
                 _removeNode(currentNode);
-
-                if(bestGoalNode != null && bestGoalNode.f < open.getFmin()*weight){
-                    goal = currentNode;
-                    break;
-                }
             }
         } catch (OutOfMemoryError e) {
             System.out.println("[INFO] DP OutOfMemory :-( "+e);

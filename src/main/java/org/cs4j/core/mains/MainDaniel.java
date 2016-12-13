@@ -907,7 +907,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP-TEST";
-                    for(int i = 2 ; i <= 2 ; i+=1) {
+                    for(int i = -2 ; i <= 2 ; i+=1) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function

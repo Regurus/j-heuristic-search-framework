@@ -1182,15 +1182,19 @@ public final class FifteenPuzzle implements SearchDomain {
             case "cost-function": {
                 this.costAlpha = Double.parseDouble(value);
                 if(this.costAlpha == -2.0){//DoubleInverse: heavy Diagonal, inverse cost
-                    tileCosts = new double[]{0, 1, 3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
-                    for(int i=1; i<=15; i++)
-                        tileCosts[i] = Math.pow(tileCosts[i],-1);
+                    tileCosts = new double[]{0, 1, 0.3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
+                    for(int i=1; i<=15; i++) {
+                        tileCosts[i] = round(Math.pow(tileCosts[i], -1));
+//                        System.out.println(tileCosts[i]);
+                    }
                 }
                 if(this.costAlpha == -1.0) {//Inverse
 //                    tileCosts = new double[]{0, 15, 13, 10, 14, 12, 9, 6, 11, 8, 5, 3, 7, 4, 2, 1};
                     tileCosts = new double[]{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-                    for (int i = 1; i <= 15; i++)
-                        tileCosts[i] = Math.pow(tileCosts[i], -1);
+                    for (int i = 1; i <= 15; i++) {
+                        tileCosts[i] = round(Math.pow(tileCosts[i], -1));
+                        System.out.println(tileCosts[i]);
+                    }
                 }
                 if(this.costAlpha == 1.0)//Heavy
                     tileCosts = new double[]{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
@@ -1241,5 +1245,12 @@ public final class FifteenPuzzle implements SearchDomain {
             // its location on the given state
             return FifteenPuzzle.this.possibleOperators[ts.blank];
         }
+    }
+
+    private double round(double val){
+        double precision = Math.pow(10,4);
+        double ret = Math.round(val * precision);
+        ret = ret/precision;
+        return ret;
     }
 }
