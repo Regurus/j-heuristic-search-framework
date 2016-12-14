@@ -9,14 +9,15 @@ import java.util.*;
  */
 public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
-    private final int key;
+    private int key = 0;
     private double precision = 0.000000001;
     private boolean debug = false;
-    private HashMap<Double, Double> countF = new HashMap<>();
-    private HashMap<Double, Double> countD = new HashMap<>();
+    private HashMap<Double, Integer> countF = new HashMap<>();
+    private HashMap<Double, Integer> countD = new HashMap<>();
     //    private BinHeap<E> heap;
     private TreeMap<gh_node,ArrayList<E>> tree;
     private TreeMap<gh_node,ArrayList<E>> outOfFocalTree;
+    private TreeMap<gh_node,ArrayList<E>> treeF;
     private boolean isFocalized;
     private double fmin;
     private double dmin;
@@ -47,6 +48,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         this.comparator = new ghNodeComparator();
         this.tree = new TreeMap<>(this.comparator);
         this.outOfFocalTree = new TreeMap<>(this.comparator);
+        this.treeF = new TreeMap<>(new Fcomparator());
         this.isFocalized = isFocalized;
         this.NodePackedComparator = NodePackedComparator;
         this.result =result;
@@ -71,6 +73,10 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         return fmin;
     }
 
+    public int getFminCount(){
+        return countF.get(fmin);
+    }
+
     public void add(E e) {
 //    testHat();
         if(debug) debugNode(e,"add");
@@ -78,12 +84,8 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
         count_add(e);
         gh_node node = new gh_node(e);
-        TreeMap<gh_node,ArrayList<E>> treeOfNode = (node.inTree ? tree : outOfFocalTree);
-/*        if(!node.inTree){
-            System.out.println("[INFO] add Node not in Focal!");
-        }*/
-
         ArrayList<E> list;
+        TreeMap<gh_node,ArrayList<E>> treeOfNode = (node.inTree ? tree : outOfFocalTree);
 
         if(treeOfNode.containsKey(node)){
             list = treeOfNode.get(node);
@@ -94,6 +96,16 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         e.setIndex(this.key,list.size());
         list.add(e);
         treeOfNode.put(node,list);
+
+        ArrayList<E> listF;
+        if(treeF.containsKey(node)){
+            listF = treeF.get(node);
+        }
+        else{
+            listF = new ArrayList<>();
+        }
+        listF.add(e);
+        treeF.put(node,listF);
 
         if(node.inTree) {
             if (this.bestNode != null) {
@@ -117,7 +129,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         if(countF.containsKey(f))
             countF.put(f,countF.get(f)+1);
         else {
-            countF.put(f, 1.0);
+            countF.put(f, 1);
             if(!isOptimal) {//fmin might change/decrease
                 if (tree.size()+outOfFocalTree.size() == 0) {//tree is empty
                     fmin = f;
@@ -131,7 +143,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         if(countD.containsKey(fd))
             countD.put(fd,countD.get(fd)+1);
         else {
-            countD.put(fd, 1.0);
+            countD.put(fd, 1);
             if(!isOptimal) {//fmin might change/decrease
                 if (tree.size()+outOfFocalTree.size() == 0) {//tree is empty
                     dmin = fd;
@@ -171,6 +183,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         return e;
     }
 
+    public E peekF() {
+        ArrayList<E> listF = treeF.get(0);
+        E e = listF.get(0);
+        return e;
+    }
+
     @Override
     public void update(E e) {
         throw new UnsupportedOperationException("Invalid operation for GH_heap, use remove and add instead");
@@ -180,29 +198,6 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     public boolean isEmpty() {
         return tree.isEmpty() && outOfFocalTree.isEmpty();
     }
-
-    public void updateF(E oldNode, E newNode) {
-//        test();
-/*        gh_node oldPos = new gh_node(oldG,oldH);
-        ArrayList<E> oldList = tree.get(oldPos);
-        E toRemove = null;
-        for (E e:oldList) {
-            if(NodePackedComparator.compare(updatedNode,e)==0){
-                toRemove = e;
-            }
-        }
-        if(toRemove != null){
-            remove(toRemove);
-        }
-        else{
-            System.out.println("can not remove");
-        }
-        add(updatedNode);*/
-//        test();
-
-    }
-
-
 
     private void reorder(){
         lowerBound = fmin * fminCoefficient + dmin * dminCoefficient;
@@ -265,10 +260,6 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         TreeMap<gh_node,ArrayList<E>> treeOfNode = (node.inTree ? tree : outOfFocalTree);
         ArrayList<E> list = treeOfNode.get(node);
 
-/*        if(!node.inTree){
-            System.out.println("[INFO] remove Node not in Focal!");
-        }*/
-
         if(list == null) {
             TreeMap<gh_node,ArrayList<E>> treeOfNode2 = (!node.inTree ? tree : outOfFocalTree);
             ArrayList<E> list2 = treeOfNode2.get(node);
@@ -307,6 +298,13 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             treeOfNode.put(node,list);
         }
 
+        ArrayList<E> listF = treeF.get(node);
+        if(listF.isEmpty())
+            System.out.println("\u001B[31m"+"[WARNING] listF is empty, can not remove"+ "\u001B[0m");
+        listF.remove(e);
+        if(listF.isEmpty())
+            treeF.remove(node);
+
         count_remove(e);
         if(bestNode == null) {
             System.out.println("[WARNING] bestNode == null");
@@ -321,7 +319,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         double fd = e.getD()+e.getDepth();
         GH_heapSize--;
         if(!countF.containsKey(f)){
-            countF.put(f,0.0);
+            countF.put(f,0);
         }
         countF.put(f,countF.get(f)-1);
         if(countF.get(f)==0){
@@ -342,7 +340,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             }
         }
         if(!countD.containsKey(fd)){
-            countD.put(fd,0.0);
+            countD.put(fd,0);
         }
         countD.put(fd,countD.get(fd)-1);
         if(countD.get(fd)==0){
@@ -567,6 +565,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             if (a.dividor > b.dividor) return 1;
 
             // From here on it is a tiebreak for cases where we have focal and non-focal nodes
+            if (a.f < b.f) return -1;
+            if (a.f > b.f) return 1;
+
             if (a.h < b.h) return -1;
             if (a.h > b.h) return 1;
 
@@ -574,6 +575,23 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             if (a.g > b.g) return 1;
 
             if (a.inTree != b.inTree) return 1;
+
+            return 0;
+        }
+    }
+
+    /**
+     * The nodes comparator class based of F value
+     */
+    protected final class Fcomparator implements Comparator<gh_node> {
+
+        @Override
+        public int compare(final gh_node a, final gh_node b) {
+            if (a.f < b.f) return -1;
+            if (a.f > b.f) return 1;
+
+            if (a.h < b.h) return -1;
+            if (a.h > b.h) return 1;
 
             return 0;
         }

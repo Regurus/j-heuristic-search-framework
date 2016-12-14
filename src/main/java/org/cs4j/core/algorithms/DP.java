@@ -3,12 +3,13 @@ package org.cs4j.core.algorithms;
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
-import org.cs4j.core.collections.*;
+import org.cs4j.core.collections.GH_heap;
+import org.cs4j.core.collections.PackedElement;
+import org.cs4j.core.collections.SearchQueueElement;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -63,7 +64,7 @@ public class DP  implements SearchAlgorithm {
         // Default values
         this.weight = 1.0;
         this.reopen = true;
-        this.FR = Integer.MAX_VALUE;
+        this.FR = 100000;
     }
 
 
@@ -294,9 +295,11 @@ public class DP  implements SearchAlgorithm {
     private Node _selectNode() {
         Node toReturn;
         toReturn = this.open.peek();
-/*        if(openF.getFminCount(FR) < result.generated){
-            toReturn = this.openF.peek();
-        }*/
+        int fminCount = open.getFminCount();
+        int lowerLimit = fminCount * FR;
+        if(lowerLimit < result.generated){
+            toReturn = this.open.peekF();
+        }
         return toReturn;
     }
 

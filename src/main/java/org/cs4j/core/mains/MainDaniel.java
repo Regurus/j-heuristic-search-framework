@@ -884,9 +884,9 @@ public class MainDaniel {
 //                new BEES(),
 
 //                new DP("DP",coefficientsF,false),
-//                new DP("DPS",coefficientsF,false),
+                new DP("DPS",coefficientsF,false),
 //                new DP("DPSU",coefficientsD,false),
-                new DP("RDPSU",coefficientsD,true),
+//                new DP("RDPSU",coefficientsD,true),
 //                new EES(1),
 //                new WAStar(),
         };
@@ -907,7 +907,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP-TEST";
-                    for(int i = -2 ; i <= 2 ; i+=1) {
+                    for(int i = 0 ; i <= 0 ; i+=1) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
