@@ -873,7 +873,7 @@ public class MainDaniel {
 
 //        globalPrefix = "DiagonalHeavy";
 //        globalPrefix = "DiagonalInverse";
-        globalPrefix = "D-1";
+//        globalPrefix = "D-1";
 //        globalPrefix = "FlipedDD_D";
 
         if(useBestFR)fileEnd = "bestFR";
@@ -884,9 +884,9 @@ public class MainDaniel {
 //                new BEES(),
 
 //                new DP("DP",coefficientsF,false),
-                new DP("DPS",coefficientsF,false),
+                new DP("RDPSU",coefficientsD,true),
 //                new DP("DPSU",coefficientsD,false),
-//                new DP("RDPSU",coefficientsD,true),
+//                new DP("DPS",coefficientsF,false),
 //                new EES(1),
 //                new WAStar(),
         };
@@ -906,8 +906,8 @@ public class MainDaniel {
             domainParams = new HashMap<>();
             switch (domainName) {
                 case "FifteenPuzzle": {
-                    summaryName = "15DP-TEST";
-                    for(int i = 0 ; i <= 0 ; i+=1) {
+                    summaryName = "15DP-ALL";
+                    for(int i = -3 ; i <= 3 ; i+=1) {
                         double alpha = (double)i;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function

@@ -177,6 +177,15 @@ public class DP  implements SearchAlgorithm {
                         System.out.println("generated: " + result.generated);
                     }*/
                     SearchDomain.State childState = domain.applyOperator(currentState, op);
+                    //TESTS
+                    PackedElement packedState = DP.this.domain.pack(childState);
+                    SearchDomain.State unpackedState = DP.this.domain.unpack(packedState);
+                    if(childState.getH() != unpackedState.getH()){
+                        System.out.println("I rest My case");
+                        childState.getH();
+                        unpackedState.getH();
+                    }
+
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
 /*                    if(childNode.getH() == 4.0 && childNode.getG() == 54 && childNode.getD() == 2){
                         System.out.println("++++++++++++++++++++++");
@@ -247,6 +256,20 @@ public class DP  implements SearchAlgorithm {
 
             solution.setCost(cost);
             result.addSolution(solution);
+
+            int smallerThanFmin = 0;
+            int smallerThanWcost = 0;
+            double fmin = open.getFmin();
+            for(Iterator<Map.Entry<PackedElement,Node>> it = closed.entrySet().iterator(); it.hasNext();){
+                Map.Entry<PackedElement,Node> entry = it.next();
+                Node node = entry.getValue();
+                if(node.f < fmin) smallerThanFmin++;
+                if(weight * node.f < cost) smallerThanWcost++;
+//                it.remove();
+            }
+            System.out.println("closed size:"+closed.size());
+            System.out.println("smallerThanFmin:"+smallerThanFmin);
+            System.out.println("smallerThanWcost:"+smallerThanWcost);
         }
 
         return result;
@@ -295,11 +318,11 @@ public class DP  implements SearchAlgorithm {
     private Node _selectNode() {
         Node toReturn;
         toReturn = this.open.peek();
-        int fminCount = open.getFminCount();
+/*        int fminCount = open.getFminCount();
         int lowerLimit = fminCount * FR;
         if(lowerLimit < result.generated){
             toReturn = this.open.peekF();
-        }
+        }*/
         return toReturn;
     }
 
@@ -593,9 +616,8 @@ public class DP  implements SearchAlgorithm {
          */
         public void computeNodeValue(double updatedHValue, double updatedDValue) {
 
-            updatedHValue = new BigDecimal(updatedHValue).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
-
             if(this.h != 0 && this.h != updatedHValue){
+                // can only happen when updating nodes
                 System.out.println("[INFO] GH_heap should update");
             }
             this.h = updatedHValue;
