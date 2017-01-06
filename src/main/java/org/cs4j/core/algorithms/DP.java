@@ -17,6 +17,8 @@ import java.util.*;
  */
 public class DP  implements SearchAlgorithm {
 
+    private boolean debug = false;
+
     private static final int open_ID = 1;
 
     private static final Map<String, Class> DPPossibleParameters;
@@ -178,14 +180,15 @@ public class DP  implements SearchAlgorithm {
                     }*/
                     SearchDomain.State childState = domain.applyOperator(currentState, op);
                     //TESTS
-                    PackedElement packedState = DP.this.domain.pack(childState);
-                    SearchDomain.State unpackedState = DP.this.domain.unpack(packedState);
-                    if(childState.getH() != unpackedState.getH()){
-                        System.out.println("I rest My case");
-                        childState.getH();
-                        unpackedState.getH();
+                    if(debug){
+                        PackedElement packedState = DP.this.domain.pack(childState);
+                        SearchDomain.State unpackedState = DP.this.domain.unpack(packedState);
+                        if(childState.getH() != unpackedState.getH()){
+                            System.out.println("Pack or unpack does not work correctly");
+                            childState.getH();
+                            unpackedState.getH();
+                        }
                     }
-
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
 /*                    if(childNode.getH() == 4.0 && childNode.getG() == 54 && childNode.getD() == 2){
                         System.out.println("++++++++++++++++++++++");
@@ -267,9 +270,9 @@ public class DP  implements SearchAlgorithm {
                 if(weight * node.f < cost) smallerThanWcost++;
 //                it.remove();
             }
-            System.out.println("closed size:"+closed.size());
+/*            System.out.println("closed size:"+closed.size());
             System.out.println("smallerThanFmin:"+smallerThanFmin);
-            System.out.println("smallerThanWcost:"+smallerThanWcost);
+            System.out.println("smallerThanWcost:"+smallerThanWcost);*/
         }
 
         return result;
@@ -616,7 +619,7 @@ public class DP  implements SearchAlgorithm {
          */
         public void computeNodeValue(double updatedHValue, double updatedDValue) {
 
-            if(this.h != 0 && this.h != updatedHValue){
+            if(debug && this.h != 0 && this.h != updatedHValue){
                 // can only happen when updating nodes
                 System.out.println("[INFO] GH_heap should update");
             }

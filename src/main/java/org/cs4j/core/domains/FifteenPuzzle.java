@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -1201,6 +1203,7 @@ public final class FifteenPuzzle implements SearchDomain {
                     tileCosts = new double[]{0, 1, 3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
                     for (int i = 1; i <= 15; i++) tileCosts[i] = Math.pow(tileCosts[i], -1);
                 }
+//                for (int i = 1; i <= 15; i++) tileCosts[i] = BigDecimal.valueOf(tileCosts[i]).setScale(10, RoundingMode.HALF_UP).doubleValue();
                 _init();
                 break;
             }
