@@ -894,8 +894,8 @@ public class MainDaniel {
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-//                "Pancakes",
-                "FifteenPuzzle",
+                "Pancakes",
+//                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"

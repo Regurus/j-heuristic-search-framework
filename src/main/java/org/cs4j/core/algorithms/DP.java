@@ -66,7 +66,7 @@ public class DP  implements SearchAlgorithm {
         // Default values
         this.weight = 1.0;
         this.reopen = true;
-        this.FR = 100000;
+        this.FR = 10;
     }
 
 
@@ -321,11 +321,11 @@ public class DP  implements SearchAlgorithm {
     private Node _selectNode() {
         Node toReturn;
         toReturn = this.open.peek();
-/*        int fminCount = open.getFminCount();
-        int lowerLimit = fminCount * FR;
+        double fminCount = open.getFminCount();
+        double lowerLimit = fminCount * FR;
         if(lowerLimit < result.generated){
             toReturn = this.open.peekF();
-        }*/
+        }
         return toReturn;
     }
 
