@@ -321,11 +321,11 @@ public class DP  implements SearchAlgorithm {
     private Node _selectNode() {
         Node toReturn;
         toReturn = this.open.peek();
-        double fminCount = open.getFminCount();
+/*        double fminCount = open.getFminCount();
         double lowerLimit = fminCount * FR;
         if(lowerLimit < result.generated){
             toReturn = this.open.peekF();
-        }
+        }*/
         return toReturn;
     }
 

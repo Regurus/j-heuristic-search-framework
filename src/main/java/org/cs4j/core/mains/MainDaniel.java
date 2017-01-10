@@ -128,7 +128,6 @@ public class MainDaniel {
                         String value = entry.getValue();
                         domain.setAdditionalParameter(key,value);
                     }
-
                     if(appendToFile && save && lines.length > i && lines[i].split(",").length == d.length){
                         output.writeln(lines[i]);
                         String[] lineSplit = lines[i].split(",");
@@ -894,8 +893,8 @@ public class MainDaniel {
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-                "Pancakes",
-//                "FifteenPuzzle",
+//                "Pancakes",
+                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
