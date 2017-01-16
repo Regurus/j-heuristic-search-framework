@@ -315,7 +315,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                     if(debug) debugNode(e,"remove2");
                     bestNode = null;
                     bestList = null;
-                    System.out.println("[WARNING] Tree is empty");
+//                    System.out.println("[WARNING] Tree is empty");
                 }
                 else {
                     if(debug) debugNode(e,"remove3");

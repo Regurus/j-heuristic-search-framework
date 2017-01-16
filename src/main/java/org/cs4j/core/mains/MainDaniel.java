@@ -882,19 +882,18 @@ public class MainDaniel {
 //                new IDAstar(),
 //                new BEES(),
 
-//                new DP("DP",coefficientsF,false),
                 new DP("RDPSU",coefficientsD,true),
-//                new DP("DPSU",coefficientsD,false),
-//                new DP("DPS",coefficientsF,false),
-//                new EES(1),
+                new DP("DPSU",coefficientsD,false),
+                new DP("DPS",coefficientsF,false),
+                new EES(1),
 //                new WAStar(),
         };
 
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-//                "Pancakes",
-                "FifteenPuzzle",
+                "Pancakes",
+//                "FifteenPuzzle",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -906,8 +905,11 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP-ALL";
-                    for(int i = -3 ; i <= 3 ; i+=1) {
-                        double alpha = (double)i;
+                    for(int i = 0 ; i <= 4 ; i++) {
+                        int resolution = 2;
+                        double alpha;
+                        if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
+                        else        alpha = (double) (-i/2) / resolution;
                         domainParams.put("cost-function", alpha+"");
                         filePrefix = globalPrefix+"alpha" + alpha + "_";  //for cost-function
 //                    filePrefix = "";  //for unit costs
@@ -937,8 +939,11 @@ public class MainDaniel {
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 1 ; i <= 1 ; i+=2) {
-                                double alpha = (double) i;
+                            for(int i = 0 ; i <= 20 ; i++) {
+                                int resolution = 10;
+                                double alpha;
+                                if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
+                                else        alpha = (double) (-i/2) / resolution;
                                 domainParams.put("cost-function", alpha+"");
                                 filePrefix = globalPrefix + num + "_alpha" + alpha + "_";  //for cost-function
 
