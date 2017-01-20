@@ -215,7 +215,7 @@ public class Pancakes implements SearchDomain {
 
     @Override
     public int maxGeneratedSize() {
-        return 5000000;
+        return 10000000;
     }
 
     @Override
@@ -298,20 +298,20 @@ public class Pancakes implements SearchDomain {
         /**
          * Debug
          */
-        PancakeState ups = ((PancakeState)this.unpack(toReturn));
+/*        PancakeState ups = ((PancakeState)this.unpack(toReturn));
         if  (!Arrays.equals(ps.cakes, ups.cakes)) {
             System.out.println("******************Pancakes pack problem:*********************");
-/*            for(int j=this.numCakes-1 ; j >=0 ; j--){
+*//*            for(int j=this.numCakes-1 ; j >=0 ; j--){
                 if(ps.cakes[j] != ups.cakes[j]){
                     System.out.println(ps.cakes[j] +"-"+ ups.cakes[j]);
                 }
                 else{
                     System.out.println("all ok");
                 }
-            }*/
+            }*//*
             System.out.println(Arrays.toString(ps.cakes));
             System.out.println(Arrays.toString(ups.cakes));
-        }
+        }*/
         return toReturn;
     }
 

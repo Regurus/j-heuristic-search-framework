@@ -56,6 +56,7 @@ public class SearchResultImpl implements SearchResult {
 
     public List<Iteration> iterations = new ArrayList<>();
     private List<Solution> solutions = new ArrayList<>();
+    private int minTimeOutInMs;
 
     public void setExtras(String key,String val){
         extras.put(key,val);
@@ -191,6 +192,7 @@ public class SearchResultImpl implements SearchResult {
     public void startTimer() {
         this.startWallTimeMillis = System.currentTimeMillis();
         this.startCpuTimeMillis = getCpuTime();
+        this.minTimeOutInMs = 1000*60*20;
     }
 
     public void stopTimer() {
@@ -199,11 +201,27 @@ public class SearchResultImpl implements SearchResult {
     }
 
     public boolean checkMinTimeOut(){
-        return getWallTimePassedInMS() < 5*60*1000;
+        long passed = getWallTimePassedInMS();
+        return passed < this.minTimeOutInMs;
     }
 
     public long getWallTimePassedInMS(){
         return System.currentTimeMillis() - this.startWallTimeMillis;
+    }
+
+    public String printWallTime(){
+        int duration = (int) getWallTimeMillis();
+        int ms = duration%1000;
+        String ret = "ms:"+ms;
+        duration /=1000;
+
+        int sec = duration%60;
+        if(sec > 0) ret="sec:"+sec+","+ret;
+        duration /=60;
+
+        int min = duration;
+        if(min > 0) ret="min:"+min+","+ret;
+        return ret;
     }
 
     public long getCpuTimePassedInMs(){

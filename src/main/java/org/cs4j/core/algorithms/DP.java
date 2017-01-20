@@ -24,8 +24,7 @@ public class DP  implements SearchAlgorithm {
     private static final Map<String, Class> DPPossibleParameters;
 
     // Declare the parameters that can be tuned before running the search
-    static
-    {
+    static {
         DPPossibleParameters = new HashMap<>();
         DP.DPPossibleParameters.put("weight", Double.class);
         DP.DPPossibleParameters.put("reopen", Boolean.class);
@@ -55,9 +54,11 @@ public class DP  implements SearchAlgorithm {
     private NodePackedComparator NPC;
 
     private double optimalSolution;
-    private HashMap<String,Double> coefficients;
+    private boolean useD;
     private String name;
     private boolean isFocalized;
+    private Node goal = null;
+    private Node bestGoalNode = null;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -72,12 +73,13 @@ public class DP  implements SearchAlgorithm {
 
     /**
      * A default constructor of the class
-     * @param name the name of the algorithm
-     * @param coefficients for the algo
+     *
+     * @param name        the name of the algorithm
+     * @param useD        for the algo
      * @param isFocalized if the algoritm is focalized or not
      */
-    public DP(String name, HashMap coefficients, boolean isFocalized) {
-        this.coefficients = coefficients;
+    public DP(String name, boolean useD, boolean isFocalized) {
+        this.useD = useD;
         this.name = name;
         this.isFocalized = isFocalized;
         this._initDefaultValues();
@@ -96,9 +98,9 @@ public class DP  implements SearchAlgorithm {
         this.NC = new NodeComparator();
         this.NPC = new NodePackedComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
-        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), NPC, result,coefficients,isFocalized);//no oracle
+        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), NPC, result, useD, isFocalized);//no oracle
         //for cases where we want to set the fmin start
-        if(this.optimalSolution != 0) {
+        if (this.optimalSolution != 0) {
             this.open.setOptimal(optimalSolution);
         }
 //        this.openF = new BinHeapF<>(openF_ID,domain);
@@ -109,13 +111,11 @@ public class DP  implements SearchAlgorithm {
 
     @Override
     public SearchResult search(SearchDomain domain) {
-        Node goal = null;
-        Node bestGoalNode = null;
         // Initialize all the data structures required for the search
         this._initDataStructures(domain);
 
         result.startTimer();
-        result.setExtras("numOfGoalsFound",0+"");
+        result.setExtras("numOfGoalsFound", 0 + "");
 
         // Let's instantiate the initial state
         SearchDomain.State currentState = domain.initialState();
@@ -125,87 +125,36 @@ public class DP  implements SearchAlgorithm {
         // And add it to the frontier
         _addNode(initNode);
 
-        try{
-            while (!this.open.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize() && result.checkMinTimeOut()) {
+        try {
+            while (checkTermination()) {
 
                 // Take the first state (still don't remove it)
                 Node currentNode = _selectNode();
 
-
-/*                if (currentNode.potential < DP.this.weight - 0.00001) {
-//                    System.out.println("\rPotential too low   \tFmin:" + this.open.getFmin() + "\tF:" +currentNode.f + "\tG:" + currentNode.g + "\tH:" + currentNode.h+ "\tPotential:" + currentNode.potential);
-                    currentNode.reCalcValue();
-                    if (currentNode.potential < DP.this.weight - 0.00001) {
-                        System.out.println("Potential after reCalc\tFmin:" + this.open.getFmin() + "\tF:" + currentNode.f + "\tG:" + currentNode.g + "\tH:" + currentNode.h + "\tPotential:" + currentNode.potential);
-                    }
-                }*/
-
                 // Extract the state from the packed value of the node
-                currentState = domain.unpack(currentNode.packed);
+                currentState = unpackDomain(currentNode);
 
                 // Check for goal condition
-                if (domain.isGoal(currentState)) {
-                    double fmin = open.getFmin();
-                    if(currentNode.f < fmin*weight){
-                        goal = currentNode;
-                        break;
-                    }
-                    else{
-                        if(bestGoalNode == null || bestGoalNode.g > currentNode.g){
-                            bestGoalNode = currentNode;
-                        }
-                        TreeMap<String,String> extras = result.getExtras();
-                        if(extras.get("generatedFirst") == null){
-                            result.setExtras("generatedFirst",result.generated+"");
-                        }
-                        Double numOfGoalsFound = Double.parseDouble(extras.get("numOfGoalsFound"));
-                        result.setExtras("numOfGoalsFound",numOfGoalsFound+1+"");
-//                        System.out.print("\n[INFO] A goal was found but not under the bound:"+fmin*weight+" f:"+currentNode.f+", W:"+weight+", fmin:"+fmin);
-                    }
-                }
+                if (checkIfGoal(currentState, currentNode))
+                    break;
 
                 // Expand the current node
                 ++result.expanded;
+
                 // Go over all the possible operators and apply them
-                for (int i = 0; i < domain.getNumOperators(currentState); ++i) {
-                    SearchDomain.Operator op = domain.getOperator(currentState, i);
+                for (int i = 0; i < getNumOperators(currentState); ++i) {
+                    SearchDomain.Operator op = getOperator(currentState, i);
                     // Try to avoid loops
                     if (op.equals(currentNode.pop)) {
                         continue;
                     }
                     // Here we actually generate a new state
-                    ++result.generated;
-/*                    if(result.generated >= 4660) {
-                        System.out.println("generated: " + result.generated);
-                    }*/
-                    SearchDomain.State childState = domain.applyOperator(currentState, op);
-                    //TESTS
-                    if(debug){
-                        PackedElement packedState = DP.this.domain.pack(childState);
-                        SearchDomain.State unpackedState = DP.this.domain.unpack(packedState);
-                        if(childState.getH() != unpackedState.getH()){
-                            System.out.println("Pack or unpack does not work correctly");
-                            childState.getH();
-                            unpackedState.getH();
-                        }
-                    }
+                    SearchDomain.State childState = applyOperator(currentState, op);
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
-/*                    if(childNode.getH() == 4.0 && childNode.getG() == 54 && childNode.getD() == 2){
-                        System.out.println("++++++++++++++++++++++");
-                        System.out.println(childState.dumpState());
-                        System.out.println(result.generated);
-                        System.out.println("++++++++++++++++++++++");
-                    }
-                    if(result.generated > 485){
-                        System.out.print("\r");
-                    }*/
-/*                    if(result.getGenerated() % 1 == 0){
-                        DecimalFormat formatter = new DecimalFormat("#,###");
-                        System.out.print("\r[INFO] DP Generated:" + formatter.format(result.getGenerated()));
-                    }*/
 
+                    ++result.generated;
                     // Treat duplicates
-                    if (this.closed.containsKey(childNode.packed)) {
+                    if (checkClosedContains(childNode)) {
                         _duplicateNode(childNode);
                     } else {// Otherwise, the node is new (hasn't been reached yet)
                         _addNode(childNode);
@@ -214,13 +163,73 @@ public class DP  implements SearchAlgorithm {
                 _removeNode(currentNode);
             }
         } catch (OutOfMemoryError e) {
-            System.out.println("[INFO] DP OutOfMemory :-( "+e);
-            System.out.println("[INFO] OutOfMemory DP on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
+            System.out.println("[INFO] DP OutOfMemory :-( " + e);
+            System.out.println("[INFO] OutOfMemory DP on:" + domain.getClass().getSimpleName() + " generated:" + result.getGenerated());
         }
 
         result.stopTimer();
 
+        if(this.open.isEmpty()){
+            System.out.println("[INFO] no goal found: open.isEmpty");
+        }
+        if(result.checkMinTimeOut()){
+            System.out.println("[INFO] no goal found: checkMinTimeOut:"+result.printWallTime());
+        }
+        if(result.getGenerated() < domain.maxGeneratedSize()){
+            System.out.println("[INFO] no goal found: maxGeneratedSize");
+        }
         // If a goal was found: update the solution
+        handleGoal();
+
+        return result;
+    }
+
+    private boolean checkTermination() {
+        return !this.open.isEmpty() && result.getGenerated() < domain.maxGeneratedSize() && result.checkMinTimeOut();
+    }
+
+    private SearchDomain.State applyOperator(SearchDomain.State currentState, SearchDomain.Operator op){
+        return domain.applyOperator(currentState, op);
+    }
+    private SearchDomain.Operator getOperator(SearchDomain.State currentState, int i){
+        return domain.getOperator(currentState, i);
+    }
+
+    private int getNumOperators(SearchDomain.State currentState) {
+        return domain.getNumOperators(currentState);
+    }
+
+    private SearchDomain.State unpackDomain(Node currentNode){
+        return domain.unpack(currentNode.packed);
+    }
+
+    private boolean checkIfGoal(SearchDomain.State currentState, Node currentNode){
+        if(this.domain.isGoal(currentState)){
+            double fmin = open.getFmin();
+            if (currentNode.f < fmin * weight) {
+                goal = currentNode;
+                return true;
+            } else {
+                if (bestGoalNode == null || bestGoalNode.g > currentNode.g) {
+                    bestGoalNode = currentNode;
+                }
+                TreeMap<String, String> extras = result.getExtras();
+                if (extras.get("generatedFirst") == null) {
+                    result.setExtras("generatedFirst", result.generated + "");
+                }
+                Double numOfGoalsFound = Double.parseDouble(extras.get("numOfGoalsFound"));
+                result.setExtras("numOfGoalsFound", numOfGoalsFound + 1 + "");
+                //                        System.out.print("\n[INFO] A goal was found but not under the bound:"+fmin*weight+" f:"+currentNode.f+", W:"+weight+", fmin:"+fmin);
+            }
+        }
+        return false;
+    }
+
+    private boolean checkClosedContains(Node childNode){
+        return this.closed.containsKey(childNode.packed);
+    }
+
+    private void handleGoal(){
         if (goal != null) {
             System.out.print("\r");
             SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
@@ -274,8 +283,6 @@ public class DP  implements SearchAlgorithm {
             System.out.println("smallerThanFmin:"+smallerThanFmin);
             System.out.println("smallerThanWcost:"+smallerThanWcost);*/
         }
-
-        return result;
     }
 
     @Override
@@ -486,7 +493,7 @@ public class DP  implements SearchAlgorithm {
             this.op = op;
 
             // Compute the actual values of sseH and sseD
-            this._computePathHats(parent, cost);
+//            this._computePathHats(parent, cost);
 
         }
 
