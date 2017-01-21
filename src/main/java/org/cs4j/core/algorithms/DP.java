@@ -153,9 +153,6 @@ public class DP  implements SearchAlgorithm {
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
 
                     ++result.generated;
-/*                    if(result.generated > 13){
-                        System.out.print("\rgenerated:"+result.generated);
-                    }*/
                     // Treat duplicates
                     if (checkClosedContains(childNode)) {
                         _duplicateNode(childNode);
@@ -171,16 +168,6 @@ public class DP  implements SearchAlgorithm {
         }
 
         result.stopTimer();
-
-        if(this.open.isEmpty()){
-            System.out.println("[INFO] no goal found: open.isEmpty");
-        }
-        if(!result.checkMinTimeOut()){
-            System.out.println("[INFO] no goal found: checkMinTimeOut:"+result.printWallTime());
-        }
-        if(result.getGenerated() >= domain.maxGeneratedSize()){
-            System.out.println("[INFO] no goal found: maxGeneratedSize");
-        }
         // If a goal was found: update the solution
         handleGoal();
 
@@ -286,6 +273,17 @@ public class DP  implements SearchAlgorithm {
 /*            System.out.println("closed size:"+closed.size());
             System.out.println("smallerThanFmin:"+smallerThanFmin);
             System.out.println("smallerThanWcost:"+smallerThanWcost);*/
+        }
+        else{
+            if(this.open.isEmpty()){
+                System.out.println("[INFO] no goal found: open.isEmpty");
+            }
+            if(result.checkMinTimeOut()){
+                System.out.println("[INFO] no goal found: checkMinTimeOut:"+result.printWallTime());
+            }
+            if(result.getGenerated() >= domain.maxGeneratedSize()){
+                System.out.println("[INFO] no goal found: maxGeneratedSize");
+            }
         }
     }
 

@@ -911,16 +911,16 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{10, 12, 16};
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
-                    pancakesNum = new int[]{101};
+//                    pancakesNum = new int[]{101};
 //                    pancakesNum = new int[]{20};
-//                    pancakesNum = new int[]{16};
+                    pancakesNum = new int[]{16};
 //                    pancakesNum = new int[]{10};
-                    for(int gap=0 ; gap <=0  ; gap++) {
+                    for(int gap = 0 ; gap <= 0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 0 ; i <= 1 ; i+=2) {
+                            for(int i = 1 ; i <= 1 ; i+=2) {
                                 int resolution = 1;
                                 double alpha;
                                 if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
