@@ -174,6 +174,7 @@ public class MainDaniel {
                                     d[8] = Double.parseDouble(generatedFirst.toString());
                                 }
                                 d[9] = Double.parseDouble(extras.get("numOfGoalsFound").toString());
+                                d[10] = Double.parseDouble(extras.get("fmin").toString());
                             }
 
 /*                            retArray[0] += 1;
@@ -843,7 +844,7 @@ public class MainDaniel {
         startInstance = 1;
         stopInstance = 100;
 
-        DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};
+        DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found","fmin"};
 
         summaryName = "NO-SUMMARY-SET";
 
@@ -861,20 +862,19 @@ public class MainDaniel {
         SearchAlgorithm[] AlgoArr = {
 //                new IDAstar(),
 //                new BEES(),
-
-//                new DP("RDPSU",true,true),
-//                new DP("DPSU",coefficientsD,false),
-                new DP("DPS",false,false),
-//                new EES(1),
 //                new WAStar(),
+                new EES(1),
+                new DP("DPS",false,false),
+                new DP("DPSU",true,false),
+                new DP("RDPSU",true,true),
         };
 
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-                "Pancakes",
+//                "Pancakes",
 //                "FifteenPuzzle",
-//            "VacuumRobot",
+            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
         };
@@ -885,8 +885,8 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP-ALL";
-                    for(int i = 0 ; i <= 4 ; i++) {
-                        int resolution = 2;
+                    for(int i = 3 ; i <= 4 ; i++) {
+                        int resolution = 1;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
                         else        alpha = (double) (-i/2) / resolution;
@@ -943,10 +943,10 @@ public class MainDaniel {
                 }
                 case "VacuumRobot": {
                     int[] dirts;
-                    dirts = new int[]{10};
-//                    dirts = new int[]{5};
+//                    dirts = new int[]{10};
+                    dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int alpha=0 ; alpha < 2 ; alpha+=2) {
+                    for(int alpha=0 ; alpha <= 0 ; alpha+=2) {
                         for (int j = 0; j < dirts.length; j++) {
                             for(int shrinkTo = dirts[j] ; shrinkTo <= dirts[j] ; shrinkTo+=1){
                                 filePrefix = globalPrefix + "";

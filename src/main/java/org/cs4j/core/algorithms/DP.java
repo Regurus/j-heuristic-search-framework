@@ -195,12 +195,25 @@ public class DP  implements SearchAlgorithm {
     }
 
     private boolean checkIfGoal(SearchDomain.State currentState, Node currentNode){
+        double fmin = open.getFmin();
         if(this.domain.isGoal(currentState)){
-            double fmin = open.getFmin();
-            if (currentNode.f < fmin * weight) {
+            if (currentNode.g < fmin * weight) {
                 goal = currentNode;
                 return true;
             } else {
+                double cost = 0;
+                SearchDomain.State currentPacked = domain.unpack(goal.packed);
+                SearchDomain.State currentParentPacked = null;
+                for (Node node = goal;
+                     node != null;
+                     node = node.parent, currentPacked = currentParentPacked) {
+                    // If op of current node is not null that means that p has a parent
+                    if (node.op != null) {
+                        currentParentPacked = domain.unpack(node.parent.packed);
+                        cost += node.op.getCost(currentPacked, currentParentPacked);
+                    }
+                }
+                currentNode.g = cost;
                 if (bestGoalNode == null || bestGoalNode.g > currentNode.g) {
                     bestGoalNode = currentNode;
                 }
@@ -212,6 +225,10 @@ public class DP  implements SearchAlgorithm {
                 result.setExtras("numOfGoalsFound", numOfGoalsFound + 1 + "");
                 //                        System.out.print("\n[INFO] A goal was found but not under the bound:"+fmin*weight+" f:"+currentNode.f+", W:"+weight+", fmin:"+fmin);
             }
+        }
+        else if(bestGoalNode != null && bestGoalNode.g < fmin * weight) {
+            goal = bestGoalNode;
+            return true;
         }
         return false;
     }
@@ -232,8 +249,8 @@ public class DP  implements SearchAlgorithm {
             SearchDomain.State currentPacked = domain.unpack(goal.packed);
             SearchDomain.State currentParentPacked = null;
             for (Node currentNode = goal;
-                 currentNode != null;
-                 currentNode = currentNode.parent, currentPacked = currentParentPacked) {
+                              currentNode != null;
+                              currentNode = currentNode.parent, currentPacked = currentParentPacked) {
                 // If op of current node is not null that means that p has a parent
                 if (currentNode.op != null) {
                     path.add(currentNode.op);
@@ -270,6 +287,7 @@ public class DP  implements SearchAlgorithm {
                 if(weight * node.f < cost) smallerThanWcost++;
 //                it.remove();
             }
+            result.setExtras("fmin",fmin+"");
 /*            System.out.println("closed size:"+closed.size());
             System.out.println("smallerThanFmin:"+smallerThanFmin);
             System.out.println("smallerThanWcost:"+smallerThanWcost);*/

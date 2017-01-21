@@ -206,10 +206,7 @@ public class EES implements SearchAlgorithm {
         // Initialize the result
         result = new SearchResultImpl();
         result.startTimer();
-        result.startArrCpuTimeMillis("0000");
-
         try {
-//            result.startArrCpuTimeMillis("1000");
             // Create the initial state and node
             State initState = domain.initialState();
             Node initNode = new Node(initState, null, null, null, null);
@@ -217,11 +214,8 @@ public class EES implements SearchAlgorithm {
             this._insertNode(initNode, initNode);
             // Update FOCAL with the inserted node (no change in f^) - required since oldBest is null in this case
             this.gequeue.updateFocal(null, initNode, 0);
-//            result.stopArrCpuTimeMillis("1000");
-            result.startArrCpuTimeMillis("2000");
             // Loop while there is some node in open
             while (!this.gequeue.isEmpty() && result.getGenerated() < this.domain.maxGeneratedSize() && result.checkMinTimeOut()) {
-                result.startArrCpuTimeMillis("2100");
                 // First, take the best node from the open list (best f^)
                 Node oldBest = this.gequeue.peekOpen();
                 // Now this node is in closed only, and not in open
@@ -242,11 +236,8 @@ public class EES implements SearchAlgorithm {
                 // Here, we decided to expand the node
                 ++result.expanded;
                 int numOps = domain.getNumOperators(state);
-                result.stopArrCpuTimeMillis("2100");
-                result.startArrCpuTimeMillis("2200");
                 // Go over all the possible operators
                 for (int i = 0; i < numOps; ++i) {
-                    result.startArrCpuTimeMillis("2210");
                     Operator op = domain.getOperator(state, i);
                     // Bypass reverse operations
                     if (op.equals(bestNode.pop)) {
@@ -263,8 +254,6 @@ public class EES implements SearchAlgorithm {
                     State childState = domain.applyOperator(state, op);
                     // Create the child node
                     Node childNode = new Node(childState, bestNode, state, op, op.reverse(state));
-                    result.stopArrCpuTimeMillis("2210");
-                    result.startArrCpuTimeMillis("2220");
                     // merge duplicates
                     // ==> This means it is in CLOSED (and maybe in OPEN too!) - a duplicate was found!
                     boolean contains = true;
@@ -272,11 +261,8 @@ public class EES implements SearchAlgorithm {
                     if(testNode == null){
                         contains = false;
                     }
-                    result.stopArrCpuTimeMillis("2220");
-                    result.startArrCpuTimeMillis("2230");
 //                    contains = this.closed.containsKey(childNode.packed);
                     if (contains) {
-                        result.startArrCpuTimeMillis("2231");
                         ++result.duplicates;
                         // Extract the duplicate
                         Node dupChildNode = this.closed.get(childNode.packed);
@@ -332,37 +318,22 @@ public class EES implements SearchAlgorithm {
                                 }
                             }
                         }
-                        result.stopArrCpuTimeMillis("2231");
                         // New node - not in CLOSED
                     } else {
-                        result.startArrCpuTimeMillis("2232");
                         this._insertNode(childNode, oldBest);
                         bestNode.children.put(childNode.packed, childNode);
-                        result.stopArrCpuTimeMillis("2232");
                     }
-                    result.stopArrCpuTimeMillis("2230");
                 }
-                result.stopArrCpuTimeMillis("2200");
-                result.startArrCpuTimeMillis("2300");
-                result.startArrCpuTimeMillis("2301");
                 // After the old-best node was expanded, let's update the best node in OPEN and FOCAL
                 Node newBest = this.gequeue.peekOpen();
-                result.stopArrCpuTimeMillis("2301");
-                result.startArrCpuTimeMillis("2302");
                 int fHatChange = this.openComparator.compareIgnoreTies(newBest, oldBest);
-                result.stopArrCpuTimeMillis("2302");
-                result.startArrCpuTimeMillis("2303");
                 this.gequeue.updateFocal(oldBest, newBest, fHatChange);
-                result.stopArrCpuTimeMillis("2303");
-                result.stopArrCpuTimeMillis("2300");
             }
-            result.stopArrCpuTimeMillis("2000");
         } catch (OutOfMemoryError e) {
             System.out.println("[INFO] EES OutOfMemory :-( "+e);
             System.out.println("[INFO] OutOfMemory EES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
         }
         result.stopTimer();
-        result.stopArrCpuTimeMillis("0000");
 //        System.out.println("Generated:\t"+result.getGenerated());
 //        System.out.println("closed Size:\t"+this.closed.size());
 /*        System.out.println();
@@ -610,9 +581,10 @@ public class EES implements SearchAlgorithm {
                 this.sseH = parent.sseH + ((edgeCost + this.h) - parent.h);
                 this.sseD = parent.sseD + ((1 + this.d) - parent.d);
                 if(sseD < 0){
-                    System.out.println("sseD: "+sseD);
-                    System.out.println("this:"+this);
-                    System.out.println("parent:"+parent);
+//                    System.out.println("sseD: "+sseD);
+//                    System.out.println("this:"+this);
+//                    System.out.println("parent:"+parent);
+                    sseD = 0;
                 }
             }
 
