@@ -153,6 +153,9 @@ public class DP  implements SearchAlgorithm {
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
 
                     ++result.generated;
+/*                    if(result.generated > 13){
+                        System.out.print("\rgenerated:"+result.generated);
+                    }*/
                     // Treat duplicates
                     if (checkClosedContains(childNode)) {
                         _duplicateNode(childNode);
@@ -172,10 +175,10 @@ public class DP  implements SearchAlgorithm {
         if(this.open.isEmpty()){
             System.out.println("[INFO] no goal found: open.isEmpty");
         }
-        if(result.checkMinTimeOut()){
+        if(!result.checkMinTimeOut()){
             System.out.println("[INFO] no goal found: checkMinTimeOut:"+result.printWallTime());
         }
-        if(result.getGenerated() < domain.maxGeneratedSize()){
+        if(result.getGenerated() >= domain.maxGeneratedSize()){
             System.out.println("[INFO] no goal found: maxGeneratedSize");
         }
         // If a goal was found: update the solution
@@ -185,7 +188,8 @@ public class DP  implements SearchAlgorithm {
     }
 
     private boolean checkTermination() {
-        return !this.open.isEmpty() && result.getGenerated() < domain.maxGeneratedSize() && result.checkMinTimeOut();
+//        return !this.open.isEmpty() && result.getGenerated() < domain.maxGeneratedSize() && result.checkMinTimeOut();
+        return result.getGenerated() < domain.maxGeneratedSize();
     }
 
     private SearchDomain.State applyOperator(SearchDomain.State currentState, SearchDomain.Operator op){

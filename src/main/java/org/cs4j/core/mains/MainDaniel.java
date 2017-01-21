@@ -845,26 +845,6 @@ public class MainDaniel {
 
         DPextraHeaders = new String[]{"Generated until 1st goal", "number of times goal was found"};
 
-        HashMap<String,Double> coefficientsD = new HashMap<>();
-        coefficientsD.put("fmin" ,0.0);//H
-        coefficientsD.put("dmin" ,1.0);//D
-        coefficientsD.put("gCost",0.0);//H
-        coefficientsD.put("dCost",1.0);//D
-        coefficientsD.put("h"    ,0.0);//H
-        coefficientsD.put("hHat" ,0.0);//hHat
-        coefficientsD.put("d"    ,1.0);//D
-        coefficientsD.put("dHat" ,0.0);//dHat
-
-        HashMap<String,Double> coefficientsF = new HashMap<>();
-        coefficientsF.put("fmin" ,1.0);//H
-        coefficientsF.put("dmin" ,0.0);//D
-        coefficientsF.put("gCost",1.0);//H
-        coefficientsF.put("dCost",0.0);//D
-        coefficientsF.put("h"    ,1.0);//H
-        coefficientsF.put("hHat" ,0.0);//hHat
-        coefficientsF.put("d"    ,0.0);//D
-        coefficientsF.put("dHat" ,0.0);//dHat
-
         summaryName = "NO-SUMMARY-SET";
 
         if(useOracle) globalPrefix = "ORACLE_";
@@ -882,7 +862,7 @@ public class MainDaniel {
 //                new IDAstar(),
 //                new BEES(),
 
-//                new DP("RDPSU",coefficientsD,true),
+//                new DP("RDPSU",true,true),
 //                new DP("DPSU",coefficientsD,false),
                 new DP("DPS",false,false),
 //                new EES(1),
@@ -933,14 +913,14 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{40};
                     pancakesNum = new int[]{101};
 //                    pancakesNum = new int[]{20};
-                    pancakesNum = new int[]{16};
+//                    pancakesNum = new int[]{16};
 //                    pancakesNum = new int[]{10};
                     for(int gap=0 ; gap <=0  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 1 ; i <= 1 ; i+=2) {
+                            for(int i = 0 ; i <= 1 ; i+=2) {
                                 int resolution = 1;
                                 double alpha;
                                 if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;

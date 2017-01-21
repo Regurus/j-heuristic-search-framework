@@ -1182,7 +1182,12 @@ public final class FifteenPuzzle implements SearchDomain {
                 break;
             }
             case "cost-function": {
+                int LCM_1_to_15 = 360360;
                 this.costAlpha = Double.parseDouble(value);
+                if(this.costAlpha == -4.0){//Inverse-integer
+                    tileCosts = new double[]{0, 1, 3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
+                    for (int i = 1; i <= 15; i++) tileCosts[i] = LCM_1_to_15*Math.pow(tileCosts[i], -1);
+                }
                 if(this.costAlpha == -3.0){//Heavy-DI
                     tileCosts = new double[]{0, 1, 3, 6, 2, 4, 7, 10, 5, 8, 11, 13, 9, 12, 14, 15};
                 }

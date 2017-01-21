@@ -19,7 +19,8 @@ public class Pancakes implements SearchDomain {
     // The parameter k for GAP-k heuristic (means that k pancakes are ignored during heuristic calculation
     // [starting from 0])
     private double k;
-    private double alpha;// thw power of the real cost to use;
+//    private double alpha;// thw power of the real cost to use;
+    private double tileCosts[];
 
     private static final Map<String, Class> PancakesPossibleParameters;
 
@@ -57,6 +58,8 @@ public class Pancakes implements SearchDomain {
      * Initialize all the data structures relevant to the domain
      */
     private void _initializeDataStructures() {
+        this.tileCosts = new double[this.numCakes];
+        Arrays.fill(this.tileCosts, 1);
         this.possibleOperators = new Operator[this.numCakes];
         // Initialize the operators (according to the updated position of the pancake)
         for (int i = 0; i < this.numCakes; ++i) {
@@ -153,21 +156,25 @@ public class Pancakes implements SearchDomain {
      * remove it
      *
      * @param cakes The pancakes array
-     * @param pow The power of the cost function to apply (0=UNIT)
+     * @param unitCost use wighted function or not
      * @param useK Whether to refer to the value of k during the calculation of gaps count
      *
      * @return The calculated gaps number, which allows to form the heuristic function
      */
-    private double _countGaps(int cakes[], double pow, boolean useK) {
+    private double _countGaps(int cakes[], boolean unitCost, boolean useK) {
         double gapsCount = 0;
         for (int i = Pancakes.MIN_PANCAKE_FOR_PDB; i <= this.maxPancakeForPDB; ++i) {
             if (this._hasGap(cakes, i, useK)) {
-                double a = cakes[i];
-                double b = (i != this.numCakes - 1) ? cakes[i + 1] : Integer.MAX_VALUE;
-                // Each gap costs the the minimal cake+1
-                a = Math.pow(a+1.0,pow);
-                b = Math.pow(b+1.0,pow);
-                gapsCount += Math.min(a, b);
+                if(unitCost) gapsCount += 1.0;
+                else {
+                    int a = cakes[i];
+                    //if it is the last cake
+                    if(i + 1 == this.numCakes){
+                        gapsCount += this.tileCosts[a];
+                    }
+                    else gapsCount += Math.min(this.tileCosts[a], this.tileCosts[cakes[i + 1]]);
+                    // Each gap costs the the minimal cake+1
+                }
             }
         }
         return gapsCount;
@@ -177,25 +184,24 @@ public class Pancakes implements SearchDomain {
      * Same as the above _countGaps function, but the value of k is used
      *
      * @param cakes The pancakes array
-     * @param pow The power of the cost function to apply (0=UNIT)
-     *
+     * @param unitCost
      * @return The calculated gaps number, which allows to form the heuristic function
      */
-    private double _countGaps(int cakes[], double pow) {
-        return this._countGaps(cakes, pow, true);
+    private double _countGaps(int cakes[], boolean unitCost) {
+        return this._countGaps(cakes, unitCost, true);
     }
 
     @Override
     public PancakeState initialState() {
         PancakeState s = new PancakeState(this.numCakes);
         System.arraycopy(this.init, 0, s.cakes, 0, numCakes);
-        s.h = this._countGaps(s.cakes, alpha);
-        s.d = this._countGaps(s.cakes, 0);
+        s.h = this._countGaps(s.cakes, false);
+        s.d = this._countGaps(s.cakes, true);
         if (this.k == 0) {
             s.dNoGaps = s.d;
         } else {
             // Calc d without k
-            s.dNoGaps = this._countGaps(s.cakes, 0, false);
+            s.dNoGaps = this._countGaps(s.cakes, true, false);
         }
         return s;
     }
@@ -241,13 +247,13 @@ public class Pancakes implements SearchDomain {
         int pancakeOperator = ((PancakeOperator)op).value;
         // Flip the top of the stack
         pancakeState.flipTopStackPortion(pancakeOperator);
-        pancakeState.h = this._countGaps(pancakeState.cakes, alpha);
-        pancakeState.d = this._countGaps(pancakeState.cakes, 0);
+        pancakeState.h = this._countGaps(pancakeState.cakes, false);
+        pancakeState.d = this._countGaps(pancakeState.cakes, true);
         if (this.k == 0) {
             pancakeState.dNoGaps = pancakeState.d;
         } else {
             // Calc d without k
-            pancakeState.dNoGaps = this._countGaps(pancakeState.cakes, 0, false);
+            pancakeState.dNoGaps = this._countGaps(pancakeState.cakes, true, false);
         }
         return pancakeState;
     }
@@ -267,8 +273,8 @@ public class Pancakes implements SearchDomain {
      */
     private double computeCost(State state, State parent, int op) {
         PancakeState ps = (PancakeState)state;
-        double separated = ps.cakes[0];
-        double bottom;
+        int separated = ps.cakes[0];
+        int bottom;
         if(op < this.numCakes-1) {
             bottom = ps.cakes[op + 1];
         }
@@ -276,9 +282,10 @@ public class Pancakes implements SearchDomain {
             bottom = ps.cakes[op];
         }
 
-        separated =  Math.pow(separated+1.0,alpha);
-        bottom =  Math.pow(bottom+1.0,alpha);
-        double value = Math.max(separated,bottom);
+//        separated =  Math.pow(separated+1.0,alpha);
+//        bottom =  Math.pow(bottom+1.0,alpha);
+//        double value = Math.max(separated,bottom);
+        double value = Math.max(this.tileCosts[separated],this.tileCosts[bottom]);
         return value;
     }
 
@@ -339,9 +346,9 @@ public class Pancakes implements SearchDomain {
                 state.cakes[index--] = p;
             }
         }
-        state.h = this._countGaps(state.cakes, alpha);
-        state.d = this._countGaps(state.cakes, 0);
-        state.dNoGaps = this._countGaps(state.cakes, 0, false);
+        state.h = this._countGaps(state.cakes, false);
+        state.d = this._countGaps(state.cakes, true);
+        state.dNoGaps = this._countGaps(state.cakes, true, false);
         return state;
     }
 
@@ -540,7 +547,8 @@ public class Pancakes implements SearchDomain {
         parameters.put(parameterName,value);
         switch (parameterName) {
             case "cost-function": {
-                this.alpha = Double.parseDouble(value);
+                double alpha = Double.parseDouble(value);
+                for(int i=0; i< this.numCakes; i++) this.tileCosts[i] = Math.pow(i+1.0,alpha);
                 break;
             }
             case "GAP-k": {
