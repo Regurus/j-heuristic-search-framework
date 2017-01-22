@@ -362,8 +362,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                     // for cases where the heuristic is admissible but not consistent
                     if(prevFmin > fmin){
                         fmin = prevFmin;
+                        System.out.println("[INFO GH_heap] heuristic is not consistent: prevFmin = "+prevFmin+" > fmin = "+fmin);
                     }
-                    reorder();
+                    else reorder();
                 }
             }
         }

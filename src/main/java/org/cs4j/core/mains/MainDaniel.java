@@ -864,17 +864,17 @@ public class MainDaniel {
 //                new BEES(),
 //                new WAStar(),
                 new EES(1),
-//                new DP("DPS",false,false),
-//                new DP("DPSU",true,false),
-//                new DP("RDPSU",true,true),
+                new DP("DPS",false,false),
+                new DP("DPSU",true,false),
+                new DP("RDPSU",true,true),
         };
 
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
 //                "Pancakes",
-                "FifteenPuzzle",
-//            "VacuumRobot",
+//                "FifteenPuzzle",
+            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
         };
@@ -946,7 +946,11 @@ public class MainDaniel {
 //                    dirts = new int[]{10};
                     dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int alpha=0 ; alpha <= 0 ; alpha+=2) {
+                    for(int i=1 ; i <= 1 ; i+=2) {
+                        int resolution = 1;
+                        double alpha;
+                        if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
+                        else        alpha = (double) (-i/2) / resolution;
                         for (int j = 0; j < dirts.length; j++) {
                             for(int shrinkTo = dirts[j] ; shrinkTo <= dirts[j] ; shrinkTo+=1){
                                 filePrefix = globalPrefix + "";
