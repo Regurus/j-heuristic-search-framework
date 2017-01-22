@@ -864,17 +864,17 @@ public class MainDaniel {
 //                new BEES(),
 //                new WAStar(),
                 new EES(1),
-                new DP("DPS",false,false),
-                new DP("DPSU",true,false),
-                new DP("RDPSU",true,true),
+//                new DP("DPS",false,false),
+//                new DP("DPSU",true,false),
+//                new DP("RDPSU",true,true),
         };
 
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
 //                "Pancakes",
-//                "FifteenPuzzle",
-            "VacuumRobot",
+                "FifteenPuzzle",
+//            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
         };

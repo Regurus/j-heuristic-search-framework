@@ -246,12 +246,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                     tempOutOfFocalTreeTree.put(node, list);
             }
             outOfFocalTree = tempOutOfFocalTreeTree;
-            if(bestNode == null){
-                bestNode = tree.firstKey();
-                bestList = tree.get(bestNode);
-            }
         }
         tree = tempTree;
+        if(bestNode == null){
+            bestNode = tree.firstKey();
+            bestList = tree.get(bestNode);
+        }
     }
 
     @Override
@@ -349,6 +349,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             countF.remove(f);
             if(!isOptimal) {//fmin might change/increase
                 if (f == fmin && (tree.size()> 0 || outOfFocalTree.size() > 0)) {//find next lowest
+                    double prevFmin = fmin;
                     fmin = Integer.MAX_VALUE;
                     Iterator it = countF.entrySet().iterator();
                     while (it.hasNext()) {
@@ -357,6 +358,10 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                         if (fmin >= key) {
                             fmin = key;
                         }
+                    }
+                    // for cases where the heuristic is admissible but not consistent
+                    if(prevFmin > fmin){
+                        fmin = prevFmin;
                     }
                     reorder();
                 }

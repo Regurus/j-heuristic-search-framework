@@ -86,6 +86,29 @@ public class Pancakes implements SearchDomain {
     }
 
     /**
+     * sets the initial state to be the given state
+     *
+     * @param state The state to set as initial state
+     */
+    public void setInitialState(State state){
+        PancakeState s = (PancakeState) state;
+        this.init = s.cakes;
+    }
+
+    /**
+     * creates a goal state of this size
+     *
+     * @param size The size of the pancakes problem to initialize as goal state
+     */
+    public Pancakes(int size) {
+        int init[] = new int[size];
+        for(int i=0; i<size; i++){
+            init[i] = i;
+        }
+        new Pancakes(init);
+    }
+
+    /**
      * The constructor reads an instance of Pancakes problem from the specified input stream
      *
      * @param stream The input stream to read the problem from

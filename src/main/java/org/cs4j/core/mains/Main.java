@@ -582,18 +582,21 @@ public class Main {
         }
     }
 
-    public static void randomWalkFifteenInstances() throws IOException {
-        System.out.println("randomWalkFifteenInstances started");
+    public static void randomWalkInstances() throws IOException {
+        System.out.println("randomWalkInstances started");
         SearchAlgorithm Astar = new WAStar();
         int iterationStep = 5;
         int stepNum = 4;
         int iterations = 1000;
-        FifteenPuzzle domain = new FifteenPuzzle();
 
-        domain.setAdditionalParameter("cost-function", -1.0+"");
+//        FifteenPuzzle domain = new FifteenPuzzle();
+        Pancakes domain = new Pancakes(16);
+
+        domain.setAdditionalParameter("cost-function", 1.0+"");
 //        String fileExt = "DiagonalHeavy";
 //        String fileExt = "Regular";
-        String fileExt = "Inverse";
+//        String fileExt = "Inverse";
+        String fileExt = "Heavy";
 
         System.out.println(fileExt);
         SearchDomain.State goalState = domain.initialState();
@@ -699,7 +702,7 @@ public class Main {
             }
             fw.close();
         }*/
-        System.out.println("randomWalkFifteenInstances finished");
+        System.out.println("randomWalkInstances finished");
     }
 
     public static void main(String[] args) throws IOException {
@@ -717,7 +720,7 @@ public class Main {
             }
         }*/
 
-        Main.randomWalkFifteenInstances();
+        Main.randomWalkInstances();
         //Main.mainTopSpin12Domain(args);
         //Main.mainRawGraphDomain(args);
         //Main.mainFifteenPuzzleDomain(args);
