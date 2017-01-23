@@ -863,10 +863,10 @@ public class MainDaniel {
 //                new IDAstar(),
 //                new BEES(),
 //                new WAStar(),
-                new EES(1),
-                new DP("DPS",false,false),
-                new DP("DPSU",true,false),
                 new DP("RDPSU",true,true),
+                new DP("DPSU",true,false),
+                new DP("DPS",false,false),
+                new EES(1),
         };
 
         SearchAlgorithmArr = AlgoArr;
@@ -946,8 +946,8 @@ public class MainDaniel {
 //                    dirts = new int[]{10};
                     dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int i=1 ; i <= 1 ; i+=2) {
-                        int resolution = 1;
+                    for(int i=1 ; i <= 2 ; i+=2) {
+                        int resolution = 2;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
                         else        alpha = (double) (-i/2) / resolution;

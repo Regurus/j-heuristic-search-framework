@@ -202,9 +202,9 @@ public class DP  implements SearchAlgorithm {
                 return true;
             } else {
                 double cost = 0;
-                SearchDomain.State currentPacked = domain.unpack(goal.packed);
+                SearchDomain.State currentPacked = domain.unpack(currentNode.packed);
                 SearchDomain.State currentParentPacked = null;
-                for (Node node = goal;
+                for (Node node = currentNode;
                      node != null;
                      node = node.parent, currentPacked = currentParentPacked) {
                     // If op of current node is not null that means that p has a parent
