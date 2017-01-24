@@ -946,7 +946,7 @@ public class MainDaniel {
 //                    dirts = new int[]{10};
                     dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int i=0 ; i <= 3 ; i+=2) {
+                    for(int i=1 ; i <= 3 ; i+=2) {
                         int resolution = 2;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;

@@ -685,7 +685,7 @@ public class VacuumRobot implements SearchDomain {
                 continue;
             }
             // Get the distance between the robot location and the current dirty location
-            int currentDist = Utils.calcManhattanDistance(xy, this.dirtyLocations.get(n));
+            int currentDist = calcManhattanDistance(xy, this.dirtyLocations.get(n));
             // Update the minimum distance if required
             if (currentDist < minDirtyDist) {
                 minDirtyIndex = n;
@@ -693,6 +693,10 @@ public class VacuumRobot implements SearchDomain {
             }
         }
         return new int[]{minDirtyIndex, minDirtyDist};
+    }
+
+    private int calcManhattanDistance(PairInt xy, PairInt n){
+        return Utils.calcManhattanDistance(xy, n);
     }
 
     /**
@@ -1133,7 +1137,9 @@ public class VacuumRobot implements SearchDomain {
      * already cleaned)
      */
     private double heavy(int ndirt) {
-        double ret = Math.pow(ndirt,this.alpha);
+        double ret;
+        if(ndirt == 0) ret = 0;// so we will not divide by zero in case that alpha < 0
+        else           ret = Math.pow(ndirt,this.alpha);
         return ret;
     }
 

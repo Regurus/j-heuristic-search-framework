@@ -347,8 +347,9 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         countF.put(f,countF.get(f)-1);
         if(countF.get(f)==0){
             countF.remove(f);
-            if(!isOptimal) {//fmin might change/increase
-                if (f == fmin && (tree.size()> 0 || outOfFocalTree.size() > 0)) {//find next lowest
+            if(!isOptimal) {
+                //fmin might increase, if the heuristic is consistent fmin should not decrease
+                if (f <= fmin && (tree.size()> 0 || outOfFocalTree.size() > 0)) {//find next lowest
                     double prevFmin = fmin;
                     fmin = Integer.MAX_VALUE;
                     Iterator it = countF.entrySet().iterator();
@@ -361,10 +362,16 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                     }
                     // for cases where the heuristic is admissible but not consistent
                     if(prevFmin > fmin){
-                        System.out.print("\r[INFO GH_heap] heuristic is not consistent: prevFmin = "+prevFmin+" > fmin = "+fmin);
+                        System.out.print("\r[INFO GH_heap] heuristic is not consistent: prevFmin = "+prevFmin+" > fmin = "+fmin+" , inconsistency:"+(prevFmin-fmin));
                         fmin = prevFmin;
                     }
-                    else reorder();
+                    else {
+                        reorder();
+//                        System.out.print("\r[INFO GH_heap] new fmin = "+fmin);
+                    }
+                }
+                else{
+                    if(debug) debugNode(e,"count_remove");
                 }
             }
         }
@@ -432,7 +439,26 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         debugNode(node,from);
     }
     private void debugNode(gh_node node, String from){
-        if(node.f + IsFocalizedPrecision < fmin){
+        if(from == "count_remove"){
+            if(fmin == 455.27838751346) {
+                //check that fmin is still OK
+                double found_fmin = Integer.MAX_VALUE;
+                Iterator it = countF.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry pair = (Map.Entry) it.next();
+                    double key = (double) pair.getKey();
+                    if (found_fmin >= key) {
+                        found_fmin = key;
+                    }
+                }
+                // there is a problem with fmin
+                if (found_fmin > fmin) {
+                    System.out.print("\r[ERROR GH_heap] check the fmin counter. fmin="+fmin+", found_fmin="+found_fmin);
+                }
+            }
+        }
+
+/*        if(node.f + IsFocalizedPrecision < fmin){
             System.out.println("++++++++++++++++++++++");
             System.out.println("[INFO] fmin decreased:"+from);
             System.out.println(fmin);
@@ -449,7 +475,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             System.out.println(fmin);
             System.out.println(result.generated);
             System.out.println("++++++++++++++++++++++");
-        }
+        }*/
 
         if(bestNode != null && bestNode.inTree == false && bestList != null){
             System.out.println("++++++++++++++++++++++");
