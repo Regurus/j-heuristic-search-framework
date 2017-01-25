@@ -39,8 +39,8 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         this.key = key;
         this.comparator = new ghNodeComparator();
         this.tree = new TreeMap<>(this.comparator);
-        this.fmin = fmin;
-        this.dmin = dmin;
+//        this.fmin = fmin;
+//        this.dmin = dmin;
         if(isFocalized) this.outOfFocalTree = new TreeMap<>(this.comparator);
         if(useFR) this.treeF = new TreeMap<>(new Fcomparator());
         this.isFocalized = isFocalized;
@@ -123,7 +123,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
         else {
             countF.put(f, 1.0);
             if(!isOptimal) {//fmin might change/decrease
-//                if(fmin == 0.0) fmin = f;
+                if(fmin == 0.0) fmin = f;
 /*                if (tree.size()+outOfFocalTree.size() == 0) {//tree is empty
                     fmin = f;
                 }
@@ -138,7 +138,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                 countD.put(fd, countD.get(fd) + 1);
             else {
                 countD.put(fd, 1.0);
-//                if(dmin == 0.0) dmin = fd;
+                if(dmin == 0.0) dmin = fd;
 /*                if (!isOptimal) {//fmin might change/decrease
                     if (tree.size() + outOfFocalTree.size() == 0) {//tree is empty
                         dmin = fd;
@@ -387,7 +387,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                 countD.remove(fd);
                 if (!isOptimal) {
                     //dmin might increase, if the heuristic is consistent dmin should not decrease
-                    if (fd <= dmin && tree.size() + outOfFocalTree.size() > 0) {//find next lowest
+                    if (fd <= dmin && (tree.size()> 0 || outOfFocalTree.size() > 0)) {//find next lowest
                         double prevDmin = dmin;
                         dmin = Integer.MAX_VALUE;
                         Iterator it = countD.entrySet().iterator();
@@ -400,12 +400,12 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                         }
                         // for cases where the heuristic is admissible but not consistent
                         if(prevDmin > dmin){
-                            System.out.print("\r[INFO GH_heap] heuristic is not consistent: prevDmin = "+prevDmin+" > dmin = "+dmin+" , inconsistency:"+(prevDmin-dmin));
+//                            System.out.print("\r[INFO GH_heap] heuristic is not consistent: prevDmin = "+prevDmin+" > dmin = "+dmin+" , inconsistency:"+(prevDmin-dmin));
                             dmin = prevDmin;
                         }
                         else {
                             reorder();
-                            System.out.print("\r[INFO GH_heap] new dmin = "+dmin);
+//                            System.out.print("\r[INFO GH_heap] new dmin = "+dmin);
                         }
                     }
                 }

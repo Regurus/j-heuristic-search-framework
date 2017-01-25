@@ -1260,7 +1260,7 @@ public class VacuumRobot implements SearchDomain {
         vrs.h = hd[0];
         vrs.d = hd[1];
         // System.out.println(this.dumpState(vrs));
-        // System.out.println(this.dumpState(vrs));
+        // System.out.println(this.duismpState(vrs));
         // Return the created state
         return vrs;
     }

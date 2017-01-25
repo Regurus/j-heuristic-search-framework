@@ -201,7 +201,8 @@ public class DP  implements SearchAlgorithm {
                 goal = currentNode;
                 return true;
             } else {
-                double cost = 0;
+                double currentCost = 0;
+                //DO NOT set the current cost to currentNode.g! it causes floating point errors in GH_heap
                 SearchDomain.State currentPacked = domain.unpack(currentNode.packed);
                 SearchDomain.State currentParentPacked = null;
                 for (Node node = currentNode;
@@ -210,11 +211,11 @@ public class DP  implements SearchAlgorithm {
                     // If op of current node is not null that means that p has a parent
                     if (node.op != null) {
                         currentParentPacked = domain.unpack(node.parent.packed);
-                        cost += node.op.getCost(currentPacked, currentParentPacked);
+                        currentCost += node.op.getCost(currentPacked, currentParentPacked);
                     }
                 }
-                currentNode.g = cost;
-                if (bestGoalNode == null || bestGoalNode.g > currentNode.g) {
+
+                if (bestGoalNode == null || bestGoalNode.g > currentCost) {
                     bestGoalNode = currentNode;
                 }
                 TreeMap<String, String> extras = result.getExtras();
