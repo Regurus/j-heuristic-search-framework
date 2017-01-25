@@ -681,11 +681,12 @@ public class VacuumRobot implements SearchDomain {
         // Go over all the (possible) dirty locations
         for (int n = 0; n < this.maximumDirtyLocationsCount; ++n) {
             // If the location should be ignored or was already cleaned - bypass it
+
             if ((ignoreIndexes != null && ignoreIndexes[n]) || (!s.isDirty(n))) {
                 continue;
             }
             // Get the distance between the robot location and the current dirty location
-            int currentDist = calcManhattanDistance(xy, this.dirtyLocations.get(n));
+            int currentDist = calcManhattanDistance(xy, n);
             // Update the minimum distance if required
             if (currentDist < minDirtyDist) {
                 minDirtyIndex = n;
@@ -695,8 +696,8 @@ public class VacuumRobot implements SearchDomain {
         return new int[]{minDirtyIndex, minDirtyDist};
     }
 
-    private int calcManhattanDistance(PairInt xy, PairInt n){
-        return Utils.calcManhattanDistance(xy, n);
+    private int calcManhattanDistance(PairInt xy, int n){
+        return Utils.calcManhattanDistance(xy, this.dirtyLocations.get(n));
     }
 
     /**

@@ -98,7 +98,7 @@ public class DP  implements SearchAlgorithm {
         this.NC = new NodeComparator();
         this.NPC = new NodePackedComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
-        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), NPC, result, useD, isFocalized);//no oracle
+        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), this.domain.initialState().getD(), NPC, result, useD, isFocalized);//no oracle
         //for cases where we want to set the fmin start
         if (this.optimalSolution != 0) {
             this.open.setOptimal(optimalSolution);
@@ -493,10 +493,9 @@ public class DP  implements SearchAlgorithm {
             super(2);
             // TODO: Why?
             this.secondaryIndex = new int[1];
-            double cost = (op != null) ? op.getCost(state, parentState) : 0;
+            this.g = (op != null) ? op.getCost(state, parentState) : 0;
+            this.depth = (op != null) ? 1 : 0;
             // If each operation costs something, we should add the cost to the g value of the parent
-            this.g = cost;
-            this.depth = 1;
             // Our g equals to the cost + g value of the parent
             if (parent != null) {
                 this.g += parent.g;
