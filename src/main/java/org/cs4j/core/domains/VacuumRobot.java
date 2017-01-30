@@ -50,6 +50,8 @@ public class VacuumRobot implements SearchDomain {
 
     private static final Map<String, Class> VacuumPossibleParameters;
 
+    private int[] minDirtDistance = new int[2];
+
     // Declare the parameters that can be tunes before running the search
     static
     {
@@ -678,22 +680,30 @@ public class VacuumRobot implements SearchDomain {
         int minDirtyIndex = -1;
         // Initially, the minimum distance is the lowest possible value
         int minDirtyDist = Integer.MAX_VALUE;
+        int currentDist;
         // Go over all the (possible) dirty locations
         for (int n = 0; n < this.maximumDirtyLocationsCount; ++n) {
             // If the location should be ignored or was already cleaned - bypass it
-
-            if ((ignoreIndexes != null && ignoreIndexes[n]) || (!s.isDirty(n))) {
+            boolean cont = checkDirty(ignoreIndexes,s,n);
+            if (cont) {
                 continue;
             }
             // Get the distance between the robot location and the current dirty location
-            int currentDist = calcManhattanDistance(xy, n);
+            currentDist = calcManhattanDistance(xy, n);
             // Update the minimum distance if required
             if (currentDist < minDirtyDist) {
                 minDirtyIndex = n;
                 minDirtyDist = currentDist;
             }
         }
-        return new int[]{minDirtyIndex, minDirtyDist};
+        minDirtDistance[0]=minDirtyIndex;
+        minDirtDistance[1]=minDirtyDist;
+        return minDirtDistance;
+//        return new int[]{minDirtyIndex, minDirtyDist};
+    }
+
+    private boolean checkDirty(boolean[] ignoreIndexes, VacuumRobotState s, int n){
+        return (ignoreIndexes != null && ignoreIndexes[n]) || (!s.isDirty(n));
     }
 
     private int calcManhattanDistance(PairInt xy, int n){
@@ -1311,7 +1321,7 @@ public class VacuumRobot implements SearchDomain {
 
     @Override
     public int maxGeneratedSize() {
-        return Integer.MAX_VALUE;
+        return 3000000;
     }
 
     /**

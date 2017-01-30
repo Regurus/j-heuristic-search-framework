@@ -341,7 +341,7 @@ public class EES implements SearchAlgorithm {
 
         // If a goal was found: update the solution
         if (goal != null) {
-            System.out.print("\r");
+//            System.out.print("\r");
             SolutionImpl solution = new SolutionImpl(this.domain);
             List<Operator> path = new ArrayList<>();
             List<State> statesPath = new ArrayList<>();

@@ -51,14 +51,15 @@ public class DP  implements SearchAlgorithm {
     //when to empty Focal
     private int FR;
     private NodeComparator NC;
-    private NodePackedComparator NPC;
 
     private double optimalSolution;
-    private boolean useD;
     private String name;
-    private boolean isFocalized;
     private Node goal = null;
     private Node bestGoalNode = null;
+
+    private boolean useD;
+    private boolean isFocalized;
+    private boolean useWApriority;
 
     /**
      * Sets the default values for the relevant fields of the algorithm
@@ -77,11 +78,14 @@ public class DP  implements SearchAlgorithm {
      * @param name        the name of the algorithm
      * @param useD        for the algo
      * @param isFocalized if the algoritm is focalized or not
+     * @param useWApriority if we want the priority to the one of WA* (works also on D)
      */
-    public DP(String name, boolean useD, boolean isFocalized) {
-        this.useD = useD;
+    public DP(String name, boolean useD, boolean isFocalized, boolean useWApriority) {
         this.name = name;
+
+        this.useD = useD;
         this.isFocalized = isFocalized;
+        this.useWApriority = useWApriority;
         this._initDefaultValues();
     }
 
@@ -96,9 +100,8 @@ public class DP  implements SearchAlgorithm {
         this.domain = domain;
         this.result = new SearchResultImpl();
         this.NC = new NodeComparator();
-        this.NPC = new NodePackedComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
-        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), this.domain.initialState().getD(), NPC, result, useD, isFocalized);//no oracle
+        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), this.domain.initialState().getD(), result, useD, isFocalized, useWApriority);//no oracle
         //for cases where we want to set the fmin start
         if (this.optimalSolution != 0) {
             this.open.setOptimal(optimalSolution);
@@ -203,6 +206,7 @@ public class DP  implements SearchAlgorithm {
             } else {
                 double currentCost = 0;
                 //DO NOT set the current cost to currentNode.g! it causes floating point errors in GH_heap
+                //here we trace back the node, maybe the because the cost might be better than currentNode.g in case we have found a shortcut
                 SearchDomain.State currentPacked = domain.unpack(currentNode.packed);
                 SearchDomain.State currentParentPacked = null;
                 for (Node node = currentNode;
@@ -747,18 +751,6 @@ public class DP  implements SearchAlgorithm {
             if (a.d > b.d) return 1;
 
             return 0;
-        }
-    }
-
-    /**
-     * The nodes comparator class
-     */
-    protected final class NodePackedComparator implements Comparator<Node> {
-
-        @Override
-        public int compare(final Node a, final Node b) {
-            if (a.packed.equals(b.packed)) return 0;
-            return -1;
         }
     }
 }

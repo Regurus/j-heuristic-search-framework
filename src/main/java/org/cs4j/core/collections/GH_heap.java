@@ -18,41 +18,45 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
     private TreeMap<gh_node,ArrayList<E>> tree;
     private TreeMap<gh_node,ArrayList<E>> outOfFocalTree;
     private TreeMap<gh_node,ArrayList<E>> treeF;
-    private boolean isFocalized;
-    private double fmin;
+        private double fmin;
     private double dmin;
     private boolean isOptimal;
     private double w;
     private gh_node bestNode;
     private ArrayList<E> bestList;
-    private ghNodeComparator comparator;
+    private Comparator<gh_node> comparator;
     private int GH_heapSize;
-    private Comparator<E> NodePackedComparator;
     private SearchResultImpl result;
+
+    private boolean isFocalized;
     private boolean useD;
-    private boolean useFR = false;
+    private boolean useFR;
+    private boolean useWApriority;
+    private boolean needsReorder;
 
-//    private boolean withFComparator;
-
-    public GH_heap(double w, int key, double fmin, double dmin, Comparator<E> NodePackedComparator, SearchResultImpl result, boolean useD, boolean isFocalized) {
+    public GH_heap(double w, int key, double fmin, double dmin, SearchResultImpl result, boolean useD, boolean isFocalized, boolean useWApriority) {
         this.w = w;
         this.key = key;
         this.comparator = new ghNodeComparator();
         this.tree = new TreeMap<>(this.comparator);
-//        this.fmin = fmin;
-//        this.dmin = dmin;
-        if(isFocalized) this.outOfFocalTree = new TreeMap<>(this.comparator);
-        if(useFR) this.treeF = new TreeMap<>(new Fcomparator());
-        this.isFocalized = isFocalized;
-        this.NodePackedComparator = NodePackedComparator;
+        this.fmin = fmin;
+        this.dmin = dmin;
         this.result =result;
+        this.isFocalized = isFocalized;
         this.useD = useD;
-//        this.heap = new BinHeap<>(new FComparator(), this.key);
-//        this.withFComparator = true;
+        this.useWApriority = useWApriority;
+        this.needsReorder = !useWApriority;
+
+        if(isFocalized) this.outOfFocalTree = new TreeMap<>(this.comparator);
     }
 
     public void setOptimal(double fmin){
         this.isOptimal = true;
+    }
+
+    public void setUseFr(boolean useFr){
+        this.useFR = useFr;
+        if(useFr) this.treeF = new TreeMap<>(new Fcomparator());
     }
 
     public double getFmin(){
@@ -122,15 +126,15 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             countF.put(f,countF.get(f)+1);
         else {
             countF.put(f, 1.0);
-            if(!isOptimal) {//fmin might change/decrease
-                if(fmin == 0.0) fmin = f;
-/*                if (tree.size()+outOfFocalTree.size() == 0) {//tree is empty
+/*            if(!isOptimal) {//fmin might change/decrease
+//                if(fmin == 0.0) fmin = f;
+*//*                if (tree.size()+outOfFocalTree.size() == 0) {//tree is empty
                     fmin = f;
                 }
                 if (fmin > f+ IsFocalizedPrecision) {//might occur due to rounding of f;
                     throw new IllegalArgumentException("[ERROR] fmin:"+fmin+" > f:"+f+", IsFocalizedPrecision:"+ IsFocalizedPrecision +" heuristic might be inconsistent OR adding doubles round error");
-                }*/
-            }
+                }*//*
+            }*/
         }
         if(useD) {
             double fd = e.getD() + e.getDepth();
@@ -138,7 +142,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
                 countD.put(fd, countD.get(fd) + 1);
             else {
                 countD.put(fd, 1.0);
-                if(dmin == 0.0) dmin = fd;
+//                if(dmin == 0.0) dmin = fd;
 /*                if (!isOptimal) {//fmin might change/decrease
                     if (tree.size() + outOfFocalTree.size() == 0) {//tree is empty
                         dmin = fd;
@@ -219,41 +223,43 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
 
     private void reorder(){
+        if(needsReorder) {
 //        int buckets = tree.size();//for paper debug
 //        int nodes = 0;//for paper debug
-        TreeMap<gh_node,ArrayList<E>> tempTree = new TreeMap<>(comparator);
+            TreeMap<gh_node, ArrayList<E>> tempTree = new TreeMap<>(comparator);
 
-        for(Iterator<Map.Entry<gh_node,ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext();){
-            Map.Entry<gh_node,ArrayList<E>> entry = it.next();
-            gh_node node = entry.getKey();
-            ArrayList<E> list = entry.getValue();
-//            nodes +=list.size();
-            it.remove();
-            node.calcPotential();
-            tempTree.put(node,list);
-        }
-
-        if(isFocalized) {
-            TreeMap<gh_node, ArrayList<E>> tempOutOfFocalTreeTree = new TreeMap<>(comparator);
-            for (Iterator<Map.Entry<gh_node, ArrayList<E>>> it = outOfFocalTree.entrySet().iterator(); it.hasNext(); ) {
+            for (Iterator<Map.Entry<gh_node, ArrayList<E>>> it = tree.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<gh_node, ArrayList<E>> entry = it.next();
                 gh_node node = entry.getKey();
                 ArrayList<E> list = entry.getValue();
+//            nodes +=list.size();
                 it.remove();
-                if (debug) debugNode(node, "reorder");
                 node.calcPotential();
-                if (debug) debugNode(node, "reorder1");
-                if (node.inTree)
-                    tempTree.put(node, list);
-                else
-                    tempOutOfFocalTreeTree.put(node, list);
+                tempTree.put(node, list);
             }
-            outOfFocalTree = tempOutOfFocalTreeTree;
-        }
-        tree = tempTree;
-        if(bestNode == null){
-            bestNode = tree.firstKey();
-            bestList = tree.get(bestNode);
+
+            if (isFocalized) {
+                TreeMap<gh_node, ArrayList<E>> tempOutOfFocalTreeTree = new TreeMap<>(comparator);
+                for (Iterator<Map.Entry<gh_node, ArrayList<E>>> it = outOfFocalTree.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry<gh_node, ArrayList<E>> entry = it.next();
+                    gh_node node = entry.getKey();
+                    ArrayList<E> list = entry.getValue();
+                    it.remove();
+                    if (debug) debugNode(node, "reorder");
+                    node.calcPotential();
+                    if (debug) debugNode(node, "reorder1");
+                    if (node.inTree)
+                        tempTree.put(node, list);
+                    else
+                        tempOutOfFocalTreeTree.put(node, list);
+                }
+                outOfFocalTree = tempOutOfFocalTreeTree;
+            }
+            tree = tempTree;
+            if (bestNode == null) {
+                bestNode = tree.firstKey();
+                bestList = tree.get(bestNode);
+            }
         }
     }
 
@@ -571,7 +577,7 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
 
         boolean inTree = true;
         double cost;
-        double divisor;
+        double estimator;
 
         @Override
         public String toString() {
@@ -610,14 +616,16 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             }
             else{
                 if(useD){
-                    this.potential = (w*dmin-this.depth)/this.d;
+                    if(useWApriority)   this.potential = this.depth + this.d * w;
+                    else                this.potential = (w*dmin-this.depth)/this.d;
                     this.cost = this.depth;
-                    this.divisor = this.d;
+                    this.estimator = this.d;
                 }
                 else{
-                    this.potential = (w*fmin-this.g)/this.h;
+                    if(useWApriority)   this.potential = this.g + this.h * w;
+                    else                this.potential = (w*fmin-this.g)/this.h;
                     this.cost = this.g;
-                    this.divisor = this.h;
+                    this.estimator = this.h;
                 }
             }
         }
@@ -638,8 +646,8 @@ public class GH_heap<E extends SearchQueueElement> implements SearchQueue<E> {
             if (a.cost < b.cost) return -1;
             if (a.cost > b.cost) return 1;
 
-            if (a.divisor < b.divisor) return -1;
-            if (a.divisor > b.divisor) return 1;
+            if (a.estimator < b.estimator) return -1;
+            if (a.estimator > b.estimator) return 1;
 
             // From here on it is a tiebreak for cases where we have focal and non-focal nodes
             if (a.f < b.f) return -1;
