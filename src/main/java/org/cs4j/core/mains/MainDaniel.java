@@ -867,16 +867,17 @@ public class MainDaniel {
 //                new DP("DPSU",true,false,false),
 //                new DP("DPS",false,false,false),
                 new DP("RWAU",true,true,true),
-                new DP("WAU",true,false,true),
+//                new DP("WAU",true,false,true),
 //                new EES(1),
         };
+//        AlgoArr[0].setAdditionalParameter("FR","2500");
 
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-//                "Pancakes",
-//                "FifteenPuzzle",
-            "VacuumRobot",
+            "Pancakes",
+//            "FifteenPuzzle",
+//            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
         };
@@ -887,7 +888,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP-ALL";
-                    for(int i = 2 ; i <= 2 ; i++) {
+                    for(int i = 0 ; i <= 0 ; i++) {
                         int resolution = 1;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
@@ -922,7 +923,7 @@ public class MainDaniel {
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 0 ; i <= 1 ; i+=1) {
+                            for(int i = 0 ; i <= 0 ; i+=1) {
                                 int resolution = 1;
                                 double alpha;
                                 if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
@@ -948,7 +949,7 @@ public class MainDaniel {
                     dirts = new int[]{10};
 //                    dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int i=0 ; i <= 1 ; i+=1) {
+                    for(int i=0 ; i <= 0 ; i+=1) {
                         int resolution = 1;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;

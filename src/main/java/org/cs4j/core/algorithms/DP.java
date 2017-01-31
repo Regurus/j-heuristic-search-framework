@@ -50,6 +50,8 @@ public class DP  implements SearchAlgorithm {
     private boolean reopen;
     //when to empty Focal
     private int FR;
+    private boolean useFR;
+    private double extractedFmin = 0;
     private NodeComparator NC;
 
     private double optimalSolution;
@@ -68,7 +70,8 @@ public class DP  implements SearchAlgorithm {
         // Default values
         this.weight = 1.0;
         this.reopen = true;
-        this.FR = 10;
+        this.FR = Integer.MAX_VALUE;
+        this.useFR = false;
     }
 
 
@@ -91,9 +94,8 @@ public class DP  implements SearchAlgorithm {
 
     @Override
     public String getName() {
-/*        if(this.FR==Integer.MAX_VALUE) return "DP";
-        else return "DP"+this.FR;*/
-        return this.name;
+        if(this.useFR) return this.name+"#"+this.FR;
+        else return this.name;
     }
 
     private void _initDataStructures(SearchDomain domain) {
@@ -101,7 +103,7 @@ public class DP  implements SearchAlgorithm {
         this.result = new SearchResultImpl();
         this.NC = new NodeComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
-        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), this.domain.initialState().getD(), result, useD, isFocalized, useWApriority);//no oracle
+        this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), this.domain.initialState().getD(), result, useFR, useD, isFocalized, useWApriority);//no oracle
         //for cases where we want to set the fmin start
         if (this.optimalSolution != 0) {
             this.open.setOptimal(optimalSolution);
@@ -334,6 +336,7 @@ public class DP  implements SearchAlgorithm {
             }
             case "FR": {
                 this.FR = Integer.parseInt(value);
+                this.useFR = true;
                 break;
             }
             case "optimalSolution": {
@@ -353,11 +356,21 @@ public class DP  implements SearchAlgorithm {
     private Node _selectNode() {
         Node toReturn;
         toReturn = this.open.peek();
-/*        double fminCount = open.getFminCount();
-        double lowerLimit = fminCount * FR;
-        if(lowerLimit < result.generated){
-            toReturn = this.open.peekF();
-        }*/
+
+        if(useFR) {
+            double fmin = open.getFmin();
+            if(extractedFmin == fmin){
+                toReturn = this.open.peekF();
+            }
+            else {
+                double fminCount = open.getFminCount();
+                double lowerLimit = fminCount * FR;
+                if (lowerLimit < result.generated) {
+                    toReturn = this.open.peekF();
+                    extractedFmin = fmin;
+                }
+            }
+        }
         return toReturn;
     }
 
