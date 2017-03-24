@@ -863,20 +863,20 @@ public class MainDaniel {
 //                new IDAstar(),
 //                new BEES(),
 //                new WAStar(),
-//                new DP("RDPSU",true,true,false),
-//                new DP("DPSU",true,false,false),
-//                new DP("DPS",false,false,false),
-                new DP("RWAU",true,true,true),
+                new DP("RDPSU",true,true,false),
+                new DP("DPSU",true,false,false),
+                new DP("DPS",false,false,false),
+//                new DP("RWAU",true,true,true),
 //                new DP("WAU",true,false,true),
-//                new EES(1),
+                new EES(1),
         };
 //        AlgoArr[0].setAdditionalParameter("FR","2500");
 
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-            "Pancakes",
 //            "FifteenPuzzle",
+            "Pancakes",
 //            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -888,7 +888,7 @@ public class MainDaniel {
             switch (domainName) {
                 case "FifteenPuzzle": {
                     summaryName = "15DP-ALL";
-                    for(int i = 0 ; i <= 0 ; i++) {
+                    for(int i = 0 ; i <= 2 ; i++) {
                         int resolution = 1;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
@@ -918,12 +918,12 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{20};
 //                    pancakesNum = new int[]{16};
                     pancakesNum = new int[]{10};
-                    for(int gap = 0 ; gap <= 0  ; gap++) {
+                    for(int gap = 1 ; gap <= 1  ; gap++) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 0 ; i <= 0 ; i+=1) {
+                            for(int i = 0 ; i <= 1 ; i+=1) {
                                 int resolution = 1;
                                 double alpha;
                                 if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
@@ -949,7 +949,7 @@ public class MainDaniel {
                     dirts = new int[]{10};
 //                    dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int i=0 ; i <= 0 ; i+=1) {
+                    for(int i=0 ; i <= 1 ; i+=1) {
                         int resolution = 1;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
