@@ -129,6 +129,7 @@ public class DP  implements SearchAlgorithm {
         Node initNode = new Node(currentState);
         // And add it to the frontier
         _addNode(initNode);
+        bestGoalNode = null;
 
         try {
             while (checkTermination()) {
