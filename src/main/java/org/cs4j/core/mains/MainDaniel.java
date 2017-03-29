@@ -824,7 +824,10 @@ public class MainDaniel {
         String ANSI_PURPLE = "\u001B[35m";
         String ANSI_CYAN = "\u001B[36m";
         String ANSI_WHITE = "\u001B[37m";
-        System.out.println(ANSI_RED + "This text is red!" + ANSI_RESET);*/
+        System.out.println(ANSI_RED + "This text is red!" + ANSI_RESET);
+        System.out.println("\u001B[31m" + "This text is red!" + "\u001B[0m");
+        System.out.println("\u001B[32m" + "This text is green!" + "\u001B[0m");
+*/
 
 
         for(int i=0; i<relPathes.length; i++) {
@@ -875,8 +878,8 @@ public class MainDaniel {
         SearchAlgorithmArr = AlgoArr;
 
         String[] domains = {
-            "FifteenPuzzle",
-            "Pancakes",
+//            "FifteenPuzzle",
+//            "Pancakes",
             "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
@@ -949,7 +952,7 @@ public class MainDaniel {
                     dirts = new int[]{10};
 //                    dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int i=0 ; i <= 1 ; i+=1) {
+                    for(int i=1 ; i <= 2 ; i+=1) {
                         int resolution = 1;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;

@@ -101,6 +101,9 @@ public class DP  implements SearchAlgorithm {
     private void _initDataStructures(SearchDomain domain) {
         this.domain = domain;
         this.result = new SearchResultImpl();
+        this.bestGoalNode = null;
+        this.goal = null;
+
         this.NC = new NodeComparator();
 //        this.open = new BinHeapF<>(open_ID,domain,this.NC);
         this.open = new GH_heap<>(weight, open_ID, this.domain.initialState().getH(), this.domain.initialState().getD(), result, useFR, useD, isFocalized, useWApriority);//no oracle
@@ -129,7 +132,6 @@ public class DP  implements SearchAlgorithm {
         Node initNode = new Node(currentState);
         // And add it to the frontier
         _addNode(initNode);
-        bestGoalNode = null;
 
         try {
             while (checkTermination()) {
@@ -247,6 +249,9 @@ public class DP  implements SearchAlgorithm {
 
     private void handleGoal(){
         if (goal != null) {
+            if(result.generated > domain.maxGeneratedSize()){
+                System.out.println("\u001B[31m" + "result.generated > domain.maxGeneratedSize()" + "\u001B[0m");
+            }
             System.out.print("\r");
             SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
             List<SearchDomain.Operator> path = new ArrayList<>();
@@ -272,8 +277,8 @@ public class DP  implements SearchAlgorithm {
             double roundedCost = new BigDecimal(cost).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
             double roundedG = new BigDecimal(goal.g).setScale(4, RoundingMode.HALF_DOWN).doubleValue();
             if (roundedCost - roundedG < 0) {
-                System.out.println("[INFO] Goal G is higher than the actual cost " +
-                        "(G: " + goal.g +  ", Actual: " + cost + ")");
+                System.out.println("\r\u001B[32m [INFO] Goal G is higher than the actual cost " +
+                        "(G: " + goal.g +  ", Actual: " + cost + ")\u001B[0m");
             }
 
             Collections.reverse(path);
@@ -302,13 +307,13 @@ public class DP  implements SearchAlgorithm {
         }
         else{
             if(this.open.isEmpty()){
-                System.out.println("[INFO] no goal found: open.isEmpty");
+                System.out.println("\r[INFO] no goal found: open.isEmpty");
             }
             if(result.checkMinTimeOut()){
-                System.out.println("[INFO] no goal found: checkMinTimeOut:"+result.printWallTime());
+                System.out.println("\r[INFO] no goal found: checkMinTimeOut:"+result.printWallTime());
             }
             if(result.getGenerated() >= domain.maxGeneratedSize()){
-                System.out.println("[INFO] no goal found: maxGeneratedSize");
+                System.out.println("\r\u001B[32m" + "[INFO] no goal found: maxGeneratedSize" + "\u001B[0m");
             }
         }
     }
