@@ -183,8 +183,8 @@ public class DP  implements SearchAlgorithm {
     }
 
     private boolean checkTermination() {
-//        return !this.open.isEmpty() && result.getGenerated() < domain.maxGeneratedSize() && result.checkMinTimeOut();
-        return result.getGenerated() < domain.maxGeneratedSize();
+        return !this.open.isEmpty() && result.getGenerated() < domain.maxGeneratedSize() && result.checkMinTimeOut();
+//        return result.getGenerated() < domain.maxGeneratedSize();
     }
 
     private SearchDomain.State applyOperator(SearchDomain.State currentState, SearchDomain.Operator op){

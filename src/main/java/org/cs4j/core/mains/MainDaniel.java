@@ -49,13 +49,13 @@ public class MainDaniel {
     private static int startInstance;
     private static int stopInstance;
     private static boolean saveSolutionPath;
-    private static boolean[] solvableInstances;
+    private static boolean[][] solvableInstances;
     private static int solvableNum;
     private static SearchAlgorithm[] SearchAlgorithmArr;
     private static HashMap<String,String> domainParams;
     private static String[] DPextraHeaders;
 
-    private static double[] searchSave100FR(boolean save){
+    private static double[] searchSave100FR(boolean save, int i, int algPos){
 //        boolean reopen = true;
         double retArray[] = {0,0,0};//solved,generated,expanded
         String[] resultColumnNames = {"InstanceID", "Found", "Depth", "Cost" , "Generated", "Expanded", "Cpu Time", "Wall Time"};
@@ -82,21 +82,55 @@ public class MainDaniel {
             String[] lines = new String[0];
             String fname = outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd+".csv";
             File file = new File(fname);
-            if(appendToFile && save && file.exists()){
+            int found = 0;
+            double d[] = new double[resultColumnNames.length];
+            if(file.exists()){
                 FileInputStream fis = new FileInputStream(file);
                 byte[] data = new byte[(int) file.length()];
                 fis.read(data);
                 fis.close();
                 str = new String(data, "UTF-8");
                 lines = str.split("\n");
-//                System.out.println(lines);
             }
-            if(save){
+            if(save && !appendToFile){
                 output = new OutputResult(outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd, null, -1, -1, null, false, overwriteFile);
                 String toPrint = String.join(",", resultColumnNames);
                 output.writeln(toPrint);
             }
-            System.out.println("Solving "+domainName + "\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
+            boolean[] alreadyPrinted = new boolean[stopInstance+1];
+            if(appendToFile){
+                output = new OutputResult(outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd, null, -1, -1, null, false, overwriteFile);
+                String toPrint = String.join(",", resultColumnNames);
+                output.writeln(toPrint);
+                int count = 0;
+                for(String line : lines) {
+                    // results without header
+                    if(count > 0) {
+                        String[] lineSplit = line.split(",");
+
+                        String iId = lineSplit[0];
+                        double iIdD = Double.parseDouble(iId);
+                        int instanceId = (int)iIdD;
+                        if(!alreadyPrinted[instanceId]){
+                            output.writeln(line);
+                            alreadyPrinted[instanceId] = true;
+
+                            String f = lineSplit[1];
+                            if (Double.parseDouble(f) == 1.0) {
+                                found++;
+                            } else if (solvableInstances[instanceId - startInstance][algPos]) {
+                                solvableNum--;
+                                solvableInstances[instanceId - startInstance][algPos] = false;
+                            }
+                        }
+                    }
+                    count++;
+                }
+            }
+            if(alreadyPrinted[i]){
+                return retArray;
+            }
+//            System.out.println("Solving "+domainName + "\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
             BufferedReader optimalReader = null;
             if(useOracle) {
                 InputStream optimalIS = new FileInputStream(new File(inputPath + "/optimalSolutions.in"));
@@ -104,117 +138,95 @@ public class MainDaniel {
             }
             //set algo total weight
             alg.setAdditionalParameter("weight", totalWeight + "");
-            int found = 0;
             //search on this domain and algo and weight the 100 instances
-            for (int i = startInstance; i <= stopInstance; ++i) {
-                try {
-                    double d[] = new double[resultColumnNames.length];
-
-                    if(useOracle) {
-                        String optimalLine = optimalReader.readLine();
-                        String[] optArr = optimalLine.split(",");
-                        int optInstance = Integer.parseInt(optArr[0]);
-                        int optimalSolution = Integer.parseInt(optArr[1]);
-                        double optimalBounded = optimalSolution * totalWeight;
-                        if (optInstance != i) System.out.println("[WARNING] Wrong optimal solution set");
-                        else alg.setAdditionalParameter("max-cost", optimalBounded + "");
+            try {
+                if(useOracle) {
+                    String optimalLine = optimalReader.readLine();
+                    String[] optArr = optimalLine.split(",");
+                    int optInstance = Integer.parseInt(optArr[0]);
+                    int optimalSolution = Integer.parseInt(optArr[1]);
+                    double optimalBounded = optimalSolution * totalWeight;
+                    if (optInstance != i) System.out.println("[WARNING] Wrong optimal solution set");
+                    else alg.setAdditionalParameter("max-cost", optimalBounded + "");
 //                        else alg.setAdditionalParameter("optimalSolution", optimalSolution + "");
-                    }
-                    InputStream is = new FileInputStream(new File(inputPath + "/" + i + ".in"));
-                    SearchDomain domain;
-                    domain = (SearchDomain) cons.newInstance(is);
-                    for(Map.Entry<String, String> entry : domainParams.entrySet()) {
-                        String key = entry.getKey();
-                        String value = entry.getValue();
-                        domain.setAdditionalParameter(key,value);
-                    }
-                    if(appendToFile && save && lines.length > i && lines[i].split(",").length == d.length){
-                        output.writeln(lines[i]);
-                        String[] lineSplit = lines[i].split(",");
-                        String f = lineSplit[1];
-                        if(Double.parseDouble(f) == 1.0){
-                            found++;
-                        }
-                        else if(solvableInstances[i-startInstance]){
-                            solvableNum--;
-                            solvableInstances[i-startInstance] = false;
-                        }
-/*                        retArray[0] += 1;
-                        retArray[1] += Double.parseDouble(lineSplit[3]);
-                        retArray[2] += Double.parseDouble(lineSplit[4]);*/
-                    }
-                    else {
-                        System.out.print("\rSolving " + domainName + " instance " + (found+1) +"/"+ i +" ("+solvableNum+")\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
-                        SearchResult result = null;
-                        if(solvableInstances[i-startInstance])
-                            result = alg.search(domain);
-                        if (result != null && result.hasSolution()) {
-                            if(totalWeight == 1)
-                                saveOptimalSolution(result,i,domain);
+                }
+                InputStream is = new FileInputStream(new File(inputPath + "/" + i + ".in"));
+                SearchDomain domain;
+                domain = (SearchDomain) cons.newInstance(is);
+                for(Map.Entry<String, String> entry : domainParams.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    domain.setAdditionalParameter(key,value);
+                }
+                System.out.print("\rSolving " + domainName + " instance " + (found+1) +"/"+ i +" ("+solvableNum+")\tAlg: " + alg.getName() + "_" + fileEnd + "\tweight: wg : " + w.wg + " wh: " + w.wh);
+                SearchResult result = null;
+                if(solvableInstances[i-startInstance][algPos])
+                    result = alg.search(domain);
+                if (result != null && result.hasSolution()) {
+                    if(totalWeight == 1)
+                        saveOptimalSolution(result,i,domain);
 //                            saveSolutionPathAsInstances(result,i);
-                            found++;
-                            d[1] = 1;
-                            d[2] = result.getSolutions().get(0).getLength();
-                            d[3] = result.getSolutions().get(0).getCost();
-                            d[4] = result.getGenerated();
-                            d[5] = result.getExpanded();
-                            d[6] = result.getCpuTimeMillis();
-                            d[7] = result.getWallTimeMillis();
+                    found++;
+                    d[1] = 1;
+                    d[2] = result.getSolutions().get(0).getLength();
+                    d[3] = result.getSolutions().get(0).getCost();
+                    d[4] = result.getGenerated();
+                    d[5] = result.getExpanded();
+                    d[6] = result.getCpuTimeMillis();
+                    d[7] = result.getWallTimeMillis();
 //                            d[8] = domain.initialState().getH();
-                            if(alg.getName().equals("DP")){
-                                TreeMap extras = result.getExtras();
+                    if(alg.getName().equals("DP")){
+                        TreeMap extras = result.getExtras();
 /*                                d[8] = extras.size();
-                                if(d[8] != 0){
-                                    int maxBuckets = Integer.parseInt(extras.lastKey().toString());
-                                    d[9] = (double) maxBuckets;
-                                    d[10] = Double.parseDouble(extras.get(maxBuckets+"").toString());
-                                }*/
-                                Object generatedFirst = extras.get("generatedFirst");
-                                if(generatedFirst != null){
-                                    d[8] = Double.parseDouble(generatedFirst.toString());
-                                }
-                                d[9] = Double.parseDouble(extras.get("numOfGoalsFound").toString());
-                                d[10] = Double.parseDouble(extras.get("fmin").toString());
-                            }
+                        if(d[8] != 0){
+                            int maxBuckets = Integer.parseInt(extras.lastKey().toString());
+                            d[9] = (double) maxBuckets;
+                            d[10] = Double.parseDouble(extras.get(maxBuckets+"").toString());
+                        }*/
+                        Object generatedFirst = extras.get("generatedFirst");
+                        if(generatedFirst != null){
+                            d[8] = Double.parseDouble(generatedFirst.toString());
+                        }
+                        d[9] = Double.parseDouble(extras.get("numOfGoalsFound").toString());
+                        d[10] = Double.parseDouble(extras.get("fmin").toString());
+                    }
 
 /*                            retArray[0] += 1;
-                            retArray[1] += result.getGenerated();
-                            retArray[2] += result.getSolutions().get(0).getLength();*/
-                        }
-                        else if(solvableInstances[i-startInstance]){
-                            solvableInstances[i-startInstance] = false;
-                            solvableNum--;
+                    retArray[1] += result.getGenerated();
+                    retArray[2] += result.getSolutions().get(0).getLength();*/
+                }
+                else if(solvableInstances[i-startInstance][algPos]){
+                    solvableInstances[i-startInstance][algPos] = false;
+                    solvableNum--;
 
-                            int sul = 0;
-                            for (boolean solvableInstance : solvableInstances) {
-                                if (solvableInstance)
-                                    sul++;
-                            }
-                            if(sul!= solvableNum)
-                                System.out.println("[WARNING] solvable num incorrect i:"+i);
-                        }
-                        if(save) {
-                            d[0] = i;
-                            output.appendNewResult(d);
-                            output.newline();
-                        }
+                    int sul = 0;
+                    for (boolean[] solvableInstance : solvableInstances) {
+                        if (solvableInstance[algPos])
+                            sul++;
                     }
-                } catch (OutOfMemoryError e) {
-                    System.out.println("[INFO] MainDaniel OutOfMemory :-( "+e);
-                    System.out.println("[INFO] OutOfMemory in:"+alg.getName()+" on:"+ domainName);
+                    if(sul!= solvableNum)
+                        System.out.println("[WARNING] solvable num incorrect i:"+i);
                 }
-                catch (FileNotFoundException e) {
-                    System.out.println("[INFO] FileNotFoundException At inputPath:"+inputPath);
-                    i=stopInstance;
+                if(save) {
+                    d[0] = i;
+                    output.appendNewResult(d);
+                    output.newline();
+                }
+            } catch (OutOfMemoryError e) {
+                System.out.println("[INFO] MainDaniel OutOfMemory :-( "+e);
+                System.out.println("[INFO] OutOfMemory in:"+alg.getName()+" on:"+ domainName);
+            }
+            catch (FileNotFoundException e) {
+                System.out.println("[INFO] FileNotFoundException At inputPath:"+inputPath);
+                i=stopInstance;
 //                    e.printStackTrace();
-                }
-                catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
+            }
+            catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
             }
         }  catch (IOException e) {
             System.out.println("[INFO] IOException At outputPath:"+outputPath);
@@ -224,106 +236,6 @@ public class MainDaniel {
             output.close();
         }
         return retArray;
-    }
-
-    private static double[] findBestFR() {
-        double[] resultSummary = new double[4];
-        int lowerLimit,upperLimit;
-        double lg,mg=0,rg,bestG = Integer.MAX_VALUE, noiseLimit = 1.1;
-        int lfr,mfr,rfr,bestFR;
-
-        lowerLimit = (int)Math.pow(2,6);
-        upperLimit = (int)Math.pow(2,20);
-
-        bestFR = mfr = upperLimit;
-
-        while (mfr > lowerLimit && mg <= bestG * noiseLimit) {//start decreasing
-            alg.setAdditionalParameter("FR",mfr+"");
-            mg = searchSave100FR(false)[1];
-            if(mg < bestG){
-                bestG = mg;
-                bestFR=mfr;
-            }
-            System.out.println("scanning: FR:" + mfr + ", Generated:" + mg);
-            mfr=mfr/2;
-        }
-
-/*        rfr=bestFR*2;
-        alg.setAdditionalParameter("FR",rfr+"");
-        rg = searchSave100FR(false)[1];
-
-        lfr=bestFR/2;
-        alg.setAdditionalParameter("FR",lfr+"");
-        lg = searchSave100FR(false)[1];
-
-        System.out.println("shrink [" + lfr + "," + rfr + "] ; {" + lg+ ","+ bestG + ","+ rg +"}");
-
-        while (rfr - lfr > 1) {//start shrink
-            mfr = (rfr+lfr)/2;
-            alg.setAdditionalParameter("FR",mfr+"");
-            mg = searchSave100FR(false)[1];
-            bestG = Math.min(mg,bestG);
-            if((mg == rg) || (lg < mg && mg < rg)){
-                rg=mg;
-                rfr=mfr;
-            }
-            else if((mg == lg) || (lg > mg && mg > rg)){
-                lg=mg;
-                lfr=mfr;
-            }
-            else if(mg<rg && mg<lg){
-                int mrfr=(mfr+rfr)/2;//median right FR
-                int lmfr=(lfr+mfr)/2;//left median FR
-
-                alg.setAdditionalParameter("FR",mrfr+"");
-                double mrg = searchSave100FR(false)[1];
-                bestG = Math.min(mrg,bestG);
-
-                alg.setAdditionalParameter("FR",lmfr+"");
-                double lmg = searchSave100FR(false)[1];
-                bestG = Math.min(lmg,bestG);
-
-                if(mg <= mrg && mg <= lmg){
-                    //mg is best from right, update r to mr
-                    rg=mrg;
-                    rfr=mrfr;
-                    //mg is best from left, update l to ml
-                    lg=lmg;
-                    lfr=lmfr;
-                } else if(lmg > mrg){//mrg is best, update l to m
-                    lg=mg;
-                    lfr=mfr;
-                } else {//lmg is best, update r to m
-                    rg=mg;
-                    rfr=mfr;
-                }
-//                System.out.println("mg is best");
-            }
-            else{
-//                System.out.println("mg is biggest!");
-                if(lg<rg){
-                    rg=mg;
-                    rfr=mfr;
-                }
-                else if (rg<mg){
-                    lg=mg;
-                    lfr=mfr;
-                }
-                else
-                    System.out.println("all same");
-            }
-            System.out.println("shrink [" + lfr + "," + rfr + "] ; {" + lg+ ","+ mg+ ","+ rg +"}");
-        }
-//        System.out.println("Best FR:" + rfr + ", Generated:" + rg);*/
-
-        alg.setAdditionalParameter("FR",bestFR+"");
-        double[] tempArray = searchSave100FR(true);//solved,generated,expanded
-        if(bestG < tempArray[1]){
-            System.out.println("Bad search");
-        }
-        System.arraycopy( tempArray, 0, resultSummary, 0, tempArray.length );
-        resultSummary[3] = bestFR;
-        return resultSummary;
     }
 
     private static void saveOptimalSolution(SearchResult result, int instance, SearchDomain domain){
@@ -788,22 +700,21 @@ public class MainDaniel {
         if(true) return;*/
 
         //search over algo and weight
-        for (SearchAlgorithm sa : SearchAlgorithmArr) {
-            alg = sa;
-
-            solvableNum = stopInstance-startInstance+1;
-            solvableInstances = new boolean[solvableNum];
-            Arrays.fill(solvableInstances,true);
-
-            for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
-                w = ws;
-                totalWeight = w.wh / w.wg;
-                if (useBestFR) {
-                    double resultArray[] = findBestFR();//solved,generated,expanded,bestFR
+        solvableNum = stopInstance-startInstance+1;
+        solvableInstances = new boolean[solvableNum][SearchAlgorithmArr.length];
+        // Fill each row with 1.0
+        for (boolean[] algo: solvableInstances)
+            Arrays.fill(algo, true);
+        for (int i = startInstance; i <= stopInstance; ++i) {
+            int algPos = 0;
+            for (SearchAlgorithm sa : SearchAlgorithmArr) {
+                alg = sa;
+                for ( Weights.SingleWeight ws :weights.NATURAL_WEIGHTS) {
+                    w = ws;
+                    totalWeight = w.wh / w.wg;
+                    searchSave100FR(true,i,algPos);
                 }
-                else{
-                    searchSave100FR(true);
-                }
+                algPos++;
             }
         }
 
@@ -879,8 +790,8 @@ public class MainDaniel {
 
         String[] domains = {
 //            "FifteenPuzzle",
-//            "Pancakes",
-            "VacuumRobot",
+            "Pancakes",
+//            "VacuumRobot",
 //            "DockyardRobot",
 //            "GridPathFinding"
         };
@@ -920,14 +831,15 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{101};
 //                    pancakesNum = new int[]{20};
 //                    pancakesNum = new int[]{16};
-                    pancakesNum = new int[]{10};
-                    for(int gap = 0 ; gap <= 0  ; gap++) {
+                    pancakesNum = new int[]{12};
+//                    pancakesNum = new int[]{10};
+                    for(int gap = 2 ; gap <= 3  ; gap+=1) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 1 ; i <= 2 ; i+=1) {
-                                int resolution = 1;
+                            for(int i = 1 ; i <= 1 ; i+=1) {
+                                int resolution = 2;
                                 double alpha;
                                 if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
                                 else        alpha = (double) (-i/2) / resolution;
@@ -937,7 +849,7 @@ public class MainDaniel {
                                 domainParams.put("GAP-k", GAPK + "");
                                 filePrefix += "GAP-" + GAPK + "_";
 
-                                System.out.println("Solving Pancakes " + num + " " + filePrefix);
+                                System.out.println("\rSolving Pancakes " + filePrefix);
                                 inputPath = relPath + "input/pancakes/generated-" + num;
                                 outputPath = relPath + "results/pancakes/" + num + "/" + filePrefix;
                                 summarySheetName = filePrefix + "pancakes";
@@ -967,7 +879,7 @@ public class MainDaniel {
                                 domainParams.put("shrinkTo", shrinkTo+"");
                                 filePrefix += "shrinkTo"+shrinkTo+"_";
 
-                                System.out.println("Solving VacuumRobot "+filePrefix);
+                                System.out.println("\rSolving VacuumRobot "+filePrefix);
                                 inputPath = relPath + "input/VacuumRobot/generated-" + dirts[j] + "-dirt";
                                 outputPath = relPath + "results/VacuumRobot/" + dirts[j] + "-dirt/" + filePrefix;
                                 summarySheetName = "Vacuum-" + dirts[j] + "-a"+alpha+"-s"+shrinkTo;
