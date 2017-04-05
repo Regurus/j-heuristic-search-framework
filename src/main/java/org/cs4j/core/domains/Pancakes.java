@@ -244,7 +244,7 @@ public class Pancakes implements SearchDomain {
 
     @Override
     public int maxGeneratedSize() {
-        return 10000000;
+        return 5000000;
     }
 
     @Override

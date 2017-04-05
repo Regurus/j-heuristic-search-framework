@@ -828,17 +828,17 @@ public class MainDaniel {
 //                    pancakesNum = new int[]{10, 12, 16};
 //                    pancakesNum = new int[]{16,20,40};
 //                    pancakesNum = new int[]{40};
-//                    pancakesNum = new int[]{101};
+                    pancakesNum = new int[]{101};
 //                    pancakesNum = new int[]{20};
 //                    pancakesNum = new int[]{16};
-                    pancakesNum = new int[]{12};
+//                    pancakesNum = new int[]{12};
 //                    pancakesNum = new int[]{10};
-                    for(int gap = 2 ; gap <= 3  ; gap+=1) {
+                    for(int gap = 0 ; gap <= 0  ; gap+=1) {
 //                        double GAPK = ((double)gap/2);
                         double GAPK = (double)gap;
                         for (int j = 0; j < pancakesNum.length; j++) {
                             int num = pancakesNum[j];
-                            for(int i = 1 ; i <= 1 ; i+=1) {
+                            for(int i = 4 ; i <= 4 ; i+=1) {
                                 int resolution = 2;
                                 double alpha;
                                 if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
@@ -864,8 +864,8 @@ public class MainDaniel {
                     dirts = new int[]{10};
 //                    dirts = new int[]{5};
 //                    int[] dirts = new int[]{5, 10};
-                    for(int i=1 ; i <= 2 ; i+=1) {
-                        int resolution = 1;
+                    for(int i=1 ; i <= 1 ; i+=1) {
+                        int resolution = 2;
                         double alpha;
                         if(i%2 == 1)alpha = (double) ((i+1)/2) / resolution;
                         else        alpha = (double) (-i/2) / resolution;
