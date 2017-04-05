@@ -69,6 +69,7 @@ public class MainDaniel {
         }
         OutputResult output = null;
         Constructor<?> cons = null;
+        StringBuilder sb = new StringBuilder();
         try {
             Class<?> cl = Class.forName("org.cs4j.core.domains."+domainName);
             cons = cl.getConstructor(InputStream.class);
@@ -93,15 +94,13 @@ public class MainDaniel {
                 lines = str.split("\n");
             }
             if(save && !appendToFile){
-                output = new OutputResult(outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd, null, -1, -1, null, false, overwriteFile);
                 String toPrint = String.join(",", resultColumnNames);
-                output.writeln(toPrint);
+                sb.append(toPrint+"\n");
             }
             boolean[] alreadyPrinted = new boolean[stopInstance+1];
             if(appendToFile){
-                output = new OutputResult(outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd, null, -1, -1, null, false, overwriteFile);
                 String toPrint = String.join(",", resultColumnNames);
-                output.writeln(toPrint);
+                sb.append(toPrint+"\n");
                 int count = 0;
                 for(String line : lines) {
                     // results without header
@@ -112,7 +111,7 @@ public class MainDaniel {
                         double iIdD = Double.parseDouble(iId);
                         int instanceId = (int)iIdD;
                         if(!alreadyPrinted[instanceId]){
-                            output.writeln(line);
+                            sb.append(line+"\n");
                             alreadyPrinted[instanceId] = true;
 
                             String f = lineSplit[1];
@@ -209,8 +208,15 @@ public class MainDaniel {
                 }
                 if(save) {
                     d[0] = i;
-                    output.appendNewResult(d);
-                    output.newline();
+                    for (double temp : d) {
+                        sb.append(temp);
+                        sb.append(",");
+                    }
+                    sb.append("\n");
+
+                    output = new OutputResult(outputPath+alg.getName()+"_"+(int)w.wg+"_"+(int)w.wh+"_"+fileEnd, null, -1, -1, null, false, overwriteFile);
+                    output.writeln(sb.toString());
+                    output.close();
                 }
             } catch (OutOfMemoryError e) {
                 System.out.println("[INFO] MainDaniel OutOfMemory :-( "+e);
@@ -218,7 +224,6 @@ public class MainDaniel {
             }
             catch (FileNotFoundException e) {
                 System.out.println("[INFO] FileNotFoundException At inputPath:"+inputPath);
-                i=stopInstance;
 //                    e.printStackTrace();
             }
             catch (InstantiationException e) {
@@ -233,7 +238,7 @@ public class MainDaniel {
             e.printStackTrace();
         }
         finally {
-            output.close();
+
         }
         return retArray;
     }
@@ -778,8 +783,8 @@ public class MainDaniel {
 //                new BEES(),
 //                new WAStar(),
                 new DP("RDPSU",true,true,false),
-                new DP("DPSU",true,false,false),
-                new DP("DPS",false,false,false),
+//                new DP("DPSU",true,false,false),
+//                new DP("DPS",false,false,false),
 //                new DP("RWAU",true,true,true),
 //                new DP("WAU",true,false,true),
                 new EES(1),
