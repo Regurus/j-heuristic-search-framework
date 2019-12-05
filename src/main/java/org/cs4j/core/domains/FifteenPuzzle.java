@@ -17,7 +17,7 @@
 package org.cs4j.core.domains;
 
 import com.carrotsearch.hppc.LongByteHashMap;
-import org.cs4j.core.SearchDomain;
+import org.cs4j.core.*;
 import org.cs4j.core.collections.PackedElement;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -314,6 +314,12 @@ public final class FifteenPuzzle implements SearchDomain {
      * @param stream The input stream to read the problem from
      * @param costFunction The cost function to use
      */
+    /**
+     *File Format:
+     * line0: puzzle size; format:dimension(x),dimension(y)
+     * line1...x*y:starting tile element; format: number; ordered in occurrence order i.e scanline left to right
+     * linex*y+1...2x*y: goal tile element; format: number; ordered in occurrence order, in standard tile puzzle sorted sequence
+     */
     public FifteenPuzzle(InputStream stream, COST_FUNCTION costFunction) {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
@@ -337,13 +343,14 @@ public final class FifteenPuzzle implements SearchDomain {
             // Now, read the goal positions of the puzzle (Each one in a single line)
             // (actually, reading the goals is redundant - since they must form 1-15 series:
             // goal i at line i)
-            line = reader.readLine();
+            // Regurus: redundant, assume the goal is canonical
+            /*line = reader.readLine();
             for (int t = 0; t < this.tilesNumber; ++t) {
                 int p = Integer.parseInt(reader.readLine());
                 if (p != t) {
                     throw new IllegalArgumentException("Non-canonical goal positions");
                 }
-            }
+            }*/
             //System.out.println(Arrays.toString(this.init));
             reader.close();
         } catch(IOException e) {

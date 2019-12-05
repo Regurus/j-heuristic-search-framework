@@ -1,6 +1,6 @@
 package org.cs4j.core.domains;
 
-import org.cs4j.core.SearchDomain;
+import org.cs4j.core.*;
 import org.cs4j.core.collections.PackedElement;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -202,7 +202,7 @@ public class RawGraph implements SearchDomain {
 
     }
 
-    private class RawGraphNode implements SearchDomain.State {
+    private class RawGraphNode implements State {
         private char name;
         private double h;
         RawGraphNode parent;

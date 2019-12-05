@@ -1,8 +1,6 @@
 package org.cs4j.core.algorithms;
 
-import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
@@ -37,7 +35,7 @@ public class WNARAStar extends WRAStar {
         // Initialize all the data structures required for the search
         this._initDataStructures();
         // Let's instantiate the initial state
-        SearchDomain.State currentState = domain.initialState();
+        State currentState = domain.initialState();
         // Create a graph node from this state
         Node initNode = new Node(currentState);
 
@@ -56,7 +54,7 @@ public class WNARAStar extends WRAStar {
         if (nrResult.hasSolution()) {
             double bestF = this.cleanup.peek().getRf();
             // Get current solution
-            SearchResult.Solution currentSolution = nrResult.getSolutions().get(0);
+            Solution currentSolution = nrResult.getSolutions().get(0);
             // Update the maximum cost (if the search continues with AR, all the nodes with g+h > maxCost will be pruned)
             maxCost = currentSolution.getCost();
             double suboptimalBoundSup = maxCost / bestF;

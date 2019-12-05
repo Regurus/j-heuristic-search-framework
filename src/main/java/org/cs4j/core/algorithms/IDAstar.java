@@ -16,9 +16,7 @@
  */
 package org.cs4j.core.algorithms;
 
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
+import org.cs4j.core.*;
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
@@ -107,8 +105,8 @@ public class IDAstar implements SearchAlgorithm {
         this.result.stopTimer();
 
         SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
-        List<SearchDomain.Operator> path = this.solution.getOperators();
-        List<SearchDomain.State> statesPath = this.solution.getStates();
+        List<Operator> path = this.solution.getOperators();
+        List<State> statesPath = this.solution.getStates();
 
         path.remove(0);
         Collections.reverse(path);

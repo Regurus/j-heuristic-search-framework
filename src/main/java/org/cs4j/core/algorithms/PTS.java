@@ -1,9 +1,7 @@
 package org.cs4j.core.algorithms;
 
 import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
+import org.cs4j.core.*;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.collections.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -443,7 +441,7 @@ public class PTS implements SearchAlgorithm {
          *
          * @param state The state from which the node should be created
          */
-        private Node(SearchDomain.State state) {
+        private Node(State state) {
             this(state, null, null, null, null);
         }
 

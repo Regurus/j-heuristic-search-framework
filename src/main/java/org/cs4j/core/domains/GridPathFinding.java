@@ -1,6 +1,6 @@
 package org.cs4j.core.domains;
 
-import org.cs4j.core.SearchDomain;
+import org.cs4j.core.*;
 import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.collections.Pair;
 import org.cs4j.core.collections.PairInt;
@@ -1510,7 +1510,7 @@ public class GridPathFinding implements SearchDomain {
          * operator
          */
         @Override
-        public SearchDomain.Operator reverse(State state) {
+        public Operator reverse(State state) {
             return GridPathFinding.this.reverseOperators[this.type];
         }
     }

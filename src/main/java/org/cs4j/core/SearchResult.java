@@ -16,8 +16,6 @@
  */
 package org.cs4j.core;
 
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
 
 import java.util.HashMap;
 import java.util.List;
@@ -114,68 +112,5 @@ public interface SearchResult {
     /**
      * Interface for search iterations.
      */
-    public interface Iteration {
-
-        /**
-         * Returns the bound for this iteration.
-         *
-         * @return the bound
-         */
-        public double getBound();
-
-        /**
-         * Returns the number of nodes expanded.
-         *
-         * @return the number of nodes expanded
-         */
-        public long getExpanded();
-
-        /**
-         * Returns the number of nodes generated.
-         *
-         * @return the number of nodes generated
-         */
-        public long getGenerated();
-    }
-
-    /**
-     * The Solution interface.
-     */
-    public interface Solution {
-
-        /**
-         * Returns a list of operators used to construct this solution.
-         *
-         * @return list of operators
-         */
-        public List<Operator> getOperators();
-
-        /**
-         * Returns a list of states used to construct this solution
-         *
-         * @return list of states
-         */
-        public List<State> getStates();
-
-        /**
-         * Returns a string representation of the solution
-         *
-         * @return A string that represents the solution
-         */
-        public String dumpSolution();
-
-        /**
-         * Returns the cost of the solution.
-         *
-         * @return the cost of the solution
-         */
-        public double getCost();
-
-        /**
-         * Returns the length of the solution.
-         */
-        public int getLength();
-
-    }
 
 }

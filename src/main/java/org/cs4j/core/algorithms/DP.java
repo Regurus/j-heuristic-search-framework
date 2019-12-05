@@ -2,7 +2,7 @@ package org.cs4j.core.algorithms;
 
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 import org.cs4j.core.collections.GH_heap;
 import org.cs4j.core.collections.PackedElement;
 import org.cs4j.core.collections.SearchQueueElement;
@@ -126,7 +126,7 @@ public class DP  implements SearchAlgorithm {
         result.setExtras("numOfGoalsFound", 0 + "");
 
         // Let's instantiate the initial state
-        SearchDomain.State currentState = domain.initialState();
+        State currentState = domain.initialState();
 
         // Create a graph node from this state
         Node initNode = new Node(currentState);
@@ -151,13 +151,13 @@ public class DP  implements SearchAlgorithm {
 
                 // Go over all the possible operators and apply them
                 for (int i = 0; i < getNumOperators(currentState); ++i) {
-                    SearchDomain.Operator op = getOperator(currentState, i);
+                    Operator op = getOperator(currentState, i);
                     // Try to avoid loops
                     if (op.equals(currentNode.pop)) {
                         continue;
                     }
                     // Here we actually generate a new state
-                    SearchDomain.State childState = applyOperator(currentState, op);
+                    State childState = applyOperator(currentState, op);
                     Node childNode = new Node(childState, currentNode, currentState, op, op.reverse(currentState));
 
                     ++result.generated;
@@ -187,22 +187,22 @@ public class DP  implements SearchAlgorithm {
 //        return result.getGenerated() < domain.maxGeneratedSize();
     }
 
-    private SearchDomain.State applyOperator(SearchDomain.State currentState, SearchDomain.Operator op){
+    private State applyOperator(State currentState, Operator op){
         return domain.applyOperator(currentState, op);
     }
-    private SearchDomain.Operator getOperator(SearchDomain.State currentState, int i){
+    private Operator getOperator(State currentState, int i){
         return domain.getOperator(currentState, i);
     }
 
-    private int getNumOperators(SearchDomain.State currentState) {
+    private int getNumOperators(State currentState) {
         return domain.getNumOperators(currentState);
     }
 
-    private SearchDomain.State unpackDomain(Node currentNode){
+    private State unpackDomain(Node currentNode){
         return domain.unpack(currentNode.packed);
     }
 
-    private boolean checkIfGoal(SearchDomain.State currentState, Node currentNode){
+    private boolean checkIfGoal(State currentState, Node currentNode){
         double fmin = open.getFmin();
         if(this.domain.isGoal(currentState)){
             if (currentNode.g < fmin * weight) {
@@ -212,8 +212,8 @@ public class DP  implements SearchAlgorithm {
                 double currentCost = 0;
                 //DO NOT set the current cost to currentNode.g! it causes floating point errors in GH_heap
                 //here we trace back the node, maybe the because the cost might be better than currentNode.g in case we have found a shortcut
-                SearchDomain.State currentPacked = domain.unpack(currentNode.packed);
-                SearchDomain.State currentParentPacked = null;
+                State currentPacked = domain.unpack(currentNode.packed);
+                State currentParentPacked = null;
                 for (Node node = currentNode;
                      node != null;
                      node = node.parent, currentPacked = currentParentPacked) {
@@ -254,13 +254,13 @@ public class DP  implements SearchAlgorithm {
             }
             System.out.print("\r");
             SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
-            List<SearchDomain.Operator> path = new ArrayList<>();
-            List<SearchDomain.State> statesPath = new ArrayList<>();
+            List<Operator> path = new ArrayList<>();
+            List<State> statesPath = new ArrayList<>();
             // System.out.println("[INFO] Solved - Generating output path.");
             double cost = 0;
 
-            SearchDomain.State currentPacked = domain.unpack(goal.packed);
-            SearchDomain.State currentParentPacked = null;
+            State currentPacked = domain.unpack(goal.packed);
+            State currentParentPacked = null;
             for (Node currentNode = goal;
                               currentNode != null;
                               currentNode = currentNode.parent, currentPacked = currentParentPacked) {
@@ -504,15 +504,15 @@ public class DP  implements SearchAlgorithm {
         private int depth;
 //        private double potential;
 
-        private SearchDomain.Operator op;
-        private SearchDomain.Operator pop;
+        private Operator op;
+        private Operator pop;
 
         private Node parent;
         private PackedElement packed;
         private int[] secondaryIndex;
         private double fcounterFmin;
 
-        private Node(SearchDomain.State state, Node parent, SearchDomain.State parentState, SearchDomain.Operator op, SearchDomain.Operator pop) {
+        private Node(State state, Node parent, State parentState, Operator op, Operator pop) {
             // Size of key
             super(2);
             // TODO: Why?
@@ -634,7 +634,7 @@ public class DP  implements SearchAlgorithm {
 
         @Override
         public String toString() {
-            SearchDomain.State state = domain.unpack(this.packed);
+            State state = domain.unpack(this.packed);
             StringBuilder sb = new StringBuilder();
             sb.append("State:"+state.dumpStateShort());
             sb.append(", h: "+this.h);//h
@@ -693,7 +693,7 @@ public class DP  implements SearchAlgorithm {
          *
          * @param state The state which this node represents
          */
-        private Node(SearchDomain.State state) {
+        private Node(State state) {
             this(state, null, null, null, null);
         }
 

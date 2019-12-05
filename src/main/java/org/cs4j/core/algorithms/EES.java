@@ -2,9 +2,7 @@ package org.cs4j.core.algorithms;
 
 import com.sun.istack.internal.NotNull;
 import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
+import org.cs4j.core.*;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.collections.*;
@@ -192,7 +190,7 @@ public class EES implements SearchAlgorithm {
 
     /**
      * (non-Javadoc)
-     * @see edu.unh.ai.search.SearchAlgorithm#search(java.lang.Object)
+     * @see //edu.unh.ai.search.SearchAlgorithm#search(java.lang.Object)
      */
     @Override
     public SearchResult search(SearchDomain domain) {
@@ -593,9 +591,7 @@ public class EES implements SearchAlgorithm {
             this.fHat = this.g + this.hHat;
 
             // This must be true assuming the heuristic is consistent (fHat may only overestimate the cost to the goal)
-            if (domain.isCurrentHeuristicConsistent()) {
-                assert this.fHat >= this.f;
-            }
+            assert !domain.isCurrentHeuristicConsistent() || this.fHat >= this.f;
             assert this.dHat >= 0;
         }
 

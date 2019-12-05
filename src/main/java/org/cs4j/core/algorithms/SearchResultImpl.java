@@ -21,10 +21,7 @@ import java.lang.management.ThreadMXBean;
 import java.text.DecimalFormat;
 import java.util.*;
 
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 
 /**
  * The search result class.
@@ -263,7 +260,7 @@ public class SearchResultImpl implements SearchResult {
     /*
      * The iteration class.
      */
-    private static class Iteration implements SearchResult.Iteration {
+    private static class Iteration{
         private double b;
         private long e;
         private long g;
@@ -274,15 +271,12 @@ public class SearchResultImpl implements SearchResult {
             this.g = g;
         }
 
-        @Override
         public double getBound() {
             return this.b;
         }
-        @Override
         public long getExpanded() {
             return this.e;
         }
-        @Override
         public long getGenerated() {
             return this.g;
         }

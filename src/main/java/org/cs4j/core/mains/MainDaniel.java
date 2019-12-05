@@ -5,10 +5,7 @@ import jxl.read.biff.BiffException;
 import jxl.write.*;
 import jxl.write.Number;
 import jxl.write.biff.RowsExceededException;
-import org.cs4j.core.OutputResult;
-import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 import org.cs4j.core.algorithms.DP;
 import org.cs4j.core.algorithms.EES;
 import org.cs4j.core.algorithms.IDAstar;
@@ -278,19 +275,19 @@ public class MainDaniel {
             sb.append(System.getProperty("line.separator"));
 
             try {
-                List<SearchDomain.Operator> operators = result.getSolutions().get(0).getOperators();
+                List<Operator> operators = result.getSolutions().get(0).getOperators();
                 PrintWriter writer = new PrintWriter(inputPath + "/optimalOperators_"+optimalSolutionParam+"_" + instance + ".in", "UTF-8");
-                SearchDomain.State parentState = domain.initialState();
-                SearchDomain.State childState = null;
+                State parentState = domain.initialState();
+                State childState = null;
                 for (int i = 0 ; i <=operators.size()-1; i++) {
                     boolean appended=false;
-                    SearchDomain.Operator iop = operators.get(i);
+                    Operator iop = operators.get(i);
                     childState = domain.applyOperator(parentState,iop);
                     PackedElement childPacked = domain.pack(childState);
                     int operatorsNum = domain.getNumOperators(parentState);
                     for(int j=0 ; j < operatorsNum;j++){
-                        SearchDomain.Operator op = domain.getOperator(parentState,j);
-                        SearchDomain.State stateJ = domain.applyOperator(parentState,op);
+                        Operator op = domain.getOperator(parentState,j);
+                        State stateJ = domain.applyOperator(parentState,op);
                         PackedElement packedJ = domain.pack(stateJ);
                         if(childPacked.equals(packedJ) || stateJ.equals(childState)){
                             appended=true;
@@ -412,14 +409,14 @@ public class MainDaniel {
             }
         }
         if(dirExist) {
-            List<SearchResult.Solution> solutions = result.getSolutions();
-            SearchResult.Solution solution = solutions.get(0);
-            List<SearchDomain.State> states = solution.getStates();
-            List<SearchDomain.Operator> operators = solution.getOperators();
+            List<Solution> solutions = result.getSolutions();
+            Solution solution = solutions.get(0);
+            List<State> states = solution.getStates();
+            List<Operator> operators = solution.getOperators();
 
             try {
                 PrintWriter writer = new PrintWriter(path+"/operators.in", "UTF-8");
-                for (SearchDomain.Operator operator : operators) {
+                for (Operator operator : operators) {
                     String toSave = operator.toString();
                     writer.println(toSave);
                     System.out.println(toSave);
@@ -622,8 +619,8 @@ public class MainDaniel {
 //                    SearchDomain domain = new Pancakes(is);
                     EES ees = new EES(domain);
 
-                    SearchDomain.State parentState = domain.initialState();
-                    SearchDomain.State childState;
+                    State parentState = domain.initialState();
+                    State childState;
                     EES.Node parentNode = ees.createNode(parentState, null, null, null, null);;
 
                     optimalOperatorsStream.getChannel().position(0);
@@ -635,7 +632,7 @@ public class MainDaniel {
 //                    System.out.println(parentState.dumpStateShort());
                     optimalOperatorsLine = optimalOperatorsReader.readLine();
                         int opPos = Integer.parseInt(optimalOperatorsLine);
-                        SearchDomain.Operator op = domain.getOperator(parentState, opPos);
+                        Operator op = domain.getOperator(parentState, opPos);
                         childState = domain.applyOperator(parentState, op);
                         solH -= op.getCost(childState,parentState);
                         solD--;
@@ -674,7 +671,7 @@ public class MainDaniel {
 
                         optimalOperatorsLine = optimalOperatorsReader.readLine();
                     int opPos = Integer.parseInt(optimalOperatorsLine);
-                    SearchDomain.Operator op = domain.getOperator(parentState, opPos);
+                    Operator op = domain.getOperator(parentState, opPos);
                     childState = domain.applyOperator(parentState, op);
                     if(!domain.isGoal(childState)){
                         System.out.println("[WARNING] Last state is NOT Goal");

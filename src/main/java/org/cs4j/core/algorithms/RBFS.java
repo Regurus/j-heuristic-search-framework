@@ -22,9 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
+import org.cs4j.core.*;
 import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.SearchResult;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;

@@ -16,11 +16,7 @@
  */
 package org.cs4j.core.algorithms;
 
-import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchDomain.Operator;
-import org.cs4j.core.SearchDomain.State;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 import org.cs4j.core.algorithms.SearchResultImpl.SolutionImpl;
 import org.cs4j.core.collections.*;
 import org.cs4j.core.collections.BucketHeap.BucketHeapElement;
@@ -173,7 +169,7 @@ public class WRAStar implements SearchAlgorithm {
         }
     }
 
-    private SearchResult.Solution createSolution(Node goal) {
+    private Solution createSolution(Node goal) {
         SolutionImpl solution = new SolutionImpl(this.domain);
         List<Operator> path = new ArrayList<>();
         List<State> statesPath = new ArrayList<>();
@@ -449,7 +445,7 @@ public class WRAStar implements SearchAlgorithm {
             if (result.hasSolution()) {
                 lastGoal = foundGoal;
                 // Get current solution
-                SearchResult.Solution currentSolution = result.getSolutions().get(0);
+                Solution currentSolution = result.getSolutions().get(0);
                 // In any case, update the previous result solution values
                 double prevExp = result.getExpanded();
                 if (previousResult != null) {
@@ -512,7 +508,7 @@ public class WRAStar implements SearchAlgorithm {
                 }
                 assert this.cleanup.isEmpty();
                 System.out.println("[INFO] Last search didn't reveal to solution - returns the previous search");
-                SearchResult.Solution sol = this.createSolution(previousGoal);
+                Solution sol = this.createSolution(previousGoal);
                 if (sol.getCost() < previousResult.getSolutions().get(0).getCost()) {
                     System.out.println("Win : prev cost " + previousResult.getSolutions().get(0).getCost() + " current cost " + sol.getCost() );
                     System.exit(-1);

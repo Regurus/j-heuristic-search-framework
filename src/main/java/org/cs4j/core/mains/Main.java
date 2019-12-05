@@ -1,9 +1,6 @@
 package org.cs4j.core.mains;
 
-import org.cs4j.core.OutputResult;
-import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 import org.cs4j.core.algorithms.*;
 import org.cs4j.core.data.Weights;
 import org.cs4j.core.domains.*;
@@ -16,7 +13,7 @@ public class Main {
 
     public double[] testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo) {
         SearchResult result = algo.search(domain);
-        SearchResult.Solution sol = result.getSolutions().get(0);
+        Solution sol = result.getSolutions().get(0);
         //System.out.println(result.getWallTimeMillis());
         //System.out.println(result.getCpuTimeMillis());
 //        System.out.println("Generated: "+result.getGenerated());
@@ -322,7 +319,7 @@ public class Main {
                     result.getGenerated(),
                     result.getExpanded(),
                     ((SearchResultImpl) result).reopened};
-            SearchResult.Solution s = result.getSolutions().get(0);
+            Solution s = result.getSolutions().get(0);
             System.out.println(s.dumpSolution());
             System.out.println(Arrays.toString(d));
         } else {
@@ -357,7 +354,7 @@ public class Main {
                     result.getGenerated(),
                     result.getExpanded(),
                     ((SearchResultImpl) result).reopened};
-            SearchResult.Solution s = result.getSolutions().get(0);
+            Solution s = result.getSolutions().get(0);
             System.out.println(s.dumpSolution());
             System.out.println(Arrays.toString(d));
         } else {
@@ -599,20 +596,20 @@ public class Main {
         String fileExt = "Heavy";
 
         System.out.println(fileExt);
-        SearchDomain.State goalState = domain.initialState();
+        State goalState = domain.initialState();
         OutputResult  output = new OutputResult("C:/Users/Daniel/Documents/gilond/Master/ResearchData/results/randomWalk"+fileExt, null, -1, -1, null, false, true);
         String headers = "Instance,d,h,d*,h*";
         output.writeln(headers);
 
-        SearchDomain.Operator randOperator;
-        SearchDomain.Operator reversedOperator = null;
+        Operator randOperator;
+        Operator reversedOperator = null;
         int randOperatorNum;
 
         for(int i=0; i<iterations*stepNum; i++){
             //randomizing
             int currentStep = i/iterations + 1;
             System.out.print("\ri:"+i);
-            SearchDomain.State randomState = goalState;
+            State randomState = goalState;
             for(int j=0; j<iterationStep*currentStep; j++){
                 int numOperators = domain.getNumOperators(randomState);
                 randOperatorNum = (int) (Math.random() * numOperators);

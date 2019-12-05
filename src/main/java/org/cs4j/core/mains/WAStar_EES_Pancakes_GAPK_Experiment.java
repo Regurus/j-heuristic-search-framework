@@ -1,9 +1,6 @@
 package org.cs4j.core.mains;
 
-import org.cs4j.core.OutputResult;
-import org.cs4j.core.SearchAlgorithm;
-import org.cs4j.core.SearchDomain;
-import org.cs4j.core.SearchResult;
+import org.cs4j.core.*;
 import org.cs4j.core.algorithms.WAStar;
 import org.cs4j.core.data.Weights;
 
@@ -73,7 +70,7 @@ public class WAStar_EES_Pancakes_GAPK_Experiment {
      * @return A new double array which contains all the fields for the solution
      */
     private double[] _getSolutionResult(SearchResult result) {
-        SearchResult.Solution solution = result.getSolutions().get(0);
+        Solution solution = result.getSolutions().get(0);
         return new double[]{
                 1,
                 solution.getLength(),

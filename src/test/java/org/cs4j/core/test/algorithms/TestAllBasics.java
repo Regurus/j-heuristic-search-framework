@@ -20,13 +20,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Assert;
 
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
-import org.cs4j.core.SearchResult.Solution;
+import org.cs4j.core.Solution;
+import org.cs4j.core.State;
 import org.cs4j.core.algorithms.WAStar;
 import org.cs4j.core.algorithms.WAStar.HeapType;
 import org.cs4j.core.algorithms.EES;
@@ -74,7 +77,7 @@ public class TestAllBasics {
 	}	
 	
 	public SearchDomain createFifteenPuzzle(String instance) throws FileNotFoundException {
-		InputStream is = new FileInputStream(new File("cs4j-master/input/fifteenpuzzle/korf100/"+instance));
+		InputStream is = new FileInputStream(new File("tileFormatTest.pzl"));
 		FifteenPuzzle puzzle = new FifteenPuzzle(is);
 		return puzzle;
 	}
@@ -83,6 +86,7 @@ public class TestAllBasics {
 			long generated, long expanded, double cost) {
 		SearchResult result = algo.search(domain);
 		Solution sol = result.getSolutions().get(0);
+
 		Assert.assertTrue(result.getWallTimeMillis() > 1);
 		Assert.assertTrue(result.getWallTimeMillis() < 200);
 		Assert.assertTrue(result.getCpuTimeMillis() > 1);
@@ -92,7 +96,12 @@ public class TestAllBasics {
 		Assert.assertTrue(sol.getCost() == cost);
 		Assert.assertTrue(sol.getLength() == cost+1);
 	}
-	
+	public void showSolution(SearchResult searchResult,int solutionIndex){
+		Solution solution = searchResult.getSolutions().get(solutionIndex);
+		for(State state: solution.getStates()){
+
+		}
+	}
 	public static void main(String[] args) throws FileNotFoundException {
 		TestAllBasics test = new TestAllBasics();
 		test.testEES();
