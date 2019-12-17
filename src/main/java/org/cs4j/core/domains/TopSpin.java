@@ -520,7 +520,7 @@ public class TopSpin implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             StringBuilder sb = new StringBuilder();
             sb.append("********************************\n");
             // h
@@ -537,7 +537,7 @@ public class TopSpin implements SearchDomain {
         }
 
         @Override
-        public String dumpStateShort() {
+        public String convertToStringShort() {
             return null;
         }
     }

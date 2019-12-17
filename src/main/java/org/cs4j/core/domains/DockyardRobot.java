@@ -1431,12 +1431,12 @@ public class DockyardRobot implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             return DockyardRobot.dumpState(this);
         }
 
         @Override
-        public String dumpStateShort() {
+        public String convertToStringShort() {
             return null;
         }
     }

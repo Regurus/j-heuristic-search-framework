@@ -94,7 +94,7 @@ public class IDAstar implements SearchAlgorithm {
         do {
             this.minNextF = -1;
             boolean goalWasFound = this.dfs(domain, root, 0, null);
-/*            System.out.println("min next f: " + minNextF ) ;
+/*          System.out.println("min next f: " + minNextF ) ;
             System.out.println("next");*/
             this.result.addIteration(i, this.bound, this.result.expanded, this.result.generated);
             this.bound = this.minNextF;

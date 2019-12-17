@@ -636,7 +636,7 @@ public class DP  implements SearchAlgorithm {
         public String toString() {
             State state = domain.unpack(this.packed);
             StringBuilder sb = new StringBuilder();
-            sb.append("State:"+state.dumpStateShort());
+            sb.append("State:"+state.convertToStringShort());
             sb.append(", h: "+this.h);//h
             sb.append(", g: "+this.g);//g
             sb.append(", f: "+this.f);//f

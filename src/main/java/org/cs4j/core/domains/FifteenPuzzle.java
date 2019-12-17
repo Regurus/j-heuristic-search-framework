@@ -30,10 +30,7 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * The 4x4 sliding-tiles domain class.
@@ -394,6 +391,21 @@ public final class FifteenPuzzle implements SearchDomain {
         this.pdbRemainsOnDisk = other.pdbRemainsOnDisk;
     }
 
+    /***
+     * constructor for random instance of tile puzzle
+     * @param random ignored, used to overload the constructor
+     */
+    public FifteenPuzzle(boolean random){
+        int[] nums = java.util.stream.IntStream.rangeClosed(0, this.tilesNumber-1).toArray();
+        Integer[] puzzle = Arrays.stream(nums).boxed().toArray( Integer[]::new );//int[]=>Integer[]
+        List<Integer> intList = Arrays.asList(puzzle);
+        Collections.shuffle(intList);
+        for (int t = 0; t < this.tilesNumber; ++t) {
+            int p = puzzle[t];
+            this.init[t] = p;
+        }
+        this._init();
+    }
     /**
      * Computes the TOTAL Manhattan distance for the specified blank and tile configuration.
      *
@@ -931,7 +943,7 @@ public final class FifteenPuzzle implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             StringBuilder sb = new StringBuilder();
             sb.append("********************************\n");
             // h
@@ -976,7 +988,7 @@ public final class FifteenPuzzle implements SearchDomain {
         }
 
         @Override
-        public String dumpStateShort() {
+        public String convertToStringShort() {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < FifteenPuzzle.this.tilesNumber; ++i) {
                 sb.append(this.tiles[i] +" ");

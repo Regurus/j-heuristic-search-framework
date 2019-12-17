@@ -1605,12 +1605,12 @@ public class VacuumRobot implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             return VacuumRobot.this.dumpState(this);
         }
 
         @Override
-        public String dumpStateShort() {
+        public String convertToStringShort() {
             return VacuumRobot.this.dumpStateShort(this);
         }
 

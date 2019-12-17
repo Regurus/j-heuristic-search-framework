@@ -997,12 +997,12 @@ public class GridPathFinding implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             return GridPathFinding.this.dumpState(this);
         }
 
         @Override
-        public String dumpStateShort() {
+        public String convertToStringShort() {
             return GridPathFinding.this.map.getPosition(this.agentLocation).toString();
         }
 

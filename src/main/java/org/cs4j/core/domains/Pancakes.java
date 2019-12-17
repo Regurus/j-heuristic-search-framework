@@ -490,7 +490,7 @@ public class Pancakes implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             StringBuilder sb = new StringBuilder();
             sb.append("********************************\n");
             // h
@@ -512,7 +512,7 @@ public class Pancakes implements SearchDomain {
         }
 
         @Override
-        public String dumpStateShort() {
+        public String convertToStringShort() {
             String[] array = new String[this.cakes.length];
             for (int i = 0; i < this.cakes.length; ++i) {
                 array[i] = String.valueOf(cakes[i]);
@@ -537,8 +537,8 @@ public class Pancakes implements SearchDomain {
             double cost = computeCost(state,parent,value);
             if(Math.abs(state.getH()-parent.getH()) > cost + 0.00000001){
                 System.out.println("[WARNING] Pancake Current Heuristic should be consistent but is not!");
-                System.out.println(state.dumpState());
-                System.out.println(parent.dumpState());
+                System.out.println(state.convertToString());
+                System.out.println(parent.convertToString());
                 System.out.println(state.getH()-parent.getH());
                 unpack(pack(state));
                 unpack(pack(parent));

@@ -361,7 +361,7 @@ public class SearchResultImpl implements SearchResult {
             // Otherwise, let's dump state by state
             StringBuffer sb = new StringBuffer();
             for (State state: this.states) {
-                sb.append(state.dumpState());
+                sb.append(state.convertToString());
 //                sb.append(state.dumpStateShort());
 //                sb.append("\n");
             }

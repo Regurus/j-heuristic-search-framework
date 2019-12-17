@@ -20,23 +20,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Assert;
 
 import org.cs4j.core.SearchAlgorithm;
 import org.cs4j.core.SearchDomain;
 import org.cs4j.core.SearchResult;
 import org.cs4j.core.Solution;
 import org.cs4j.core.State;
-import org.cs4j.core.algorithms.WAStar;
-import org.cs4j.core.algorithms.WAStar.HeapType;
-import org.cs4j.core.algorithms.EES;
-import org.cs4j.core.algorithms.IDAstar;
-import org.cs4j.core.algorithms.RBFS;
-import org.cs4j.core.algorithms.WRBFS;
+import org.cs4j.core.algorithms.*;
 import org.cs4j.core.domains.FifteenPuzzle;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestAllBasics {
@@ -81,12 +73,11 @@ public class TestAllBasics {
 		FifteenPuzzle puzzle = new FifteenPuzzle(is);
 		return puzzle;
 	}
-	
-	public void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, 
-			long generated, long expanded, double cost) {
+	@Test
+	public void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, long generated, long expanded, double cost) {
 		SearchResult result = algo.search(domain);
 		Solution sol = result.getSolutions().get(0);
-
+		showSolution(result,0);
 		Assert.assertTrue(result.getWallTimeMillis() > 1);
 		Assert.assertTrue(result.getWallTimeMillis() < 200);
 		Assert.assertTrue(result.getCpuTimeMillis() > 1);
@@ -99,12 +90,14 @@ public class TestAllBasics {
 	public void showSolution(SearchResult searchResult,int solutionIndex){
 		Solution solution = searchResult.getSolutions().get(solutionIndex);
 		for(State state: solution.getStates()){
-
+			System.out.println(state.convertToString());
 		}
+		System.out.println("Cost: "+solution.getCost());
+		System.out.println("Time: "+(searchResult).getCpuTimeMillis()/1000+"s");
 	}
 	public static void main(String[] args) throws FileNotFoundException {
 		TestAllBasics test = new TestAllBasics();
-		test.testEES();
+		test.testIDAstar();
 	}
 
 }

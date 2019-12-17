@@ -5,7 +5,6 @@ import org.cs4j.core.collections.PackedElement;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -242,13 +241,13 @@ public class RawGraph implements SearchDomain {
         }
 
         @Override
-        public String dumpState() {
+        public String convertToString() {
             return this.name + "";
         }
 
         @Override
-        public String dumpStateShort() {
-            return this.dumpState();
+        public String convertToStringShort() {
+            return this.convertToString();
         }
     }
 
