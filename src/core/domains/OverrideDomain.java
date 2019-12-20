@@ -21,6 +21,7 @@ public class OverrideDomain implements SearchDomain {
 
     private DefaultUndirectedGraph tree = new DefaultUndirectedGraph(DefaultEdge.class);
     private Node[] nodes;
+    private int startIndex = 0;
 
     /**
      * Basic constructor class using in-memory data
@@ -42,6 +43,9 @@ public class OverrideDomain implements SearchDomain {
         for(int i=0;i<vertices.length;i++){
             Node next = new Node(vertices[i]==-2,vertices[i]==-1,vertices[i]);
             tree.addVertex(next);
+            if(next.isRoot()){
+                this.startIndex = i;
+            }
             nodes[i]=next;
         }
     }
@@ -77,42 +81,76 @@ public class OverrideDomain implements SearchDomain {
     }
     @Override
     public State initialState() {
-        return null;
+        return new OverrideState(this.nodes[this.startIndex],null,0);
     }
 
     @Override
     public boolean isGoal(State state) {
-        return false;
+        if(!(state instanceof OverrideState)){
+            return false;
+        }
+        return ((OverrideState) state).contained.isGoal;
     }
 
     @Override
     public int getNumOperators(State state) {
-        return 0;
+        if(!(state instanceof OverrideState)){
+            return 0;
+        }
+        return tree.degreeOf(((OverrideState)state).contained);
     }
 
     @Override
     public Operator getOperator(State state, int index) {
-        return null;
+        if(!(state instanceof OverrideState)){
+            return null;
+        }
+        Node end;
+        Object edge = this.tree.edgesOf(((OverrideState) state).contained).toArray()[index];
+        //due to the fact that graph is undirected no way of knowing which one is target and which is source
+        Node node1 = (Node)this.tree.getEdgeSource(edge);
+        Node node2 = (Node)this.tree.getEdgeTarget(edge);
+        if(node1==((OverrideState) state).contained){
+            end = node2;
+        }
+        else {
+            end = node1;
+        }
+        return new TransitionOperator((OverrideState)state,end,((Cost)edge).cost);
     }
 
     @Override
     public State applyOperator(State state, Operator op) {
-        return null;
+        if(!(state instanceof OverrideState) || !(op instanceof TransitionOperator)){
+            return null;
+        }
+        return new OverrideState(((TransitionOperator) op).end.contained,
+                (OverrideState)state,((TransitionOperator) op).edgeCost+((OverrideState) state).costSoFar);
     }
 
     @Override
     public State copy(State state) {
-        return null;
+        if(!(state instanceof OverrideState)){
+            return null;
+        }
+        return new OverrideState(((OverrideState) state).contained,((OverrideState) state).previous,
+                ((OverrideState) state).costSoFar);
     }
-
+    //TODO double check
     @Override
     public PackedElement pack(State state) {
-        return null;
+        if(!(state instanceof OverrideState)){
+            return null;
+        }
+        return (OverrideState)state;
     }
 
     @Override
     public State unpack(PackedElement packed) {
-        return null;
+        if(!(packed instanceof OverrideState)){
+            return null;
+        }
+        return (OverrideState)packed;
     }
 
     @Override
@@ -127,17 +165,16 @@ public class OverrideDomain implements SearchDomain {
 
     @Override
     public void setOptimalSolutionCost(double cost) {
-
     }
 
     @Override
     public double getOptimalSolutionCost() {
-        return 0;
+        return -1;
     }
 
     @Override
     public int maxGeneratedSize() {
-        return 0;
+        return 10000;
     }
 
     @Override
@@ -171,15 +208,70 @@ public class OverrideDomain implements SearchDomain {
         public int gethValue() {
             return hValue;
         }
+    }
+    private class OverrideState extends PackedElement implements State{
+        public final Node contained;
+        public final OverrideState previous;
+        public final int costSoFar;
+
+        public OverrideState(Node contained, OverrideState previous,int costSoFar) {
+            super(1);
+            this.contained = contained;
+            this.previous = previous;
+            this.costSoFar = costSoFar;
+        }
+        @Override
+        public State getParent() {
+            return previous;
+        }
 
         @Override
-        public String toString() {
-            if(isRoot)
-                return "Root";
-            else if(isGoal)
-                return "Goal";
-            else
-                return ""+hValue;
+        public double getH() {
+            return contained.gethValue();
+        }
+
+        @Override
+        public double getD() {
+            return costSoFar;
+        }
+
+        @Override
+        public String convertToString() {
+            return contained.toString();
+        }
+
+        @Override
+        public String convertToStringShort() {
+            return contained.toString();
+        }
+    }
+    private class TransitionOperator implements Operator{
+        private final OverrideState start;
+        private final OverrideState end;
+        private final int edgeCost;
+
+        public TransitionOperator(OverrideState start, Node end,int edgeCost) {
+            this.start = start;
+            this.end = new OverrideState(end,this.start,this.start.costSoFar+edgeCost);
+            this.edgeCost = edgeCost;
+        }
+
+        @Override
+        public double getCost(State state, State parent) {
+            if(!(state instanceof OverrideState) || !(parent instanceof OverrideState)){
+                return Double.MAX_VALUE;
+            }
+            return ((OverrideState) state).costSoFar - ((OverrideState) state).previous.costSoFar;
+        }
+
+        @Override
+        public Operator reverse(State state) {
+            if(!(state instanceof OverrideState)){
+                return null;
+            }
+            if(state.getParent()==null)
+                return null;
+            return new TransitionOperator((OverrideState)state,((OverrideState) state.getParent()).contained,-this.edgeCost);
         }
     }
     //jgrapht disregards same objects bound to edged so there is a need for container for edge-cost value

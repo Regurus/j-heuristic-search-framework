@@ -13,7 +13,7 @@ import java.util.Map;
 public interface SearchConfigurable {
 
     /**
-     * Retrieves and returns the possible paramters that can be set for this algorithm
+     * Retrieves and returns the possible parameters that can be set for this algorithm
      *
      * @return A mapping of parameters (name=>type) or null if there are no such parameters
      */

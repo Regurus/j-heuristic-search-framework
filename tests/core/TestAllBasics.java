@@ -51,7 +51,8 @@ public class TestAllBasics {
 		SearchDomain domain = createFifteenPuzzle("12");
 		SearchAlgorithm algo = new IDAstar();
 		testSearchAlgorithm(domain, algo, 546343, 269708, 45);
-	}		
+	}
+
 
 	@Test
 	public void testEES() throws FileNotFoundException {
@@ -72,8 +73,7 @@ public class TestAllBasics {
 		FifteenPuzzle puzzle = new FifteenPuzzle(is);
 		return puzzle;
 	}
-	@Test
-	public void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, long generated, long expanded, double cost) {
+	public static void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, long generated, long expanded, double cost) {
 		SearchResult result = algo.search(domain);
 		Solution sol = result.getSolutions().get(0);
 		showSolution(result,0);
@@ -86,7 +86,7 @@ public class TestAllBasics {
 		Assert.assertTrue(sol.getCost() == cost);
 		Assert.assertTrue(sol.getLength() == cost+1);*/
 	}
-	public void showSolution(SearchResult searchResult,int solutionIndex){
+	public static void showSolution(SearchResult searchResult,int solutionIndex){
 		Solution solution = searchResult.getSolutions().get(solutionIndex);
 		for(State state: solution.getStates()){
 			System.out.println(state.convertToString());
