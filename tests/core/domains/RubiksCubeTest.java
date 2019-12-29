@@ -3,6 +3,7 @@ package core.domains;
 import core.SearchAlgorithm;
 import core.SearchDomain;
 import core.algorithms.IDAstar;
+import core.algorithms.IDDPS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

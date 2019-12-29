@@ -32,66 +32,17 @@ public class OverrideDomainTest {
     }
 
     @Test
-    public void sanityChecks() {
+    public void checkIncorrectAdjacentMatrices(){
+
     }
 
     @Test
-    public void initialState() {
+    public void checkIncorrectTransitionWeights(){
+
     }
 
     @Test
-    public void isGoal() {
-    }
+    public void checkTreeNavigation(){
 
-    @Test
-    public void getNumOperators() {
-    }
-
-    @Test
-    public void getOperator() {
-    }
-
-    @Test
-    public void applyOperator() {
-    }
-
-    @Test
-    public void copy() {
-    }
-
-    @Test
-    public void pack() {
-    }
-
-    @Test
-    public void unpack() {
-    }
-
-    @Test
-    public void dumpStatesCollection() {
-    }
-
-    @Test
-    public void isCurrentHeuristicConsistent() {
-    }
-
-    @Test
-    public void setOptimalSolutionCost() {
-    }
-
-    @Test
-    public void getOptimalSolutionCost() {
-    }
-
-    @Test
-    public void maxGeneratedSize() {
-    }
-
-    @Test
-    public void getPossibleParameters() {
-    }
-
-    @Test
-    public void setAdditionalParameter() {
     }
 }

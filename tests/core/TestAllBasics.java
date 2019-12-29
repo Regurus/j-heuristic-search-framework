@@ -15,19 +15,10 @@ package core; /**
  * limitations under the License.
  */
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-
-import core.SearchAlgorithm;
-import core.SearchDomain;
-import core.SearchResult;
-import core.Solution;
-import core.State;
 import core.algorithms.*;
 import core.domains.FifteenPuzzle;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class TestAllBasics {
@@ -53,6 +44,12 @@ public class TestAllBasics {
 		testSearchAlgorithm(domain, algo, 546343, 269708, 45);
 	}
 
+	@Test
+	public void testIDDPS() throws FileNotFoundException {
+		SearchDomain domain = createFifteenPuzzle("12");
+		SearchAlgorithm algo = new IDDPS(1);
+		testSearchAlgorithm(domain, algo, 546343, 269708, 45);
+	}
 
 	@Test
 	public void testEES() throws FileNotFoundException {
@@ -69,14 +66,14 @@ public class TestAllBasics {
 	}	
 	
 	public SearchDomain createFifteenPuzzle(String instance) throws FileNotFoundException {
-		InputStream is = new FileInputStream(new File("tileFormatTest.pzl"));
+		InputStream is = getClass().getClassLoader().getResourceAsStream("tileFormatTest.pzl");
 		FifteenPuzzle puzzle = new FifteenPuzzle(is);
 		return puzzle;
 	}
 	public static void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, long generated, long expanded, double cost) {
 		SearchResult result = algo.search(domain);
 		Solution sol = result.getSolutions().get(0);
-		//showSolution(result,0);
+		showSolution(result,0);
 		/*Assert.assertTrue(result.getWallTimeMillis() > 1);
 		Assert.assertTrue(result.getWallTimeMillis() < 200);
 		Assert.assertTrue(result.getCpuTimeMillis() > 1);
@@ -88,15 +85,20 @@ public class TestAllBasics {
 	}
 	public static void showSolution(SearchResult searchResult,int solutionIndex){
 		Solution solution = searchResult.getSolutions().get(solutionIndex);
-		for(State state: solution.getStates()){
+		/*for(State state: solution.getStates()){
 			System.out.println(state.convertToString());
-		}
+		}*/
 		System.out.println("Cost: "+solution.getCost());
 		System.out.println("Time: "+(searchResult).getCpuTimeMillis()/1000+"s");
+		System.out.println("Expanded: "+(searchResult).getExpanded());
+		System.out.println("Generated: "+(searchResult).getGenerated());
 	}
 	public static void main(String[] args) throws FileNotFoundException {
 		TestAllBasics test = new TestAllBasics();
 		test.testIDAstar();
+		test.testRBFS();
+		test.testIDDPS();
+		test.testEES();
 	}
 
 }
