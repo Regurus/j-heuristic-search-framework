@@ -105,7 +105,12 @@ public class Pancakes implements SearchDomain {
         for(int i=0; i<size; i++){
             init[i] = i;
         }
-        new Pancakes(init);
+        this.numCakes = init.length;
+        this.init = new int[init.length];
+        // Copy the given init array
+        System.arraycopy(init, 0, this.init, 0, this.init.length);
+        // System.out.println(Arrays.toString(this.init));
+        this._initializeDataStructures();
     }
 
     /**

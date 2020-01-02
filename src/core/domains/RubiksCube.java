@@ -4,6 +4,8 @@ import core.Operator;
 import core.SearchDomain;
 import core.State;
 import core.collections.PackedElement;
+
+import java.io.*;
 import java.util.Map;
 import org.apache.log4j.Logger;
 /**
@@ -15,10 +17,23 @@ public class RubiksCube implements SearchDomain {
     public static HeuristicType activeHeuristic;
     public byte[][][] startingState;
     public static Logger log = Logger.getLogger(RubiksCube.class.getName());
+    private final byte[][][] ORIGINAL_CUBE = {{{0,0,0},{0,0,0},{0,0,0}},{{1,1,1},{1,1,1},{1,1,1}},{{2,2,2},{2,2,2},{2,2,2}},
+            {{3,3,3},{3,3,3},{3,3,3}},{{4,4,4},{4,4,4},{4,4,4}},{{5,5,5},{5,5,5},{5,5,5}}};
 
     public RubiksCube(byte[][][] cube, HeuristicType active) {
         this.startingState = cube;
         activeHeuristic = active;
+    }
+
+    public RubiksCube(HeuristicType active) {
+        byte[][][] cube = deepCopyCube(ORIGINAL_CUBE);
+        this.startingState = cube;
+        activeHeuristic = active;
+    }
+
+    public void setInitialState(State state){
+        if(state instanceof RubiksState)
+            this.startingState = ((RubiksState) state).cube;
     }
 
     RubiksOperator getTestOperator(){
@@ -51,6 +66,19 @@ public class RubiksCube implements SearchDomain {
         PARALLEL_LINES,
         PARALLEL_LINES_COMPLEX,
         NO_HEURISTIC
+    }
+    static byte[][][] deepCopyCube(byte[][][] cube){
+        byte[][][] result = new byte[cube.length][][];
+        for(int i=0;i<cube.length;i++){
+            result[i] = new byte[cube[i].length][];
+            for(int j=0;j<cube[i].length;j++){
+                result[i][j] = new byte[cube[i][j].length];
+                for(int k=0;k<cube[i][j].length;k++){
+                    result[i][j][k] = cube[i][j][k];
+                }
+            }
+        }
+        return result;
     }
     @Override
     public State initialState() {
@@ -381,7 +409,7 @@ public class RubiksCube implements SearchDomain {
             if(!(state instanceof RubiksState))
                 return null;
             RubiksState prev = (RubiksState) state;
-            byte[][][] resultCube = this.deepCopyCube(prev.cube);
+            byte[][][] resultCube = RubiksCube.deepCopyCube(prev.cube);
             switch (this.operator){
                 case TOP_LEFT_1462:
                     resultCube = this.applyTL1462(resultCube);
@@ -442,19 +470,7 @@ public class RubiksCube implements SearchDomain {
             return new RubiksState(resultCube,prev,prev.currentCost+1);
         }
 
-        private byte[][][] deepCopyCube(byte[][][] cube){
-            byte[][][] result = new byte[cube.length][][];
-            for(int i=0;i<cube.length;i++){
-                result[i] = new byte[cube[i].length][];
-                for(int j=0;j<cube[i].length;j++){
-                    result[i][j] = new byte[cube[i][j].length];
-                    for(int k=0;k<cube[i][j].length;k++){
-                        result[i][j][k] = cube[i][j][k];
-                    }
-                }
-            }
-            return result;
-        }
+
         byte[][][] applyTR2345(byte[][][] cube){
             byte[][] savedValues = {cube[1][0],cube[2][0],cube[3][0],cube[4][0]};
             cube[2][0] = savedValues[0];
