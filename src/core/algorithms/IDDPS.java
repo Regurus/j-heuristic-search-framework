@@ -29,10 +29,10 @@ public class IDDPS extends IDAstar{
             this.B = subOptimalityBound;
     }
     @Override
-    protected boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
-        double f = cost + this.weight * parent.getH();
+    protected boolean dfs(SearchDomain domain, State current, double cost, Operator pop) {
+        double f = cost + this.weight * current.getH();
 
-        if (f <= this.bound && domain.isGoal(parent)) {
+        if (f <= this.bound && domain.isGoal(current)) {
             this.solution.setCost(f);
             this.solution.addOperator(pop);
             return true;
@@ -45,16 +45,16 @@ public class IDDPS extends IDAstar{
         }
         ++result.expanded;
         //building focal list
-        PriorityQueue<Pair<Double,Pair<State,Operator>>> focalList =this.buildFocalList(parent,pop,domain);
+        PriorityQueue<Pair<Double,Pair<State,Operator>>> focalList =this.buildFocalList(current,pop,domain);
         //expand by focal list priority
         while(!focalList.isEmpty()){
             Pair<State,Operator> pair = focalList.remove().getValue();
             State next = pair.getKey();
             Operator path = pair.getValue();
-            boolean goal = this.dfs(domain, next, path.getCost(next, parent) + cost, path.reverse(parent));
+            boolean goal = this.dfs(domain, next, path.getCost(next, current) + cost, path.reverse(current));
             if (goal) {
                 this.solution.addOperator(path);
-                this.solution.addState(parent);
+                this.solution.addState(current);
                 return true;
             }
         }

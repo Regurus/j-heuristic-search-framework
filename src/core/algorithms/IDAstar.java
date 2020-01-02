@@ -6,17 +6,17 @@ import core.SearchAlgorithm;
 import core.SearchResult;
 import core.algorithms.SearchResultImpl.SolutionImpl;
 import core.collections.Pair;
+import core.domains.RubiksCube;
+import org.apache.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 public class IDAstar implements SearchAlgorithm {
     // The domain for the search
     protected SearchDomain domain;
-
-
+    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
     protected SearchResultImpl result;
     protected SolutionImpl solution;
-
     protected double weight;
     protected double bound;
     protected double minNextF;
@@ -68,12 +68,16 @@ public class IDAstar implements SearchAlgorithm {
         this.bound = this.weight * root.getH();
         int i = 0;
         do {
+            if(domain.debugMode)
+                log.debug("iteration start bound: "+this.bound );
             this.minNextF = -1;
             boolean goalWasFound = this.dfs(domain, root, 0, null);
 /*          System.out.println("min next f: " + minNextF ) ;
             System.out.println("next");*/
             this.result.addIteration(i, this.bound, this.result.expanded, this.result.generated);
             this.bound = this.minNextF;
+            if(domain.debugMode)
+                log.debug("iteration end new bound: "+this.bound );
             if (goalWasFound) {
                 break;
             }
@@ -102,18 +106,21 @@ public class IDAstar implements SearchAlgorithm {
      * A single iteration of the IDA*
      *
      * @param domain The domain on which the search is performed
-     * @param parent The parent state
-     * @param cost The cost to reach the parent state
+     * @param current The current state
+     * @param cost The cost to reach the current state
      * @param pop The reverse operator?
      *
      * @return Whether a solution was found
      */
-    protected boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
-        double f = cost + this.weight * parent.getH();//todo change to potential calculation
-
-        if (f <= this.bound && domain.isGoal(parent)) {
+    protected boolean dfs(SearchDomain domain, State current, double cost, Operator pop) {
+        double f = cost + this.weight * current.getH();//todo change to potential calculation
+        if(domain.debugMode)
+            log.debug("current limit: "+this.bound);
+        if (f <= this.bound && domain.isGoal(current)) {
             this.solution.setCost(f);
             this.solution.addOperator(pop);
+            if(domain.debugMode)
+                log.debug("iteration end: goal found @cost "+f);
             return true;
         }
         //todo update the next cost here
@@ -121,24 +128,27 @@ public class IDAstar implements SearchAlgorithm {
             // Let's record the lowest value of f that is greater than the bound
             if (this.minNextF < 0 || f < this.minNextF)
                 this.minNextF = f;
+            if(domain.debugMode){
+                log.debug("branch end: f out of current bound");
+            }
             return false;//stopping current iteration
         }
 
         // Expand the current node
         ++result.expanded;
-        int numOps = domain.getNumOperators(parent);
+        int numOps = domain.getNumOperators(current);
         for (int i = 0; i < numOps; ++i) {
-            Operator op = domain.getOperator(parent, i);
+            Operator op = domain.getOperator(current, i);
             // Bypass reverse operators
             if (op.equals(pop)) {
                 continue;
             }
             ++result.generated;
-            State child = domain.applyOperator(parent, op);
-            boolean goal = this.dfs(domain, child, op.getCost(child, parent) + cost, op.reverse(parent));
+            State child = domain.applyOperator(current, op);
+            boolean goal = this.dfs(domain, child, op.getCost(child, current) + cost, op.reverse(current));
             if (goal) {
                 this.solution.addOperator(op);
-                this.solution.addState(parent);
+                this.solution.addState(current);
                 return true;
             }
         }

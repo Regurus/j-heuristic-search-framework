@@ -1,5 +1,8 @@
 package core.algorithms;
 
+import core.Graphs;
+import core.SearchResult;
+import core.domains.OverrideDomain;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,5 +55,11 @@ public class IDAstarTest {
 
     @Test
     public void search() {
+        OverrideDomain graph1 = Graphs.graph1;
+        SearchResult g1Result = this.tested.search(graph1);
+        assertEquals("G1 solution cost OK", 10 ,(int)g1Result.getSolutions().get(0).getCost());
+        assertEquals("G1 solution length OK", 4 ,g1Result.getSolutions().get(0).getLength());
+        assertEquals("G1 expanded amount OK", 11 ,g1Result.getExpanded());
+        assertEquals("G1 generated amount OK", 16 ,g1Result.getGenerated());
     }
 }

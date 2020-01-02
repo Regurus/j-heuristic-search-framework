@@ -24,7 +24,7 @@ import core.collections.PackedElement;
  * @author Matthew Hatem
  */
 public interface SearchDomain extends SearchConfigurable {
-
+    boolean debugMode = false;
     /**
      * Returns the initial state for an instance of Domain.
      *

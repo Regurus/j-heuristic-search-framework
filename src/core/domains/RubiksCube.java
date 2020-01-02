@@ -15,7 +15,6 @@ public class RubiksCube implements SearchDomain {
     public static HeuristicType activeHeuristic;
     public byte[][][] startingState;
     public static Logger log = Logger.getLogger(RubiksCube.class.getName());
-    public static boolean debug = false;
 
     public RubiksCube(byte[][][] cube, HeuristicType active) {
         this.startingState = cube;
@@ -61,7 +60,7 @@ public class RubiksCube implements SearchDomain {
     @Override
     public boolean isGoal(State state) {
         if(!(state instanceof RubiksState)){
-            if(debug)
+            if(debugMode)
                 log.debug("Goal: False");
             return false;
         }
@@ -69,14 +68,14 @@ public class RubiksCube implements SearchDomain {
             for(byte[] line : ((RubiksState) state).getCube()[i]){
                 for(byte cell : line){
                     if(cell != i){
-                        if(debug)
+                        if(debugMode)
                             log.debug("Goal: False");
                         return false;
                     }
                 }
             }
         }
-        if(debug)
+        if(debugMode)
             log.debug("Goal: True");
         return true;
     }
@@ -88,7 +87,7 @@ public class RubiksCube implements SearchDomain {
 
     @Override
     public Operator getOperator(State state, int index) {
-        if(debug)
+        if(debugMode)
             log.debug("Returning operator: "+Operators.values()[index]);
         return new RubiksOperator(Operators.values()[index]);
     }
@@ -193,7 +192,7 @@ public class RubiksCube implements SearchDomain {
             else{
                 res = this.getComplexParallelStripeHeuristic();
             }
-            if(debug)
+            if(debugMode)
                 log.debug("H requested: "+res+" returned");
             return res;
         }
@@ -202,7 +201,7 @@ public class RubiksCube implements SearchDomain {
 
         @Override
         public double getD() {
-            if(debug)
+            if(debugMode)
                 log.debug("D requested: "+currentCost+" returned");
             return currentCost;
         }
@@ -377,7 +376,7 @@ public class RubiksCube implements SearchDomain {
         }
 
         public RubiksState apply(State state){
-            if(debug)
+            if(debugMode)
                 log.debug("Applying Operator: "+this.operator);
             if(!(state instanceof RubiksState))
                 return null;

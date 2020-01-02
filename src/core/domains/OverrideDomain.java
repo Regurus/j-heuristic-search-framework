@@ -5,6 +5,7 @@ import core.SearchDomain;
 import core.State;
 import core.collections.PackedElement;
 import core.collections.Pair;
+import org.apache.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultUndirectedGraph;
 
@@ -22,6 +23,7 @@ public class OverrideDomain implements SearchDomain {
     private DefaultUndirectedGraph tree = new DefaultUndirectedGraph(DefaultEdge.class);
     private Node[] nodes;
     private int startIndex = 0;
+    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
 
     /**
      * Basic constructor class using in-memory data
@@ -41,7 +43,7 @@ public class OverrideDomain implements SearchDomain {
 
     private void addVertices(int[] vertices) {
         for(int i=0;i<vertices.length;i++){
-            Node next = new Node(vertices[i]==-2,vertices[i]==-1,vertices[i]);
+            Node next = new Node(vertices[i]==-2,vertices[i]==-1,vertices[i],i);
             tree.addVertex(next);
             if(next.isRoot()){
                 this.startIndex = i;
@@ -53,7 +55,7 @@ public class OverrideDomain implements SearchDomain {
     private void addEdges(int[][] adjacencyMatrix){
         for(int i=0;i<adjacencyMatrix.length;i++){
             for(int j=0;j<adjacencyMatrix[0].length;j++){
-                if(adjacencyMatrix[i][j] > -1 && i != j)//no self edges
+                if(adjacencyMatrix[i][j] > 0 && i != j)//no self edges
                     tree.addEdge(nodes[i],nodes[j], new Cost(adjacencyMatrix[i][j]));
             }
         }
@@ -124,6 +126,8 @@ public class OverrideDomain implements SearchDomain {
         if(!(state instanceof OverrideState) || !(op instanceof TransitionOperator)){
             return null;
         }
+        if(debugMode)
+            log.debug("index: "+((TransitionOperator) op).start.contained.getIndex()+" to: "+((TransitionOperator) op).end.contained.getIndex());
         return new OverrideState(((TransitionOperator) op).end.contained,
                 (OverrideState)state,((TransitionOperator) op).edgeCost+((OverrideState) state).costSoFar);
     }
@@ -191,10 +195,14 @@ public class OverrideDomain implements SearchDomain {
         boolean isRoot;
         int hValue;
 
-        public Node(boolean isGoal, boolean isRoot, int hValue) {
+
+        int index;
+
+        public Node(boolean isGoal, boolean isRoot, int hValue, int index) {
             this.isGoal = isGoal;
             this.isRoot = isRoot;
             this.hValue = hValue;
+            this.index = index+1;
         }
 
         public boolean isGoal() {
@@ -206,9 +214,23 @@ public class OverrideDomain implements SearchDomain {
         }
 
         public int gethValue() {
-            return hValue;
+            if(this.hValue>=0)
+                return hValue;
+            return 0;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if(obj instanceof Node){
+                return this.index==((Node) obj).index;
+            }
+            return false;
         }
     }
+
     private class OverrideState extends PackedElement implements State{
         public final Node contained;
         public final OverrideState previous;
@@ -244,6 +266,14 @@ public class OverrideDomain implements SearchDomain {
         public String convertToStringShort() {
             return contained.toString();
         }
+
+        @Override
+        public boolean equals(Object object) {
+            if(object instanceof OverrideState){
+                return this.contained.equals(((OverrideState) object).contained);
+            }
+            return false;
+        }
     }
     private class TransitionOperator implements Operator{
         private final OverrideState start;
@@ -269,9 +299,16 @@ public class OverrideDomain implements SearchDomain {
             if(!(state instanceof OverrideState)){
                 return null;
             }
-            if(state.getParent()==null)
-                return null;
-            return new TransitionOperator((OverrideState)state,((OverrideState) state.getParent()).contained,-this.edgeCost);
+            return new TransitionOperator(this.end, this.start.contained,this.edgeCost);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if(other instanceof  TransitionOperator){
+                return this.start.equals(((TransitionOperator) other).start)
+                        && this.end.equals(((TransitionOperator) other).end);
+            }
+            return false;
         }
     }
     //jgrapht disregards same objects bound to edged so there is a need for container for edge-cost value
