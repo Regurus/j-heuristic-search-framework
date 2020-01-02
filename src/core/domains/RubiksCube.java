@@ -176,8 +176,8 @@ public class RubiksCube implements SearchDomain {
 
         @Override
         public double getH() {
-            if(this.previous==null)
-                return 0;
+            /*if(this.previous==null)
+                return 0;*/
             if (RubiksCube.activeHeuristic == HeuristicType.PARALLEL_LINES){
                 int res = this.getParallelStripeHeuristic();
                 if(debug)

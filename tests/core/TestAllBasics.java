@@ -76,7 +76,7 @@ public class TestAllBasics {
 	public static void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, long generated, long expanded, double cost) {
 		SearchResult result = algo.search(domain);
 		Solution sol = result.getSolutions().get(0);
-		//showSolution(result,0);
+		showSolution(result,0);
 		/*Assert.assertTrue(result.getWallTimeMillis() > 1);
 		Assert.assertTrue(result.getWallTimeMillis() < 200);
 		Assert.assertTrue(result.getCpuTimeMillis() > 1);
@@ -88,9 +88,11 @@ public class TestAllBasics {
 	}
 	public static void showSolution(SearchResult searchResult,int solutionIndex){
 		Solution solution = searchResult.getSolutions().get(solutionIndex);
-		for(State state: solution.getStates()){
+		/*for(State state: solution.getStates()){
 			System.out.println(state.convertToString());
-		}
+		}*/
+		System.out.println("Nodes Generated: "+searchResult.getGenerated());
+		System.out.println("Nodes Expanded: "+searchResult.getExpanded());
 		System.out.println("Cost: "+solution.getCost());
 		System.out.println("Time: "+(searchResult).getCpuTimeMillis()/1000+"s");
 	}

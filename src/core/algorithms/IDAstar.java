@@ -134,6 +134,7 @@ public class IDAstar implements SearchAlgorithm {
      */
     private boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
         double f = cost + this.weight * parent.getH();//todo change to potential calculation
+        //TODO bug here
     
         if (f <= this.bound && domain.isGoal(parent)) {
             this.solution.setCost(f);
