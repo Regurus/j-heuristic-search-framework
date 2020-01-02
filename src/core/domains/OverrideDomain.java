@@ -67,18 +67,29 @@ public class OverrideDomain implements SearchDomain {
         //sizes fit
         if(transitionMatrix==null || transitionMatrix.length!=transitionMatrix[0].length || transitionMatrix.length!=vertices.length)
         {
-            return false;
+            throw new IllegalArgumentException("Transition matrix/vertex array size error!");
         }
         //no more than one start node
         int starts = 0;
+        int goals = 0;
         for(int cell:vertices) {
                 if(cell<-2)
-                    return false;
+                    throw new IllegalArgumentException("Max negative value is -2 for goal node!");
                 if(cell==-1)
                     starts++;
+                if(cell==-2)
+                    goals++;
             if(starts>1)
-                return false;
+                throw new IllegalArgumentException("Only one starting state allowed!");
         }
+        for(int[] row:transitionMatrix) {
+            for(int cell:row){
+                if(cell<0)
+                    throw new IllegalArgumentException("Negative weights now allowed!");
+            }
+        }
+        if(goals==0||starts==0)
+            throw new IllegalArgumentException("There should be at least one goal node and one starting node");
         return true;
     }
     @Override

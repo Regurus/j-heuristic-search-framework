@@ -18,6 +18,6 @@ public class Graphs {
             {0,0,0,0,0,0,0,0,0,0,0,2,0,0,0},
             {0,0,4,0,0,2,0,0,0,0,0,0,0,0,0},
             {0,0,0,0,0,0,0,0,0,2,0,6,0,0,0}};
-    static final int[] g1Vetrices = {8,6,4,5,5,-2,8,10,-2,5,1,7,5,2,3};
+    static final int[] g1Vetrices = {-1,6,4,5,5,-2,8,10,-2,5,1,7,5,2,3};
     public static final OverrideDomain graph1 = new OverrideDomain(g1AdjMatrix, g1Vetrices);
 }
