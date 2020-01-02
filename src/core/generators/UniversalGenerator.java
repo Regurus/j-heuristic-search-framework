@@ -1,10 +1,10 @@
 package core.generators;
-
-import core.Operator;
 import core.SearchDomain;
-import core.SearchResult;
 import core.State;
-
+/***
+ * Support class for generating random instances for problem spaces.
+ * currently supports 15-puzzle,pancakes,rubik`s cube.
+ */
 import java.util.Random;
 
 public class UniversalGenerator {
