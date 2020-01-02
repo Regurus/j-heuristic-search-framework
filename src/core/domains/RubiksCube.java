@@ -48,8 +48,10 @@ public class RubiksCube implements SearchDomain {
     }
 
     public enum HeuristicType{
-        BASE_RING,
-        PARALLEL_LINES
+        BASE_RING,//has a bug still h!=0 on goal
+        PARALLEL_LINES,
+        PARALLEL_LINES_COMPLEX,
+        NO_HEURISTIC
     }
     @Override
     public State initialState() {
@@ -176,18 +178,27 @@ public class RubiksCube implements SearchDomain {
 
         @Override
         public double getH() {
-            /*if(this.previous==null)
-                return 0;*/
-            if (RubiksCube.activeHeuristic == HeuristicType.PARALLEL_LINES){
-                int res = this.getParallelStripeHeuristic();
-                if(debug)
-                    log.debug("H requested: "+currentCost+" returned");
-                return res;
+            if(this.previous==null)
+                return 0;
+            double res = 0;
+            if(RubiksCube.activeHeuristic == HeuristicType.NO_HEURISTIC){
+                return 0;
             }
-
-            else
-                return this.getRingHeuristic();
+            else if (RubiksCube.activeHeuristic == HeuristicType.PARALLEL_LINES){
+                res = this.getParallelStripeHeuristic();
+            }
+            else if(RubiksCube.activeHeuristic == HeuristicType.BASE_RING){
+                res = this.getRingHeuristic();
+            }
+            else{
+                res = this.getComplexParallelStripeHeuristic();
+            }
+            if(debug)
+                log.debug("H requested: "+res+" returned");
+            return res;
         }
+
+
 
         @Override
         public double getD() {
@@ -210,15 +221,111 @@ public class RubiksCube implements SearchDomain {
             return cube;
         }
 
-        private int getRingHeuristic() {
-            return 0;
+        private double getRingHeuristic() {
+            int result = 9;
+            //operator 2345 TOP
+            if(cube[1][0][0]==cube[1][0][1]&&cube[1][0][1]==cube[1][0][2]){
+                if(cube[2][0][0]==cube[2][0][1]&&cube[2][0][1]==cube[2][0][2]){
+                    if(cube[3][0][0]==cube[3][0][1]&&cube[3][0][1]==cube[3][0][2]){
+                        if(cube[4][0][0]==cube[4][0][1]&&cube[4][0][1]==cube[4][0][2]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 2345 MID
+            if(cube[1][1][0]==cube[1][1][1]&&cube[1][1][1]==cube[1][1][2]){
+                if(cube[2][1][0]==cube[2][1][1]&&cube[2][1][1]==cube[2][1][2]){
+                    if(cube[3][1][0]==cube[3][1][1]&&cube[3][1][1]==cube[3][1][2]){
+                        if(cube[4][1][0]==cube[4][1][1]&&cube[4][1][1]==cube[4][1][2]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 2345 BOT
+            if(cube[1][2][0]==cube[1][2][1]&&cube[1][2][1]==cube[1][2][2]){
+                if(cube[2][2][0]==cube[2][2][1]&&cube[2][2][1]==cube[2][2][2]){
+                    if(cube[3][2][0]==cube[3][2][1]&&cube[3][2][1]==cube[3][2][2]){
+                        if(cube[4][2][0]==cube[4][2][1]&&cube[4][2][1]==cube[4][2][2]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 1462 TOP
+            if(cube[0][0][0]==cube[0][0][1]&&cube[0][0][1]==cube[0][0][2]){
+                if(cube[3][0][2]==cube[3][1][2]&&cube[3][1][2]==cube[3][2][2]){
+                    if(cube[5][2][0]==cube[5][2][1]&&cube[5][2][1]==cube[5][2][2]){
+                        if(cube[1][0][0]==cube[1][1][0]&&cube[1][1][0]==cube[1][2][0]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 1462 MID
+            if(cube[0][1][0]==cube[0][1][1]&&cube[0][1][1]==cube[0][1][2]){
+                if(cube[3][0][1]==cube[3][1][1]&&cube[3][1][1]==cube[3][2][1]){
+                    if(cube[5][1][0]==cube[5][1][1]&&cube[5][1][1]==cube[5][1][2]){
+                        if(cube[1][0][1]==cube[1][1][1]&&cube[1][1][1]==cube[1][2][1]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 1462 BOT
+            if(cube[0][2][0]==cube[0][2][1]&&cube[0][2][1]==cube[0][2][2]){
+                if(cube[3][0][0]==cube[3][1][0]&&cube[3][1][0]==cube[3][2][0]){
+                    if(cube[5][0][0]==cube[5][0][1]&&cube[5][0][1]==cube[5][0][2]){
+                        if(cube[1][0][2]==cube[1][1][2]&&cube[1][1][2]==cube[1][2][2]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 3651 TOP
+            if(cube[0][0][0]==cube[0][1][0]&&cube[0][1][0]==cube[0][2][0]){
+                if(cube[2][0][0]==cube[3][1][0]&&cube[3][1][0]==cube[3][2][0]){
+                    if(cube[5][0][0]==cube[5][1][0]&&cube[5][1][0]==cube[5][2][0]){
+                        if(cube[4][2][0]==cube[4][2][1]&&cube[4][0][1]==cube[4][2][2]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 3651 MID
+            if(cube[0][0][1]==cube[0][1][1]&&cube[0][1][1]==cube[0][2][1]){
+                if(cube[2][0][1]==cube[3][1][1]&&cube[3][1][1]==cube[3][2][1]){
+                    if(cube[5][0][1]==cube[5][1][1]&&cube[5][1][1]==cube[5][2][1]){
+                        if(cube[4][0][1]==cube[4][1][1]&&cube[4][1][1]==cube[4][2][1]){
+                            result--;
+                        }
+                    }
+                }
+            }
+            //operator 3651 BOT
+            if(cube[0][2][0]==cube[0][2][1]&&cube[0][2][1]==cube[0][2][2]){
+                if(cube[2][2][0]==cube[3][2][1]&&cube[3][2][1]==cube[3][2][2]){
+                    if(cube[5][2][0]==cube[5][2][1]&&cube[5][2][1]==cube[5][2][2]){
+                        if(cube[4][0][0]==cube[4][1][0]&&cube[4][1][0]==cube[4][2][0]){
+                            result--;
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
-        private int getParallelStripeHeuristic() {
+        private double getParallelStripeHeuristic() {
             int pair05 = getHorizontalStripes(this.cube[0], this.cube[5]) + getVerticalStripes(this.cube[0], this.cube[5]);
             int pair13 = getHorizontalStripes(this.cube[1], this.cube[3]) + getVerticalStripes(this.cube[1], this.cube[3]);
             int pair24 = getHorizontalStripes(this.cube[2], this.cube[4]) + getVerticalStripes(this.cube[2], this.cube[4]);
             return pair05 + pair13 + pair24;
+        }
+
+        private double getComplexParallelStripeHeuristic() {
+            return 0;
         }
 
         private int getHorizontalStripes(byte[][] sideA, byte[][] sideB) {
@@ -236,15 +343,15 @@ public class RubiksCube implements SearchDomain {
             int result = 0;
             boolean aTheSame = sideA[0][0] == sideA[1][0] && sideA[1][0] == sideA[2][0];
             boolean bTheSame = sideB[0][0] == sideB[1][0] && sideB[1][0] == sideB[2][0];
-            if (aTheSame && bTheSame)
+            if (!aTheSame || !bTheSame)
                 result++;
             aTheSame = sideA[0][1] == sideA[1][1] && sideA[1][1] == sideA[2][1];
             bTheSame = sideB[0][1] == sideB[1][1] && sideB[1][1] == sideB[2][1];
-            if (aTheSame && bTheSame)
+            if (!aTheSame || !bTheSame)
                 result++;
             aTheSame = sideA[0][2] == sideA[1][2] && sideA[1][2] == sideA[2][2];
             bTheSame = sideB[0][2] == sideB[1][2] && sideB[1][2] == sideB[2][2];
-            if (aTheSame && bTheSame)
+            if (!aTheSame || !bTheSame)
                 result++;
             return result;
         }

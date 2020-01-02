@@ -3,7 +3,7 @@ package core.domains;
 import core.SearchAlgorithm;
 import core.SearchDomain;
 import core.algorithms.IDAstar;
-import core.algorithms.WAStar;
+import core.algorithms.IDDPS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +23,13 @@ public class RubiksCubeTest {
     public void setUp() {
         test = new RubiksCube(ORIGINAL_CUBE, RubiksCube.HeuristicType.PARALLEL_LINES);
     }
+
+    @After
+    public void tearDown() throws Exception {
+    }
+
+
+
     @Test
     public void D1Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();

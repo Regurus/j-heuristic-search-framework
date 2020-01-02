@@ -1,51 +1,27 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package core.algorithms;
 
 import core.*;
 import core.SearchAlgorithm;
 import core.SearchResult;
 import core.algorithms.SearchResultImpl.SolutionImpl;
+import core.collections.Pair;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Iterative Deepening A* Search
- *
- * @author Matthew Hatem
- */
+import java.util.*;
 public class IDAstar implements SearchAlgorithm {
     // The domain for the search
-    private SearchDomain domain;
+    protected SearchDomain domain;
 
-    private SearchResultImpl result;
-    private SolutionImpl solution;
 
-    private double weight;
-    private double bound;
-    private double minNextF;
+    protected SearchResultImpl result;
+    protected SolutionImpl solution;
 
-    /**
-     * The default constructor of the class
-     */
+    protected double weight;
+    protected double bound;
+    protected double minNextF;
+
+
     public IDAstar() {
   	    this(1.0);
     }
@@ -132,10 +108,9 @@ public class IDAstar implements SearchAlgorithm {
      *
      * @return Whether a solution was found
      */
-    private boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
+    protected boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
         double f = cost + this.weight * parent.getH();//todo change to potential calculation
-        //TODO bug here
-    
+
         if (f <= this.bound && domain.isGoal(parent)) {
             this.solution.setCost(f);
             this.solution.addOperator(pop);
@@ -153,7 +128,7 @@ public class IDAstar implements SearchAlgorithm {
         ++result.expanded;
         int numOps = domain.getNumOperators(parent);
         for (int i = 0; i < numOps; ++i) {
-    	    Operator op = domain.getOperator(parent, i);
+            Operator op = domain.getOperator(parent, i);
             // Bypass reverse operators
             if (op.equals(pop)) {
                 continue;
@@ -172,3 +147,4 @@ public class IDAstar implements SearchAlgorithm {
         return false;
     }
 }
+
