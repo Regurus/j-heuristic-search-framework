@@ -35,7 +35,13 @@ public class TestAllBasics {
 		SearchDomain domain = createFifteenPuzzle("12");
 		SearchAlgorithm algo = new RBFS();
 		testSearchAlgorithm(domain, algo, 301098, 148421, 45);
-	}	
+	}
+	@Test
+	public void testDPS() throws FileNotFoundException {
+		SearchDomain domain = createFifteenPuzzle("12");
+		SearchAlgorithm algo = new DP("name",true,true,false);
+		testSearchAlgorithm(domain, algo, 301098, 148421, 45);
+	}
 	
 	@Test
 	public void testIDAstar() throws FileNotFoundException {
@@ -96,7 +102,6 @@ public class TestAllBasics {
 	public static void main(String[] args) throws FileNotFoundException {
 		TestAllBasics test = new TestAllBasics();
 		test.testIDAstar();
-		test.testRBFS();
 		test.testIDDPS();
 		test.testEES();
 	}

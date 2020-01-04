@@ -72,7 +72,7 @@ public class RubiksCubeTest {
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.NO_HEURISTIC);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     @Test
