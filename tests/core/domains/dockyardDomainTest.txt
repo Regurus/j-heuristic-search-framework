@@ -1,0 +1,22 @@
+locations: 2
+cranesCount: 1
+boxesCount: 3
+pilesCount: 2
+RobotWorkers: 1
+
+location 0
+adjacent: 0 1
+cranes: 1
+piles: 0
+pile 0
+0 1 2
+
+location 1
+adjacent: 1 0
+cranes: 1
+piles: 1
+pile 1
+
+container 0 1
+container 1 1
+container 2 1
