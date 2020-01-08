@@ -417,9 +417,9 @@ public class VacuumRobot implements SearchDomain {
             this.possibleMoves = new Move[4];
             this.possibleMovesCount = possibleMoves.length;
             // Initialize all the moves according to the real directions to perform
-            this.possibleMoves[0] = new Move(this, 'S',  0,  1);
-            this.possibleMoves[1] = new Move(this, 'N',  0, -1);
-            this.possibleMoves[2] = new Move(this, 'W', -1,  0);
+            this.possibleMoves[0] = new Move(this, 'N',  0, -1); // There was a mix-up here, I switched the indexes (0 and 1)
+            this.possibleMoves[1] = new Move(this, 'S',  0,  1); // because it returned the opposite of up and down in tests
+            this.possibleMoves[2] = new Move(this, 'W', -1,  0); // ^- Lior
             this.possibleMoves[3] = new Move(this, 'E',  1,  0);
         }
 
@@ -1663,6 +1663,20 @@ public class VacuumRobot implements SearchDomain {
         @Override
         public Operator reverse(State state) {
             return VacuumRobot.this.reverseOperators[this.type];
+        }
+
+
+        @Override
+        public String toString(){
+            switch(this.type){
+                case -1: return "NOP";
+                case 0: return "UP";
+                case 1: return "DOWN";
+                case 2: return "LEFT";
+                case 3: return "RIGHT";
+                case 4: return "SUCK";
+            }
+            return "INVALID"; //Should never happen
         }
     }
 
