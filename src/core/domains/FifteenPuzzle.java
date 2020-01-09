@@ -42,7 +42,6 @@ public final class FifteenPuzzle implements SearchDomain {
     private final int width = 4;
     private final int height = 4;
     private final int tilesNumber = this.width * this.height;
-    // TODO?
     private int init[] = new int[this.tilesNumber]; // 16
     // Pre-computed Manhattan distance between each pair of tiles
     private double md[][] = new double[this.tilesNumber][this.tilesNumber]; // 4x4 array
@@ -55,9 +54,14 @@ public final class FifteenPuzzle implements SearchDomain {
     // The number of possible operators on any possible tile position
     private int operatorsCount[] = new int[tilesNumber];
     // The next tile we get after applying any possible operator on any tile
-    private int operatorsNextTiles[][] = new int[tilesNumber][4];
+    private int[][] operatorsNextTiles={
+            {1,4},{0,2,5},{1,3,6},{2,7},{0,5,8},{1,4,6,9},{2,5,7,10},{3,6,11},
+            {4,9,12},{5,8,10,13},{6,9,11,14},{7,10,15},{8,13},{9,12,14},{10,13,15},{11,14}
+    };
     // The possible operators (each one is represented by the REACHED tile)
     private Operator possibleOperators[] = new Operator[this.tilesNumber];
+
+
 
     public enum COST_FUNCTION {
         UNIT,
@@ -72,48 +76,14 @@ public final class FifteenPuzzle implements SearchDomain {
 
     private enum HeuristicType {
         MD,
-        PDB78,
-        PDB555
     }
-
     private HeuristicType heuristicType;
-
-    private boolean pdbRemainsOnDisk;
-
-    // Used in case PDB remains cached on dist
-    private RandomAccessFile pdb7File;
-    private RandomAccessFile pdb8File;
-
-    // PDBs for 7-8 partitioning
-    private LongByteHashMap pdb7;
-    private LongByteHashMap pdb8;
-
-    // Used in case PDB remains cached on dist
-    private RandomAccessFile pdb5_1File;
-    private RandomAccessFile pdb5_2File;
-    private RandomAccessFile pdb5_3File;
-
-    // PDBs for 5-5-5 partitioning
-    private LongByteHashMap pdb5_1;
-    private LongByteHashMap pdb5_2;
-    private LongByteHashMap pdb5_3;
-
     private boolean useReflection;
     // Reflection via the diagonal
     private int reflectedIndexes[] = new int[this.tilesNumber]; // 16
 
     private static final Map<String, Class> FifteenPuzzlePossibleParameters;
 
-    // Size of the PDB for 5 tiles
-    private static final int TABLE_SIZE_PDB5 = 16 * 15 * 14 * 13 * 12;
-    // Size of the PDB for the 7 first tiles
-    private static final int TABLE_SIZE_PDB7 = 16 * 15 * 14 * 13 * 12 * 11 * 10;
-    // Size of the PDB for the 8 rest tiles
-    private static final int TABLE_SIZE_PDB8 = 16 * 15 * 14 * 13 * 12 * 11 * 10 * 9;
-
-    // When reading some PDB create a map with the required size * PDB_ENTRIES_INCREASE
-    // (in order to disallow map copying)
-    private static final double PDB_ENTRIES_INCREASE = 1.1d;
 
     // Declare the parameters that can be tunes before running the search
     static
@@ -128,170 +98,6 @@ public final class FifteenPuzzle implements SearchDomain {
     }
     // the actual parameters that have been set
     private TreeMap<String,String> parameters = new TreeMap<>();
-
-    /**
-     * The function calculates Manhattan distance between two given tiles
-     *
-     * @param firstTile The first tile
-     * @param secondTile The second tile
-     *
-     * @return The calculated distance
-     */
-    private int _computeManhattanDistance(int firstTile, int secondTile) {
-        // Get Width and Height of the tile
-        int firstTileRow = firstTile / this.width;
-        int firstTileCol = firstTile % this.width;
-        int secondTileRow = secondTile / this.width;
-        int secondTileCol = secondTile % this.width;
-        return Math.abs(firstTileCol - secondTileCol) + Math.abs(firstTileRow - secondTileRow);
-    }
-
-    /**
-     * Computes the _getTileCost of moving the tile to the goal
-     *
-     * @param tile The tile for which the _getTileCost should be computed
-     *
-     * @return The computed _getTileCost
-     */
-    private double _getTileCost(int tile) {
-        // Compute the _getTileCost according to the type of the _getTileCost function used in the search
-        return tileCosts[tile];
-    }
-
-    /**
-     * Initializes the Manhattan distance heuristic table.
-     */
-    private void _initMD() {
-
-        // First, calculate Manhattan distance between each pair of tiles
-        for (int currentTile = 1; currentTile < this.tilesNumber; ++currentTile) {
-            // Calculate the _getTileCost of the tile (important for 'heavy' state)
-            double cost = this._getTileCost(currentTile);
-            for (int otherTile = 0; otherTile < this.tilesNumber; ++otherTile) {
-                // Calculate the Manhattan distance between the tiles
-                this.mdUnit[currentTile][otherTile] = this._computeManhattanDistance(currentTile, otherTile);
-                this.md[currentTile][otherTile] = this.mdUnit[currentTile][otherTile] * cost;
-            }
-        }
-
-        // Go over all pairs of tiles and compute the increase/decrease in the Manhattan distance
-        // when applying some operator on the puzzle (for any possible pair of tiles and for any
-        // possible operator)
-        for (int t = 1; t < this.tilesNumber; t++) {
-            for (int d = 0; d < this.tilesNumber; d++) {
-                double previousWeightedMD = this.md[t][d];
-                int previousMD = this.mdUnit[t][d];
-                for (int s = 0; s < this.tilesNumber; s++) {
-                    this.mdAddends[t][d][s] = -100; // some invalid value.
-                    // Moving Up
-                } if (d >= this.width) {
-                    // d-width is the index of tile we are on if moving UP
-                    this.mdAddends[t][d][d - this.width] =  this.md[t][d - this.width] - previousWeightedMD;
-//                    this.mdAddendsUnit[t][d][d - this.width] = (int)this.mdAddends[t][d][d - this.width];
-                    this.mdAddendsUnit[t][d][d - this.width] = this.mdUnit[t][d - this.width] - previousMD;
-                    // Moving Left
-                } if (d % this.width > 0) {
-                    // d-1 is the index of the tile we are on if moving Left
-                    this.mdAddends[t][d][d - 1] = this.md[t][d - 1] - previousWeightedMD;
-//                    this.mdAddendsUnit[t][d][d - 1] = (int)this.mdAddends[t][d][d - 1];
-                    this.mdAddendsUnit[t][d][d - 1] = this.mdUnit[t][d - 1] - previousMD;
-                    // Moving Right
-                } if (d % this.width < this.width - 1) {
-                    // d+1 is the index of the tile we are on if moving right
-                    this.mdAddends[t][d][d + 1] = this.md[t][d + 1] - previousWeightedMD;
-//                    this.mdAddendsUnit[t][d][d + 1] = (int)this.mdAddends[t][d][d + 1];
-                    this.mdAddendsUnit[t][d][d + 1] = this.mdUnit[t][d + 1] - previousMD;
-                    // Moving Down
-                } if (d < this.tilesNumber - this.width) {
-                    // d+width is the index of the tile we are on if moving down
-                    this.mdAddends[t][d][d + this.width] = this.md[t][d + this.width] - previousWeightedMD;
-//                    this.mdAddendsUnit[t][d][d + this.width] = (int)this.mdAddends[t][d][d + this.width];
-                    this.mdAddendsUnit[t][d][d + this.width] = this.mdUnit[t][d + this.width] - previousMD;
-                }
-            }
-        }
-    }
-
-
-    /**
-     * Initializes the operators and their count for each state:
-     * This functions initializes an array which specifies for each tile, the tile that is reached
-     * after applying each possible operator
-     *
-     * Note that each time we add an optional operator, we increase the operators counter by 1
-     *
-     * The tile-puzzle board looks like this:
-     *
-     * 0  1  2  3
-     * 4  5  6  7
-     * 8  9  10 11
-     * 12 13 14 15
-     */
-    private void _initOperators() {
-        for (int i = 0; i < this.tilesNumber; ++i) {
-            // Initially, there is no optional operators, so initialize the counter to 0
-            this.operatorsCount[i] = 0;
-            // Move up
-            if (i >= this.width) {
-                this.operatorsNextTiles[i][this.operatorsCount[i]++] = i - this.width;
-            }
-            // Move left
-            if (i % this.width > 0) {
-                this.operatorsNextTiles[i][this.operatorsCount[i]++] = i - 1;
-            }
-            // Move right
-            if (i % this.width < this.width - 1) {
-                this.operatorsNextTiles[i][this.operatorsCount[i]++] = i + 1;
-            }
-            // Move down
-            if (i < this.tilesNumber - this.width) {
-                this.operatorsNextTiles[i][this.operatorsCount[i]++] = i + this.width;
-            }
-            // In any case there cannot be more than 4 possible operators - so assert this
-            assert (this.operatorsCount[i] <= 4);
-        }
-    }
-
-    private void _init() {
-        this._initMD();
-        this._initOperators();
-        // Create a new operator for each possible tile - i is the position of blank
-        for (int i = 0; i < this.possibleOperators.length; ++i) {
-            this.possibleOperators[i] = new FifteenPuzzleOperator(i);
-        }
-        // Manhattan Distance is the default heuristic type
-        this.heuristicType = HeuristicType.MD;
-        // By default reflection is not used!
-        this.useReflection = false;
-        // Initially, no pdb-7-8
-        this.pdb7 = null;
-        this.pdb8 = null;
-        // Initially, no pdb-555
-        this.pdb5_1 = null;
-        this.pdb5_2 = null;
-        this.pdb5_3 = null;
-        // By default PDB is stored on memory ...
-        this.pdbRemainsOnDisk = false;
-    }
-
-    @Override
-    public boolean isCurrentHeuristicConsistent() {
-        return (this.heuristicType == HeuristicType.MD);
-    }
-
-    @Override
-    public void setOptimalSolutionCost(double cost) { }
-
-    @Override
-    public double getOptimalSolutionCost() {
-        return -1;
-    }
-
-    @Override
-    public int maxGeneratedSize() {
-        return 5000000;
-    }
-
     /**
      * A default constructor of the class:
      *
@@ -383,29 +189,119 @@ public final class FifteenPuzzle implements SearchDomain {
         this.heuristicType = other.heuristicType;
         this.useReflection = other.useReflection;
         this.reflectedIndexes = other.reflectedIndexes;
-        this.pdb5_1 = other.pdb5_1;
-        this.pdb5_2 = other.pdb5_2;
-        this.pdb5_3 = other.pdb5_3;
-        this.pdb7 = other.pdb7;
-        this.pdb8 = other.pdb8;
-        this.pdbRemainsOnDisk = other.pdbRemainsOnDisk;
     }
 
-    /***
-     * constructor for random instance of tile puzzle
-     * @param random ignored, used to overload the constructor
+    /**
+     * The function calculates Manhattan distance between two given tiles
+     *
+     * @param firstTile The first tile
+     * @param secondTile The second tile
+     *
+     * @return The calculated distance
      */
-    public FifteenPuzzle(boolean random){
-        int[] nums = java.util.stream.IntStream.rangeClosed(0, this.tilesNumber-1).toArray();
-        Integer[] puzzle = Arrays.stream(nums).boxed().toArray( Integer[]::new );//int[]=>Integer[]
-        List<Integer> intList = Arrays.asList(puzzle);
-        Collections.shuffle(intList);
-        for (int t = 0; t < this.tilesNumber; ++t) {
-            int p = puzzle[t];
-            this.init[t] = p;
-        }
-        this._init();
+    private int _computeManhattanDistance(int firstTile, int secondTile) {
+        // Get Width and Height of the tile
+        int firstTileRow = firstTile / this.width;
+        int firstTileCol = firstTile % this.width;
+        int secondTileRow = secondTile / this.width;
+        int secondTileCol = secondTile % this.width;
+        return Math.abs(firstTileCol - secondTileCol) + Math.abs(firstTileRow - secondTileRow);
     }
+
+    /**
+     * Computes the _getTileCost of moving the tile to the goal
+     *
+     * @param tile The tile for which the _getTileCost should be computed
+     *
+     * @return The computed _getTileCost
+     */
+    private double _getTileCost(int tile) {
+        // Compute the _getTileCost according to the type of the _getTileCost function used in the search
+        return tileCosts[tile];
+    }
+
+    /**
+     * Initializes the Manhattan distance heuristic table.
+     */
+    private void _initMD() {
+
+        // First, calculate Manhattan distance between each pair of tiles
+        for (int currentTile = 1; currentTile < this.tilesNumber; ++currentTile) {
+            // Calculate the _getTileCost of the tile (important for 'heavy' state)
+            double cost = this._getTileCost(currentTile);
+            for (int otherTile = 0; otherTile < this.tilesNumber; ++otherTile) {
+                // Calculate the Manhattan distance between the tiles
+                this.mdUnit[currentTile][otherTile] = this._computeManhattanDistance(currentTile, otherTile);
+                this.md[currentTile][otherTile] = this.mdUnit[currentTile][otherTile] * cost;
+            }
+        }
+
+        // Go over all pairs of tiles and compute the increase/decrease in the Manhattan distance
+        // when applying some operator on the puzzle (for any possible pair of tiles and for any
+        // possible operator)
+        for (int t = 1; t < this.tilesNumber; t++) {
+            for (int d = 0; d < this.tilesNumber; d++) {
+                double previousWeightedMD = this.md[t][d];
+                int previousMD = this.mdUnit[t][d];
+                for (int s = 0; s < this.tilesNumber; s++) {
+                    this.mdAddends[t][d][s] = -100; // some invalid value.
+                    // Moving Up
+                } if (d >= this.width) {
+                    // d-width is the index of tile we are on if moving UP
+                    this.mdAddends[t][d][d - this.width] =  this.md[t][d - this.width] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d - this.width] = (int)this.mdAddends[t][d][d - this.width];
+                    this.mdAddendsUnit[t][d][d - this.width] = this.mdUnit[t][d - this.width] - previousMD;
+                    // Moving Left
+                } if (d % this.width > 0) {
+                    // d-1 is the index of the tile we are on if moving Left
+                    this.mdAddends[t][d][d - 1] = this.md[t][d - 1] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d - 1] = (int)this.mdAddends[t][d][d - 1];
+                    this.mdAddendsUnit[t][d][d - 1] = this.mdUnit[t][d - 1] - previousMD;
+                    // Moving Right
+                } if (d % this.width < this.width - 1) {
+                    // d+1 is the index of the tile we are on if moving right
+                    this.mdAddends[t][d][d + 1] = this.md[t][d + 1] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d + 1] = (int)this.mdAddends[t][d][d + 1];
+                    this.mdAddendsUnit[t][d][d + 1] = this.mdUnit[t][d + 1] - previousMD;
+                    // Moving Down
+                } if (d < this.tilesNumber - this.width) {
+                    // d+width is the index of the tile we are on if moving down
+                    this.mdAddends[t][d][d + this.width] = this.md[t][d + this.width] - previousWeightedMD;
+//                    this.mdAddendsUnit[t][d][d + this.width] = (int)this.mdAddends[t][d][d + this.width];
+                    this.mdAddendsUnit[t][d][d + this.width] = this.mdUnit[t][d + this.width] - previousMD;
+                }
+            }
+        }
+    }
+
+    private void _init() {
+        this._initMD();
+        // Create a new operator for each possible tile - i is the position of blank
+        for (int i = 0; i < this.possibleOperators.length; ++i) {
+            this.possibleOperators[i] = new FifteenPuzzleOperator(i);
+        }
+        // Manhattan Distance is the default heuristic type
+        this.heuristicType = HeuristicType.MD;
+    }
+
+    @Override
+    public boolean isCurrentHeuristicConsistent() {
+        return (this.heuristicType == HeuristicType.MD);
+    }
+
+    @Override
+    public void setOptimalSolutionCost(double cost) { }
+
+    @Override
+    public double getOptimalSolutionCost() {
+        return -1;
+    }
+
+    @Override
+    public int maxGeneratedSize() {
+        return 5000000;
+    }
+
     /**
      * Computes the TOTAL Manhattan distance for the specified blank and tile configuration.
      *
@@ -446,9 +342,6 @@ public final class FifteenPuzzle implements SearchDomain {
         }*/
     }
 
-    private double[] _computeHDNoMDFromDisk(TileState state) {
-       throw new NotImplementedException();
-    }
 
     /**
      * This function is called in case the heuristic type is not Manhattan Distance
@@ -458,38 +351,7 @@ public final class FifteenPuzzle implements SearchDomain {
      * @return An array of the form {h, d}
      */
     private double[] _computeHDNoMD(TileState state) {
-        double h;
-        double d;
-        switch (this.heuristicType) {
-            case PDB78: {
-                h = this.pdb7.get(state.getHash7Index()) +
-                        this.pdb8.get(state.getHash8Index());
-                if (this.useReflection) {
-                    int hRef = this.pdb7.get(state.getHash7ReflectionIndex()) +
-                            this.pdb8.get(state.getHash8ReflectionIndex());
-                    h = Math.max(h, hRef);
-                }
-                d = h;
-                break;
-            }
-            case PDB555: {
-                h = this.pdb5_1.get(state.getHash5_1Index()) +
-                        this.pdb5_2.get(state.getHash5_2Index()) +
-                        this.pdb5_3.get(state.getHash5_3Index());
-                if (this.useReflection) {
-                    int hRef = this.pdb5_1.get(state.getHash5_1ReflectIndex()) +
-                            this.pdb5_2.get(state.getHash5_2ReflectIndex()) +
-                            this.pdb5_3.get(state.getHash5_3ReflectIndex());
-                    h = Math.max(h, hRef);
-                }
-                d = h;
-                break;
-            }
-            default: {
-                throw new NotImplementedException();
-            }
-        }
-        return new double[] {h, d};
+        throw new NotImplementedException();
     }
 
     /**
@@ -500,22 +362,9 @@ public final class FifteenPuzzle implements SearchDomain {
      * @return An array of the form {h, d}
      */
     private double[] computeHD(TileState state) {
-        double h;
-        double d;
-        switch (this.heuristicType) {
-            case MD: {
-                // Let's calculate the heuristic values (h and d)
-                h = this._computeTotalMD(state.blank, state.tiles, true);
-                d = this._computeTotalMD(state.blank, state.tiles, false);
-                break;
-            }
-            default: {
-                if (this.pdbRemainsOnDisk) {
-                    return this._computeHDNoMDFromDisk(state);
-                }
-                return this._computeHDNoMD(state);
-            }
-        }
+        // Let's calculate the heuristic values (h and d)
+        double h = this._computeTotalMD(state.blank, state.tiles, true);
+        double d = this._computeTotalMD(state.blank, state.tiles, false);
         assert h != -1 && d != -1;
         return new double[]{h, d};
     }
@@ -617,32 +466,16 @@ public final class FifteenPuzzle implements SearchDomain {
         return ret;
     }
 
-    /*
-    public List<Operator> getOperators(State s) {
-        TileState ts = (TileState) s;
-        // Let's get the number of possible operators for this state - all possible operations are
-        // achieved by moving the blank
-        int currentOperatorsCount = this.operatorsCount[ts.blank];
-        // TODO: Why * 2?
-        List<Operator> list = new ArrayList<Operator>(currentOperatorsCount * 2);
-        // Go over all the operators in the operators table and add them to the result list
-        for (int i = 0; i < currentOperatorsCount; i++) {
-            // Get an operator of reaching the this.operatorsNextTiles[ts.blank][i] tile
-            Operator op = this.possibleOperators[this.operatorsNextTiles[ts.blank][i]];
-            list.add(op);
-        }
-        return list;
-    }
-    */
-
     @Override
     public int getNumOperators(State state) {
         // The number of the operators depends only on the position of the blank
-        return this.operatorsCount[((TileState) state).blank];
+        return this.operatorsNextTiles[((TileState) state).blank].length;
     }
 
     @Override
     public Operator getOperator(State s, int index) {
+        if(index>=this.getNumOperators(s))
+            return null;
         TileState ts = (TileState) s;
         // Return the operator according to the position of the blank after applying the operator
         // whose index equals to the given one
@@ -663,29 +496,6 @@ public final class FifteenPuzzle implements SearchDomain {
         copy.d = ts.d;
         return copy;
     }
-
-    /**
-     * Apply an operator, but ignore any heuristic related issues
-     *
-     * @param s The state to apply the operator on
-     * @param op The operator to apply
-     *
-     * @return The result state
-     */
-    /*public State applyOperatorNoHeuristic(State s, Operator op) {
-        TileState ts = (TileState) copy(s);
-        FifteenPuzzleOperator fop = (FifteenPuzzleOperator) op;
-        // Get the updated position of the blank
-        int futureBlankPosition = fop.value;
-        // Get the tile located at the future blank position
-        int tileAtFutureBlankPosition = ts.tiles[fop.value];
-        // Move that tile to the current position of blank
-        ts.tiles[ts.blank] = tileAtFutureBlankPosition;
-        ts.blank = futureBlankPosition;
-        return ts;
-    }
-    */
-
 
     @Override
     public State applyOperator(State s, Operator op) {
@@ -731,36 +541,6 @@ public final class FifteenPuzzle implements SearchDomain {
         return new PackedElement(result);
     }
 
-    /**
-     * Unpacks the state but ignores all the heuristic related issues
-     *
-     * @param packed The packed state
-     *
-     * @return The unpacked state
-     */
-    public State unpackNoHeuristic(PackedElement packed) {
-        assert packed.getLongsCount() == 1;
-        long firstPacked = packed.getFirst();
-        TileState ts = new TileState();
-        ts.blank = -1;
-        // Start from end and go to start
-        for (int i = this.tilesNumber - 1; i >= 0; --i) {
-            // Each time, extract a single tile
-            int t = (int) firstPacked & 0xF;
-            // Initialize this tile
-            ts.tiles[i] = t;
-            ts.positionsOfTiles[t] = i;
-            // Mark the blank (in this case there is no need to update the distance between the tile
-            // and its required position (in the goal)
-            if (t == 0) {
-                ts.blank = i;
-            }
-            // Update the word so that the next tile can be now extracted
-            firstPacked >>= 4;
-        }
-        return ts;
-    }
-
     @Override
     public State unpack(PackedElement packed) {
         assert packed.getLongsCount() == 1;
@@ -796,16 +576,16 @@ public final class FifteenPuzzle implements SearchDomain {
     /**
      * The tile state class
      */
-    private final class TileState implements State {
+    final class TileState implements State {
 
         private int tiles[] = new int[FifteenPuzzle.this.tilesNumber];
         private int positionsOfTiles[] = new int[FifteenPuzzle.this.tilesNumber];
-        private int blank;
+        int blank;
 
         private double h;
         private double d;
 
-        private TileState parent = null;
+        TileState parent = null;
 
         /**
          * A default constructor (required for the {@see initialState()} function
@@ -1007,109 +787,6 @@ public final class FifteenPuzzle implements SearchDomain {
         return FifteenPuzzle.FifteenPuzzlePossibleParameters;
     }
 
-    /**
-     * Read a permutation index from the DB
-     *
-     * @param inputStream The DB of permutations
-     *
-     * @return The read index
-     *
-     * @throws IOException If something wrong occurred
-     */
-    private long _readIndex(DataInputStream inputStream) throws IOException {
-        return inputStream.readInt() & 0xffffffffl;
-    }
-
-    /**
-     * Reads a single PDB table from the given file
-     *
-     * @param pdbFileName The name of the PDB file
-     * @param permutationsCount The number of permutations assumed to be in the file
-     *
-     * @return An initialized map that contains all the distances for the permutations
-     *
-     * @throws IOException If something wrong occurred
-     */
-    private LongByteHashMap _readSinglePDB(String pdbFileName, int permutationsCount) throws IOException {
-        LongByteHashMap toReturn = new LongByteHashMap((int)(permutationsCount * FifteenPuzzle.PDB_ENTRIES_INCREASE));
-        // Each permutation index is stored as int
-        DataInputStream inputStream = new DataInputStream(new FileInputStream(pdbFileName));
-        for (long i = 0; i < permutationsCount; ++i) {
-            // Debug
-            if (i % 999 == 0) {
-                System.out.print("\r[INFO] Read " + (i + 1) + "/" + permutationsCount + " values");
-            }
-            // First, read the hash value of the permutation
-            long hashValue = this._readIndex(inputStream);
-            // Now, read the distance
-            byte distance = inputStream.readByte();
-            if (hashValue >= permutationsCount) {
-                System.out.println("[ERROR] Invalid hash value found in PDB " + pdbFileName +
-                        "(hash: " + hashValue + ", distance: " + distance + ")");
-                throw new IOException();
-            }
-            // Debug:
-            /*
-            if (toReturn.containsKey(hashValue)) {
-                System.out.println((int)toReturn.get(hashValue));
-                System.out.println((int) distance);
-                assert toReturn.get(hashValue) == distance;
-            } else {
-                toReturn.put(hashValue, distance);
-            }*/
-            toReturn.put(hashValue, distance);
-        }
-        // Last new line
-        System.out.println();
-        return toReturn;
-    }
-
-    private void _readPDB78(String pdb7FileName, String pdb8FileName) throws IOException {
-        // Read PDB 7
-        if (this.pdbRemainsOnDisk) {
-            this.pdb7File = new RandomAccessFile(pdb7FileName, "r");
-        } else {
-            System.out.println("[INFO] Reading PDB from " + pdb7FileName);
-            this.pdb7 = this._readSinglePDB(pdb7FileName, FifteenPuzzle.TABLE_SIZE_PDB7);
-            System.out.println("[INFO] Finished reading PDB from " + pdb7FileName);
-        }
-        // Read PDB 8
-        if (this.pdbRemainsOnDisk) {
-            this.pdb8File = new RandomAccessFile(pdb8FileName, "r");
-        } else {
-            System.out.println("[INFO] Reading PDB from " + pdb8FileName);
-            this.pdb8 = this._readSinglePDB(pdb8FileName, FifteenPuzzle.TABLE_SIZE_PDB8);
-            System.out.println("[INFO] Finished reading PDB from " + pdb8FileName);
-        }
-    }
-
-
-    private void _readPDB555(String pdb5_1FileName, String pdb5_2FileName, String pdb5_3FileName) throws IOException {
-        // Read PDB 5_1
-        System.out.println("[INFO] Reading PDB from " + pdb5_1FileName);
-        this.pdb5_1 = this._readSinglePDB(pdb5_1FileName, FifteenPuzzle.TABLE_SIZE_PDB5);
-        System.out.println("[INFO] Finished reading PDB from " + pdb5_1FileName);
-        // Read PDB 5_2
-        System.out.println("[INFO] Reading PDB from " + pdb5_2FileName);
-        this.pdb5_2 = this._readSinglePDB(pdb5_2FileName, FifteenPuzzle.TABLE_SIZE_PDB5);
-        System.out.println("[INFO] Finished reading PDB from " + pdb5_2FileName);
-        // Read PDB 5_3
-        System.out.println("[INFO] Reading PDB from " + pdb5_3FileName);
-        this.pdb5_3 = this._readSinglePDB(pdb5_3FileName, FifteenPuzzle.TABLE_SIZE_PDB5);
-        System.out.println("[INFO] Finished reading PDB from " + pdb5_3FileName);
-    }
-
-    /**
-     * Calculates the reflected index via the diagonal
-     *
-     * @param tile The tile (index) to calculate the reflection on
-     *
-     * @return The calculated reflection index
-     */
-    private int _getReflectedTile(int tile) {
-        return (tile % this.width) * this.width + (tile / this.height);
-    }
-
     @Override
     public void setAdditionalParameter(String parameterName, String value) {
         parameters.put(parameterName,value);
@@ -1120,83 +797,10 @@ public final class FifteenPuzzle implements SearchDomain {
                         this.heuristicType = HeuristicType.MD;
                         break;
                     }
-                    case "pdb-78": {
-                        this.heuristicType = HeuristicType.PDB78;
-                        break;
-                    }
-                    case "pdb-555": {
-                        this.heuristicType = HeuristicType.PDB555;
-                        break;
-                    }
                     default: {
                         System.err.println("Illegal heuristic type for FifteenPuzzle domain: " + value);
                         throw new IllegalArgumentException();
                     }
-                }
-                break;
-            }
-            case "pdb-remains-on-disk": {
-                if (this.heuristicType == HeuristicType.MD) {
-                    System.out.println("[ERROR] The type of the heuristic function must involve PDB");
-                    throw new IllegalArgumentException();
-                }
-                this.pdbRemainsOnDisk = Boolean.parseBoolean(value);
-                break;
-            }
-            case "pdb-555-files": {
-                if (heuristicType != HeuristicType.PDB555) {
-                    System.out.println("[ERROR] Heuristic type isn't pdb-555 - can't set pdb file");
-                    throw new IllegalArgumentException();
-                }
-                String[] split = value.trim().split(",");
-                if (split.length == 1) {
-                    split = value.trim().split(", ");
-                }
-                if (split.length != 3) {
-                    System.out.println("[ERROR] Invalid format for pdb-555 file: " +
-                            "should be '<file-5_1>, <file-5_2> <file-5_3>'");
-                    throw new IllegalArgumentException();
-                }
-                // Otherwise, read and initialize the files
-                try {
-                    this._readPDB555(split[0], split[1], split[2]);
-                } catch (IOException e) {
-                    System.out.println("[ERROR] Failed reading pdb-555 files: " + e.getMessage());
-                    throw new IllegalArgumentException();
-                }
-                break;
-            }
-            case "pdb-78-files": {
-                if (heuristicType != HeuristicType.PDB78) {
-                    System.out.println("[ERROR] Heuristic type isn't pdb-78 - can't set pdb file");
-                    throw new IllegalArgumentException();
-                }
-                String[] split = value.trim().split(",");
-                if (split.length == 1) {
-                    split = value.trim().split(", ");
-                }
-                if (split.length != 2) {
-                    System.out.println("[ERROR] Invalid format for pdb-78 files: should be '<file-7>, <file-8>'");
-                    throw new IllegalArgumentException();
-                }
-                // Otherwise, read and initialize the file
-                try {
-                    this._readPDB78(split[0], split[1]);
-                } catch (IOException e) {
-                    System.out.println("[ERROR] Failed reading pdb-78 files: " + e.getMessage());
-                    throw new IllegalArgumentException();
-                }
-                break;
-            }
-            case "use-reflection": {
-                if (this.heuristicType == HeuristicType.MD) {
-                    System.out.println("[ERROR] Reflection is only relevant if PDB-555 or PDB-78 heuristics are used");
-                    throw new IllegalArgumentException();
-                }
-                this.useReflection = Boolean.parseBoolean(value);
-                // Otherwise, let's initialize the reflection array
-                for (int tile = 0; tile < this.tilesNumber; ++tile) {
-                    this.reflectedIndexes[tile] = this._getReflectedTile(tile);
                 }
                 break;
             }
@@ -1241,10 +845,8 @@ public final class FifteenPuzzle implements SearchDomain {
     /**
      * A single operator that can be applied on the FifteenPuzzle
      */
-    private final class FifteenPuzzleOperator implements Operator {
-
-        private int value;
-
+    final class FifteenPuzzleOperator implements Operator {
+        int value;
         /**
          * The constructor of the class
          *
@@ -1253,7 +855,6 @@ public final class FifteenPuzzle implements SearchDomain {
         private FifteenPuzzleOperator(int value) {
             this.value = value;
         }
-
         @Override
         public double getCost(State s, State parent) {
             // All the operators have the same cost
@@ -1261,7 +862,6 @@ public final class FifteenPuzzle implements SearchDomain {
             int tile = pts.tiles[value];
             return FifteenPuzzle.this._getTileCost(tile);
         }
-
         @Override
         public Operator reverse(State s) {
             TileState ts = (TileState) s;
@@ -1269,12 +869,5 @@ public final class FifteenPuzzle implements SearchDomain {
             // its location on the given state
             return FifteenPuzzle.this.possibleOperators[ts.blank];
         }
-    }
-
-    private double round(double val){
-        double precision = Math.pow(10,4);
-        double ret = Math.round(val * precision);
-        ret = ret/precision;
-        return ret;
     }
 }
