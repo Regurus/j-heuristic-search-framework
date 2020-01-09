@@ -309,10 +309,6 @@ public class Pancakes implements SearchDomain {
         else {
             bottom = ps.cakes[op];
         }
-
-//        separated =  Math.pow(separated+1.0,alpha);
-//        bottom =  Math.pow(bottom+1.0,alpha);
-//        double value = Math.max(separated,bottom);
         double value = Math.max(this.tileCosts[separated],this.tileCosts[bottom]);
         return value;
     }
@@ -330,23 +326,6 @@ public class Pancakes implements SearchDomain {
             packed[i] = word;
         }
         PackedElement toReturn = new PackedElement(packed);
-        /**
-         * Debug
-         */
-/*        PancakeState ups = ((PancakeState)this.unpack(toReturn));
-        if  (!Arrays.equals(ps.cakes, ups.cakes)) {
-            System.out.println("******************Pancakes pack problem:*********************");
-*//*            for(int j=this.numCakes-1 ; j >=0 ; j--){
-                if(ps.cakes[j] != ups.cakes[j]){
-                    System.out.println(ps.cakes[j] +"-"+ ups.cakes[j]);
-                }
-                else{
-                    System.out.println("all ok");
-                }
-            }*//*
-            System.out.println(Arrays.toString(ps.cakes));
-            System.out.println(Arrays.toString(ups.cakes));
-        }*/
         return toReturn;
     }
 
@@ -360,9 +339,6 @@ public class Pancakes implements SearchDomain {
             // In case of first iteration (starting from the end, maybe only part of the full coverage of pancakes is
             // included inside the packed long - let's calculate this count
             if (i == packed.getLongsCount() - 1) {
-                // E.g. if (numCakes=20; packedCakesInSingleLong=12 => maxIterationIndex=8)
-                //      if (numCakes=15; packedCakesInSingleLong=15 => maxIterationIndex=0)
-                //      if (numCakes=10; packedCakesInSingleLong=10 => maxIterationIndex=0)
                 int specificMaxIterationIndex = this.numCakes % this.packedCakesInSingleLong;
                 if (specificMaxIterationIndex > 0) {
                     maxIterationIndex = specificMaxIterationIndex;
@@ -383,7 +359,7 @@ public class Pancakes implements SearchDomain {
     /**
      * Pancake stat class
      */
-    public final class PancakeState implements State {
+    final class PancakeState implements State {
         public int numCakes;
         public int[] cakes;
         public double h;
@@ -529,7 +505,7 @@ public class Pancakes implements SearchDomain {
     /**
      * An operator class which represents a single operator of the Pancake domain
      */
-    private final class PancakeOperator implements Operator {
+    final class PancakeOperator implements Operator {
 
         private int value;
 

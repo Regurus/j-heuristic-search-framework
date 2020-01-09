@@ -384,8 +384,6 @@ public class RubiksCube implements SearchDomain {
         }
     }
 
-
-
     protected class RubiksOperator implements Operator{
         Operators operator;
 
