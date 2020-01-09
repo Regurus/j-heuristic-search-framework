@@ -18,7 +18,7 @@ public class UniversalGeneratorTest {
     @Test
     public void generateRubiks() {
         IDAstar solver = new IDAstar();
-        int depth = 5;
+        int depth = 6;
         for(int i=0; i<100; i++){
             RubiksCube domain = new RubiksCube(RubiksCube.HeuristicType.PARALLEL_LINES);
             State newState = this.tested.generate(domain,depth);

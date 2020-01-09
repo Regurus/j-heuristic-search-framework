@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 
 public class VacuumRobotTest {
 
-    private static final String vacuumPath = System.getProperty("user.dir") + "\\tests\\core\\domains\\vacuumRobotDomainTest.txt";
+    private static final String vacuumPath = System.getProperty("user.dir") + "\\testResources\\core\\domains\\vacuumRobotDomainTest.txt";
 
         /*
         Initialization of the file to test with should be as followed:

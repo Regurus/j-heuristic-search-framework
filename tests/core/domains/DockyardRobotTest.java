@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.*;
 
 public class DockyardRobotTest {
-    private static final String dockyardPath = System.getProperty("user.dir") + "\\tests\\core\\domains\\dockyardDomainTest.txt";
+    private static final String dockyardPath = System.getProperty("user.dir") + "\\testResources\\core\\domains\\dockyardDomainTest.txt";
 
     /*
         Initialization of the file to test with should be as followed:

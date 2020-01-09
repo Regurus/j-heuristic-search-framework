@@ -1,15 +1,18 @@
 package core.algorithms;
 
 import core.Graphs;
+import core.SearchAlgorithm;
 import core.SearchResult;
+import core.Solution;
+import core.domains.DockyardRobot;
 import core.domains.OverrideDomain;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.*;
+import java.sql.SQLOutput;
 
 import static org.junit.Assert.*;
 
@@ -61,5 +64,20 @@ public class IDAstarTest {
         assertEquals("G1 solution length OK", 4 ,g1Result.getSolutions().get(0).getLength());
         assertEquals("G1 expanded amount OK", 12 ,g1Result.getExpanded());
         assertEquals("G1 generated amount OK", 17 ,g1Result.getGenerated());
+    }
+
+    @Test
+    public void TestOnDockyardRobotW2() throws FileNotFoundException {
+        SearchAlgorithm alg = new IDAstar(2);
+
+        String dockyardPath = System.getProperty("user.dir") + "\\testResources\\core\\domains\\dockyardDomainTest.txt";
+        File domainTest = new File(dockyardPath);
+        InputStream problemStream = new FileInputStream(domainTest);
+        DockyardRobot domain = new DockyardRobot(problemStream);
+
+        SearchResult result = alg.search(domain);
+        Solution sol = result.getSolutions().get(0);
+
+        assertTrue("Solution length must be at most 22 steps and at min 11!", 22>=  sol.getLength() && 11<= sol.getLength());
     }
 }

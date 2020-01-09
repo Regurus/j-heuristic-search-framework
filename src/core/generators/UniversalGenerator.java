@@ -7,6 +7,13 @@ import core.State;
  */
 import java.util.Random;
 
+/*TODO:
+        1. Work on generators @ UniversalGeneratortest (Talk with Dor)
+        2. Run WBnB on those domains and gather their results (See @TestAllBasics).
+        3. Export to csv those results.
+ */
+
+
 public class UniversalGenerator {
     Random generator = new Random();
 

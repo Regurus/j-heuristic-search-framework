@@ -26,9 +26,9 @@ public class IDAstar implements SearchAlgorithm {
   	    this(1.0);
     }
 
-    protected IDAstar(double weight) {
+    public IDAstar(double weight) {
         this.weight = weight;
-    }
+    } //Changed to public to basically be WIDA*
 
     @Override
     public String getName() {

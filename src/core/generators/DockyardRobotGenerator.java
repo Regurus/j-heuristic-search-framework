@@ -1,5 +1,6 @@
 package core.generators;
 
+import core.domains.DockyardRobot;
 import core.domains.Utils;
 
 import java.io.File;
@@ -9,7 +10,6 @@ import java.util.*;
 
 /**
  * Created by sepetnit on 11/8/2015.
- *
  */
 public class DockyardRobotGenerator extends GeneralInstancesGenerator {
     private static final int BOXES_OUT_OF_PLACE_PERCENTAGE = 30  ;
@@ -184,17 +184,17 @@ public class DockyardRobotGenerator extends GeneralInstancesGenerator {
 
         if (args.length == 0) {
             args = new String[7];
-            args[0] = "input\\dockyardrobot\\generated";
+            args[0] = System.getProperty("user.dir") + "\\testResources\\core\\algorithms\\DockyardRobot";
             // Count of Problems
             args[1] = 100 + "";
             // Count of Locations
-            args[2] = 5 + "";
+            args[2] = 3 + "";
             // Count of Cranes
-            args[3] = 5 + "";
+            args[3] = 3 + "";
             // Count of Containers (Boxes)
-            args[4] = 8 + "";
+            args[4] = 3 + "";
             // Count of Piles
-            args[5] = 5 + "";
+            args[5] = 3 + "";
             // Count of Robots
             args[6] = 1 + "";
         }
