@@ -35,13 +35,13 @@ public class NewBnB implements SearchAlgorithm {
     private SearchResultImpl result;
     private SearchDomain domain;
     private Node goal;
-    private double weight;
-    private double boundFactor;
-    private Stack<Node> open;
-    private HashSet<PackedElement> visited;
+    protected double weight; //weight for heuristic
+    private double boundFactor; //above this bound, cut the branch
+    private Stack<Node> open; //open list, nodes to check
+    private HashSet<PackedElement> visited; // nodes already visited
 
 
-    private List<Operator> path = new ArrayList<Operator>(3);
+    private List<Operator> path = new ArrayList<Operator>();
 
     public NewBnB() {
         this.weight = 1;
@@ -49,7 +49,7 @@ public class NewBnB implements SearchAlgorithm {
 
     @Override
     public String getName() {
-        return "bnb";
+        return "BnB";
     }
 
     @Override
@@ -64,22 +64,23 @@ public class NewBnB implements SearchAlgorithm {
 
     @Override
     public SearchResult search(SearchDomain domain) {
+        //initialize params
         open = new Stack<>();
         visited = new HashSet<>();
         boundFactor = Double.MAX_VALUE;
         this.domain = domain;
-
         result = new SearchResultImpl();
+
         result.startTimer();
 
         State initialState = domain.initialState();
         Node initialNode = new Node(initialState);
         open.add(initialNode);
-        visited.add(domain.pack(initialState));
+        //visited.add(domain.pack(initialState)); TODO: maybe add it inorder to avoid loops
         while (!open.isEmpty()) {
             Node currentNode = this.open.pop();
             State state = currentNode.state;
-            visited.remove(domain.pack(state));
+            //visited.remove(domain.pack(state));
 
             if (domain.isGoal(currentNode.state)) {
                 if(boundFactor> currentNode.g/weight){
@@ -90,6 +91,7 @@ public class NewBnB implements SearchAlgorithm {
             }
 
             //System.out.println(state.convertToStringShort());
+            //expand node
             result.expanded++;
             for (int i=0; i< domain.getNumOperators(state); ++i) {
                 Operator op = domain.getOperator(state, i);
@@ -98,19 +100,21 @@ public class NewBnB implements SearchAlgorithm {
                 }
                 State childState = domain.applyOperator(state, op);
                 PackedElement childPack = domain.pack(childState);
-                if (visited.contains(childPack)) {
+
+                /*if (visited.contains(childPack)) {
                     continue;
-                }
+                }*/
                 result.generated++;
                 Node childNode = new Node(childState, currentNode, op, op.reverse(state));
 
+                //add to open stack. else: cut the branch
                 if (childNode.g < boundFactor) {
                     visited.add(childPack);
                     this.open.add(childNode);
                 }
             }
         }
-
+        //finish running the algorithm. restore path
         result.stopTimer();
 
         if (goal != null) {
@@ -128,12 +132,16 @@ public class NewBnB implements SearchAlgorithm {
     }
 
     protected double getRank(Node n) {
-        return n.g+ n.h * weight;
+        return n.g+ n.h;
     }
 
+    /**
+     * The node class
+     */
     protected final class Node {
         double h, g;
-        Operator op, pop;
+        Operator op; //parent to san
+        Operator pop; //san to parent
         State state;
         Node parent;
         // double fPrime;
