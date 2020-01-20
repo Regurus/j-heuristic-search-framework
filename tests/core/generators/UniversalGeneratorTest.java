@@ -37,6 +37,7 @@ public class UniversalGeneratorTest {
             State newState = this.tested.generate(domain,depth);
             domain.setInitialState(newState);
             SearchResult result = solver.search(domain);
+            System.out.println(result.toString());
             System.out.println("actual lenght: " +result.getSolutions().get(0).getLength());
             assertTrue(result.getSolutions().get(0).getLength()<=depth);
         }

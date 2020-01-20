@@ -67,7 +67,7 @@ public class DFS implements SearchAlgorithm {
             Node currentNode = this.stack.pop();
             // Extract the state from the packed value of the node
             state = domain.unpack(currentNode.packed);
-
+            System.out.println("Stack size: "+this.stack.size());
             // Check for goal condition on the state popped from stack
             if (domain.isGoal(state)) {
                 // Goal cost is calculated by traversing the path from end to start

@@ -4,6 +4,7 @@ import core.SearchAlgorithm;
 import core.SearchDomain;
 import core.algorithms.IDAstar;
 import core.algorithms.IDDPS;
+import core.algorithms.PHS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class RubiksCubeTest {
         RubiksCube.RubiksOperator operator = test.getTestOperator();
         operator.applyML2345(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
-        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
+        testSearchAlgorithm(domain, new IDAstar(3), 0, 0, 0);
     }
     @Test
     public void D2Test(){
@@ -85,7 +86,7 @@ public class RubiksCubeTest {
         operator.applyTR1462(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
-        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
+        testSearchAlgorithm(domain, new IDAstar(5), 0, 0, 0);
     }
     @Test
     public void D7Test(){
@@ -112,7 +113,7 @@ public class RubiksCubeTest {
         operator.applyTR1462(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
-        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
+        testSearchAlgorithm(domain, new IDDPS(2), 0, 0, 0);
     }
     @Test
     public void D9Test(){
@@ -144,7 +145,7 @@ public class RubiksCubeTest {
         operator.applyML2345(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
-        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
+        testSearchAlgorithm(domain, new IDAstar(3), 0, 0, 0);
     }
     @Test
     public void operatorRotateTest(){
@@ -160,6 +161,12 @@ public class RubiksCubeTest {
         assertArrayEquals(XRotatedRight[0],ARotatedRight[0]);
         assertArrayEquals(XRotatedRight[1],ARotatedRight[1]);
         assertArrayEquals(XRotatedRight[2],ARotatedRight[2]);
+    }
+    @Test
+    public void testReverseOperator(){
+        RubiksCube.RubiksOperator operator = test.getTestOperator();
+        RubiksCube.RubiksOperator operatorReversed = (RubiksCube.RubiksOperator) operator.reverse(null);
+        assertEquals("operators reverse OK", RubiksCube.Operators.BOT_RIGHT_1462,operatorReversed.operator);
     }
     @Test
     public void testOperatorsReversable(){

@@ -656,46 +656,6 @@ public final class FifteenPuzzle implements SearchDomain {
             return FifteenPuzzle.this._getHashNIndex(permutation);
         }
 
-        private long getHash7Index() {
-            return this._getHashNIndex(7, 1);
-        }
-
-        private long getHash7ReflectionIndex() {
-            return this._getHashNReflectionIndex(7, 1);
-        }
-
-        private long getHash8Index() {
-            return this._getHashNIndex(8, 8);
-        }
-
-        private long getHash8ReflectionIndex() {
-            return this._getHashNReflectionIndex(8, 8);
-        }
-
-        private long getHash5_1Index() {
-            return this._getHashNIndex(5, 1);
-        }
-
-        private long getHash5_1ReflectIndex() {
-            return this._getHashNReflectionIndex(5, 1);
-        }
-
-        private long getHash5_2Index() {
-            return this._getHashNIndex(5, 6);
-        }
-
-        private long getHash5_2ReflectIndex() {
-            return this._getHashNReflectionIndex(5, 6);
-        }
-
-        private long getHash5_3Index() {
-            return this._getHashNIndex(5, 11);
-        }
-
-        private long getHash5_3ReflectIndex() {
-            return this._getHashNReflectionIndex(5, 11);
-        }
-
         @Override
         public boolean equals(Object object) {
             try {

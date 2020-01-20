@@ -4,14 +4,9 @@ import core.Operator;
 import core.SearchDomain;
 import core.State;
 import core.collections.PackedElement;
-import core.collections.Pair;
 import org.apache.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultUndirectedGraph;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -275,7 +270,7 @@ public class OverrideDomain implements SearchDomain {
 
         @Override
         public String convertToStringShort() {
-            return contained.toString();
+            return "index: "+contained.index+" H:"+contained.hValue;
         }
 
         @Override
@@ -322,7 +317,7 @@ public class OverrideDomain implements SearchDomain {
             return false;
         }
     }
-    //jgrapht disregards same objects bound to edged so there is a need for container for edge-cost value
+    //jgrapht disregards same objects bound to edges so there is a need for container for edge-cost value
     private class Cost{
         int cost;
 

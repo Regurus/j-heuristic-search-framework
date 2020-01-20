@@ -23,6 +23,8 @@ import core.*;
 import core.algorithms.SearchResultImpl.SolutionImpl;
 import core.SearchResult;
 import core.collections.PackedElement;
+import core.domains.RubiksCube;
+import org.apache.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
@@ -39,6 +41,7 @@ public class NewBnB implements SearchAlgorithm {
     private double boundFactor; //above this bound, cut the branch
     private Stack<Node> open; //open list, nodes to check
     private HashSet<PackedElement> visited; // nodes already visited
+    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
 
 
     private List<Operator> path = new ArrayList<Operator>();
@@ -93,6 +96,7 @@ public class NewBnB implements SearchAlgorithm {
             //System.out.println(state.convertToStringShort());
             //expand node
             result.expanded++;
+            log.debug("open size: "+this.open.size()+"  hash size: "+this.visited.size());
             for (int i=0; i< domain.getNumOperators(state); ++i) {
                 Operator op = domain.getOperator(state, i);
                 if (op.equals(currentNode.pop)) {

@@ -42,7 +42,7 @@ public class PancakesTest {
             assertEquals("initial operator count OK, size: "+i,i-1, pan.getNumOperators(pan.initialState()));
         }
     }
-    
+
     @Test
     public void applyOperator() {
         for(int i=0;i<SIZE-1;i++){
