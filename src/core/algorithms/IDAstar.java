@@ -71,7 +71,7 @@ public class IDAstar implements SearchAlgorithm {
             if(domain.debugMode)
                 log.debug("iteration start bound: "+this.bound );
             this.minNextF = -1;
-            boolean goalWasFound = this.dfs(domain, root, 0, null);
+            boolean goalWasFound = this.iterate(domain, root, 0, null);
 /*          System.out.println("min next f: " + minNextF ) ;
             System.out.println("next");*/
             this.result.addIteration(i, this.bound, this.result.expanded, this.result.generated);
@@ -101,6 +101,9 @@ public class IDAstar implements SearchAlgorithm {
 
         return this.result;
     }
+    protected boolean iterate(SearchDomain domain, State root, double cost, Operator pop){
+        return this.dfs(domain, root, 0, null);
+    }
 
     /**
      * A single iteration of the IDA*
@@ -125,12 +128,7 @@ public class IDAstar implements SearchAlgorithm {
         }
         //todo update the next cost here
         if (f > this.bound) {
-            // Let's record the lowest value of f that is greater than the bound
-            if (this.minNextF < 0 || f < this.minNextF)
-                this.minNextF = f;
-            if(domain.debugMode){
-                log.debug("branch end: f out of current bound");
-            }
+            this.recordLowestValue(f);
             return false;//stopping current iteration
         }
 
@@ -155,6 +153,13 @@ public class IDAstar implements SearchAlgorithm {
 
         // No solution was found
         return false;
+    }
+    public void recordLowestValue(double f){
+        if (this.minNextF < 0 || f < this.minNextF)
+            this.minNextF = f;
+        if(domain.debugMode){
+            log.debug("branch end: f out of current bound");
+        }
     }
 }
 
