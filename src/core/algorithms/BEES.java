@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * According to the following paper: Faster Bounded-Cost Search Using Inadmissible Estimates
  */
-public class BEES implements SearchAlgorithm {
+public class BEES extends SearchAlgorithm {
     private static final int OPEN_ID = 0;
     private static final int CLEANUP_ID = 1;
 

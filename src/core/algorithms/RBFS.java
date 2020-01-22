@@ -32,7 +32,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  * 
  * @author Matthew Hatem
  */
-public class RBFS implements SearchAlgorithm {
+public class RBFS extends SearchAlgorithm {
   
 	private SearchResultImpl result;
 	private SearchDomain domain;

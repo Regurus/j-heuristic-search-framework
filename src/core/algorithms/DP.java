@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Created by Daniel on 21/12/2015.
  */
-public class DP  implements SearchAlgorithm {
+public class DP extends SearchAlgorithm {
 
     private boolean debug = false;
 

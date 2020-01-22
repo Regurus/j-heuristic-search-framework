@@ -24,7 +24,7 @@ import java.util.Map;
  * is greater than the maximum value can be pruned
  */
 
-public class PHS implements SearchAlgorithm {
+public class PHS extends SearchAlgorithm {
 
     private static final Map<String, Class> PHSPossibleParameters;
 

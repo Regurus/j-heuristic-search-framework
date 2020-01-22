@@ -12,7 +12,7 @@ import java.util.*;
  *
  * Implementation of the simple DFS algorithm (iterative implementation)
  */
-public class DFS implements SearchAlgorithm {
+public class DFS extends SearchAlgorithm {
 
     // The domain for the search
     private SearchDomain domain;

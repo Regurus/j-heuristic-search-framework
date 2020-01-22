@@ -1,34 +1,57 @@
-
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package core.algorithms;
 
+
 import core.*;
-import core.SearchAlgorithm;
-import core.SearchResult;
-import core.algorithms.SearchResultImpl.SolutionImpl;
-import core.collections.Pair;
-import core.domains.RubiksCube;
-import org.apache.log4j.Logger;
+import core.algorithms.SearchResultImpl;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.*;
-public class IDAstar implements SearchAlgorithm {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Iterative Deepening A* Search
+ *
+ * @author Matthew Hatem
+ */
+public class IDAstar extends SearchAlgorithm {
     // The domain for the search
-    protected SearchDomain domain;
-    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
-    protected SearchResultImpl result;
-    protected SolutionImpl solution;
-    protected double weight;
-    protected double bound;
-    protected double minNextF;
+    private SearchDomain domain;
 
+    private SearchResultImpl result;
+    private SearchResultImpl.SolutionImpl solution;
 
+    private double weight;
+    private double bound;
+    private double minNextF;
+
+    /**
+     * The default constructor of the class
+     */
     public IDAstar() {
-  	    this(1.0);
+        this(1.0);
     }
 
     public IDAstar(double weight) {
         this.weight = weight;
-    } //Changed to public to basically be WIDA*
+    }
 
     @Override
     public String getName() {
@@ -62,22 +85,18 @@ public class IDAstar implements SearchAlgorithm {
     @Override
     public SearchResult search(SearchDomain domain) {
         this.result = new SearchResultImpl();
-        this.solution = new SolutionImpl();
+        this.solution = new SearchResultImpl.SolutionImpl();
         State root = domain.initialState();
         this.result.startTimer();
         this.bound = this.weight * root.getH();
         int i = 0;
         do {
-            if(domain.debugMode)
-                log.debug("iteration start bound: "+this.bound );
             this.minNextF = -1;
-            boolean goalWasFound = this.iterate(domain, root, 0, null);
-/*          System.out.println("min next f: " + minNextF ) ;
+            boolean goalWasFound = this.dfs(domain, root, 0, null);
+/*            System.out.println("min next f: " + minNextF ) ;
             System.out.println("next");*/
             this.result.addIteration(i, this.bound, this.result.expanded, this.result.generated);
             this.bound = this.minNextF;
-            if(domain.debugMode)
-                log.debug("iteration end new bound: "+this.bound );
             if (goalWasFound) {
                 break;
             }
@@ -101,52 +120,49 @@ public class IDAstar implements SearchAlgorithm {
 
         return this.result;
     }
-    protected boolean iterate(SearchDomain domain, State root, double cost, Operator pop){
-        return this.dfs(domain, root, 0, null);
-    }
 
     /**
      * A single iteration of the IDA*
      *
      * @param domain The domain on which the search is performed
-     * @param current The current state
-     * @param cost The cost to reach the current state
+     * @param parent The parent state
+     * @param cost The cost to reach the parent state
      * @param pop The reverse operator?
      *
      * @return Whether a solution was found
      */
-    protected boolean dfs(SearchDomain domain, State current, double cost, Operator pop) {
-        double f = cost + this.weight * current.getH();//todo change to potential calculation
-        if(domain.debugMode)
-            log.debug("current limit: "+this.bound);
-        if (f <= this.bound && domain.isGoal(current)) {
+    private boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
+        double f = cost + this.weight * parent.getH();
+
+        if (f <= this.bound && domain.isGoal(parent)) {
             this.solution.setCost(f);
             this.solution.addOperator(pop);
-            if(domain.debugMode)
-                log.debug("iteration end: goal found @cost "+f);
+            this.solution.addState(parent);
             return true;
         }
-        //todo update the next cost here
+
         if (f > this.bound) {
-            this.recordLowestValue(f);
-            return false;//stopping current iteration
+            // Let's record the lowest value of f that is greater than the bound
+            if (this.minNextF < 0 || f < this.minNextF)
+                this.minNextF = f;
+            return false;
         }
 
         // Expand the current node
         ++result.expanded;
-        int numOps = domain.getNumOperators(current);
+        int numOps = domain.getNumOperators(parent);
         for (int i = 0; i < numOps; ++i) {
-            Operator op = domain.getOperator(current, i);
+            Operator op = domain.getOperator(parent, i);
             // Bypass reverse operators
             if (op.equals(pop)) {
                 continue;
             }
             ++result.generated;
-            State child = domain.applyOperator(current, op);
-            boolean goal = this.dfs(domain, child, op.getCost(child, current) + cost, op.reverse(current));
+            State child = domain.applyOperator(parent, op);
+            boolean goal = this.dfs(domain, child, op.getCost(child, parent) + cost, op.reverse(parent));
             if (goal) {
                 this.solution.addOperator(op);
-                this.solution.addState(current);
+                this.solution.addState(parent);
                 return true;
             }
         }
@@ -154,12 +170,4 @@ public class IDAstar implements SearchAlgorithm {
         // No solution was found
         return false;
     }
-    public void recordLowestValue(double f){
-        if (this.minNextF < 0 || f < this.minNextF)
-            this.minNextF = f;
-        if(domain.debugMode){
-            log.debug("branch end: f out of current bound");
-        }
-    }
 }
-

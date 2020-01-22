@@ -1,22 +1,17 @@
 package core.algorithms;
 
-import core.SearchDomain;
 import core.SearchResult;
 import core.State;
 import core.domains.FifteenPuzzle;
-import core.domains.Pancakes;
-import core.domains.RubiksCube;
 import core.generators.UniversalGenerator;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class IDDPSTest {
-    Pancakes domain;
+    FifteenPuzzle domain;
     @Before
     public void setUp() throws Exception {
-        this.domain = new Pancakes(100);
+        this.domain = new FifteenPuzzle();
     }
 
     @Test
@@ -47,5 +42,14 @@ public class IDDPSTest {
         System.out.println("Delta Expanded: "+avgDeltaExpanded/runs);
         System.out.println("Delta Generated: "+avgDeltaGenerated/runs);
         System.out.println("Delta Solution Length: "+avgDeltaSolutionLen/runs);
+    }
+
+    @Test
+    public void test() {
+        ImpovingBnB solver = new ImpovingBnB(2);
+        UniversalGenerator generator = new UniversalGenerator();
+        State newState = generator.generate(domain,10);
+        domain.setInitialState(newState);
+        solver.search(domain);
     }
 }

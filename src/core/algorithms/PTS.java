@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * @author Vitali Sepetnitsky
  */
-public class PTS implements SearchAlgorithm {
+public class PTS extends SearchAlgorithm {
 
     // The domain to which the search problem belongs
     private SearchDomain domain;

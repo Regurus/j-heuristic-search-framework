@@ -36,7 +36,7 @@ import java.util.*;
  *
  * (Edited by Vitali Sepetnitsky)
  */
-public class WAStar implements SearchAlgorithm {
+public class WAStar extends SearchAlgorithm {
 
     private static final int QID = 0;
 

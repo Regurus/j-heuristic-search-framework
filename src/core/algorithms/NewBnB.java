@@ -32,7 +32,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  *
  * @author Matthew Hatem
  */
-public class NewBnB implements SearchAlgorithm {
+public class NewBnB extends SearchAlgorithm {
 
     private SearchResultImpl result;
     private SearchDomain domain;

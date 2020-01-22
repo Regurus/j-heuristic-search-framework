@@ -16,16 +16,15 @@
  */
 package core;
 
-import java.util.Map;
 
 /**
  * The search algorithm interface.
  *
  * @author Matthew Hatem
  */
-public interface SearchAlgorithm extends SearchConfigurable{
+public abstract class SearchAlgorithm implements SearchConfigurable{
 
-    String getName();
+    public abstract String getName();
 
     /**
      * Performs a search beginning at the specified state.
@@ -33,5 +32,41 @@ public interface SearchAlgorithm extends SearchConfigurable{
      * @param domain The domain to apply the search on
      * @return search results
      */
-    SearchResult search(SearchDomain domain);
+    public abstract SearchResult search(SearchDomain domain);
+
+    protected class Node{
+        private Node previous;
+        private State current;
+        private int depth = 0;
+        private double g;
+
+        public Node(Node previous, State current, double g) {
+            this.previous = previous;
+            this.current = current;
+            this.g = g;
+        }
+
+        public Node(Node previous, State current, double g, int depth) {
+            this.previous = previous;
+            this.current = current;
+            this.g = g;
+            this.depth = depth;
+        }
+
+        public double getG() {
+            return g;
+        }
+
+        public Node getPrevious() {
+            return previous;
+        }
+
+        public State getCurrent() {
+            return current;
+        }
+
+        public int getDepth() {
+            return depth;
+        }
+    }
 }

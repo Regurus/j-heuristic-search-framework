@@ -13,7 +13,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 
-public class EES implements SearchAlgorithm {
+public class EES extends SearchAlgorithm {
     private static final int CLEANUP_ID = 0;
     private static final int FOCAL_ID = 1;
 

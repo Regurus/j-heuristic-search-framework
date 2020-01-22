@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.LinkedHashMap;
 import core.algorithms.SearchResultImpl.SolutionImpl;
 
-public class IDDPS implements SearchAlgorithm {
+public class IDDPS extends SearchAlgorithm {
 
     Stack<Pair<Node,Operator>> openList;
     private double maxF = 0;
@@ -202,27 +202,4 @@ public class IDDPS implements SearchAlgorithm {
         return this.result;
     }
 
-    private class Node{
-        Node previous;
-        State current;
-        double g;
-
-        public Node(Node previous, State current, double g) {
-            this.previous = previous;
-            this.current = current;
-            this.g = g;
-        }
-
-        public double getG() {
-            return g;
-        }
-
-        public Node getPrevious() {
-            return previous;
-        }
-
-        public State getCurrent() {
-            return current;
-        }
-    }
 }

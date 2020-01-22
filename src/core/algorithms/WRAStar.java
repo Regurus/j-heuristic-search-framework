@@ -37,7 +37,7 @@ import java.util.Map;
  *
  * (Edited by Vitali Sepetnitsky)
  */
-public class WRAStar implements SearchAlgorithm {
+public class WRAStar extends SearchAlgorithm {
 
     private static final int QID = 0;
 
