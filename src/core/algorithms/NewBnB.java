@@ -23,8 +23,6 @@ import core.*;
 import core.algorithms.SearchResultImpl.SolutionImpl;
 import core.SearchResult;
 import core.collections.PackedElement;
-import core.domains.RubiksCube;
-import org.apache.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
@@ -32,7 +30,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  *
  * @author Matthew Hatem
  */
-public class NewBnB extends SearchAlgorithm {
+public class NewBnB implements SearchAlgorithm {
 
     private SearchResultImpl result;
     private SearchDomain domain;
@@ -41,7 +39,6 @@ public class NewBnB extends SearchAlgorithm {
     private double boundFactor; //above this bound, cut the branch
     private Stack<Node> open; //open list, nodes to check
     private HashSet<PackedElement> visited; // nodes already visited
-    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
 
 
     private List<Operator> path = new ArrayList<Operator>();
@@ -79,11 +76,11 @@ public class NewBnB extends SearchAlgorithm {
         State initialState = domain.initialState();
         Node initialNode = new Node(initialState);
         open.add(initialNode);
-        //visited.add(domain.pack(initialState)); TODO: maybe add it inorder to avoid loops
+        visited.add(domain.pack(initialState));
         while (!open.isEmpty()) {
             Node currentNode = this.open.pop();
             State state = currentNode.state;
-            //visited.remove(domain.pack(state));
+            visited.remove(domain.pack(state));
 
             if (domain.isGoal(currentNode.state)) {
                 if(boundFactor> currentNode.g/weight){
@@ -93,30 +90,45 @@ public class NewBnB extends SearchAlgorithm {
                 continue;
             }
 
-            //System.out.println(state.convertToStringShort());
+            System.out.println(open.size()+"***openSize***");
             //expand node
             result.expanded++;
-            log.debug("open size: "+this.open.size()+"  hash size: "+this.visited.size());
-            for (int i=0; i< domain.getNumOperators(state); ++i) {
-                Operator op = domain.getOperator(state, i);
-                if (op.equals(currentNode.pop)) {
-                    continue;
-                }
-                State childState = domain.applyOperator(state, op);
-                PackedElement childPack = domain.pack(childState);
+            int numOperators = domain.getNumOperators(state);
+            List<Node> priority = new ArrayList<>();
 
-                /*if (visited.contains(childPack)) {
+            for (int i=0; i< numOperators; ++i) {
+                Operator op = domain.getOperator(state, i);
+                /*if (op.equals(currentNode.pop)) {
                     continue;
                 }*/
+                State childState = domain.applyOperator(state, op);
+                if(currentNode.parent!= null && childState.equals(currentNode.parent)){
+                    System.out.println("WAS HERE!!!");
+                    continue;
+                }
+                PackedElement childPack = domain.pack(childState);
+                if (visited.contains(childPack)) {
+                    continue;
+                }
                 result.generated++;
                 Node childNode = new Node(childState, currentNode, op, op.reverse(state));
 
                 //add to open stack. else: cut the branch
                 if (childNode.g < boundFactor) {
                     visited.add(childPack);
-                    this.open.add(childNode);
+                    //open.add(childNode);
+                    priority.add(childNode);
                 }
             }
+            Collections.sort(priority);
+            open.addAll(priority);
+            System.out.println("***********current state!!!**************");
+            System.out.println(state.convertToString());
+            System.out.println("**************************");
+            for(int i=0; i<open.size(); i++){
+                System.out.println(open.get(i).state.convertToString());
+            }
+            System.out.print("");
         }
         //finish running the algorithm. restore path
         result.stopTimer();
@@ -142,10 +154,10 @@ public class NewBnB extends SearchAlgorithm {
     /**
      * The node class
      */
-    protected final class Node {
+    protected final class Node implements Comparable<Node>{
         double h, g;
         Operator op; //parent to san
-        Operator pop; //san to parent
+        //Operator pop; //san to parent
         State state;
         Node parent;
         // double fPrime;
@@ -160,8 +172,18 @@ public class NewBnB extends SearchAlgorithm {
             this.h = state.getH();
             this.state = domain.copy(state);
             this.parent = parent;
-            this.pop = pop;
+            //this.pop = pop;
             this.op = op;
+        }
+
+        @Override
+        public int compareTo(Node o) {
+            if (this.g + this.h > o.g + o.h) {
+                return 1;
+            }
+            else{
+                return -1;
+            }
         }
     }
 
