@@ -61,6 +61,10 @@ public abstract class SearchAlgorithm implements SearchConfigurable{
             return previous;
         }
 
+        public double getF() {
+            return current.getH()+g;
+        }
+
         public State getCurrent() {
             return current;
         }

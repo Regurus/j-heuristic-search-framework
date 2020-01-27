@@ -30,7 +30,14 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  *
  * @author Matthew Hatem
  */
-public class NewBnB implements SearchAlgorithm {
+public class NewBnB extends SearchAlgorithm {
+
+    class BnBNodeComparator implements Comparator<Node> {
+        @Override
+        public int compare(Node a, Node b) {
+            return Double.compare( b.getCurrent().getD(), a.getCurrent().getD());
+        }
+    }
 
     private SearchResultImpl result;
     private SearchDomain domain;
@@ -45,6 +52,10 @@ public class NewBnB implements SearchAlgorithm {
 
     public NewBnB() {
         this.weight = 1;
+    }
+
+    public NewBnB(double weight) {
+        this.weight = weight;
     }
 
     @Override
@@ -66,7 +77,7 @@ public class NewBnB implements SearchAlgorithm {
     public SearchResult search(SearchDomain domain) {
         //initialize params
         open = new Stack<>();
-        visited = new HashSet<>();
+        visited = new HashSet<PackedElement>();
         boundFactor = Double.MAX_VALUE;
         this.domain = domain;
         result = new SearchResultImpl();
@@ -74,23 +85,25 @@ public class NewBnB implements SearchAlgorithm {
         result.startTimer();
 
         State initialState = domain.initialState();
-        Node initialNode = new Node(initialState);
+        Node initialNode = new Node(null, initialState, 0);
         open.add(initialNode);
         visited.add(domain.pack(initialState));
         while (!open.isEmpty()) {
             Node currentNode = this.open.pop();
-            State state = currentNode.state;
+            State state = currentNode.getCurrent();
             visited.remove(domain.pack(state));
 
-            if (domain.isGoal(currentNode.state)) {
-                if(boundFactor> currentNode.g/weight){
+            if (domain.isGoal(currentNode.getCurrent())) {
+                System.out.println("Found!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.out.println(boundFactor);
+                if(boundFactor> currentNode.getG()/weight){
                     goal = currentNode;
-                    boundFactor = currentNode.g/weight;
+                    boundFactor = currentNode.getG()/weight;
                 }
                 continue;
             }
 
-            System.out.println(open.size()+"***openSize***");
+            System.out.println(open.size()+"**openSize**");
             //expand node
             result.expanded++;
             int numOperators = domain.getNumOperators(state);
@@ -98,93 +111,43 @@ public class NewBnB implements SearchAlgorithm {
 
             for (int i=0; i< numOperators; ++i) {
                 Operator op = domain.getOperator(state, i);
-                /*if (op.equals(currentNode.pop)) {
-                    continue;
-                }*/
                 State childState = domain.applyOperator(state, op);
-                if(currentNode.parent!= null && childState.equals(currentNode.parent)){
-                    System.out.println("WAS HERE!!!");
+                if(currentNode.getPrevious()!= null && childState.equals(currentNode.getPrevious().getCurrent())){
+//                    System.out.println("WAS HERE!!!");
                     continue;
                 }
                 PackedElement childPack = domain.pack(childState);
-                if (visited.contains(childPack)) {
+                if (!visited.add(childPack)) {
+                    System.gc();
                     continue;
                 }
                 result.generated++;
-                Node childNode = new Node(childState, currentNode, op, op.reverse(state));
+                Node childNode = new Node(currentNode, childState, currentNode.getG()+op.getCost(childState, state));
 
                 //add to open stack. else: cut the branch
-                if (childNode.g < boundFactor) {
-                    visited.add(childPack);
+                if (childNode.getF() < boundFactor) {
                     //open.add(childNode);
                     priority.add(childNode);
                 }
             }
-            Collections.sort(priority);
+            priority.sort(new BnBNodeComparator());
             open.addAll(priority);
-            System.out.println("***********current state!!!**************");
-            System.out.println(state.convertToString());
-            System.out.println("**************************");
-            for(int i=0; i<open.size(); i++){
-                System.out.println(open.get(i).state.convertToString());
-            }
-            System.out.print("");
         }
+        System.out.println("cost"+goal.getG());
         //finish running the algorithm. restore path
         result.stopTimer();
 
         if (goal != null) {
             SolutionImpl solution = new SolutionImpl();
-            for (Node p = goal; p != null; p = p.parent) {
-                path.add(p.op);
+            for (Node p = goal; p != null; p = p.getPrevious()) {
+                //path.add(p);
             }
             Collections.reverse(path);
             solution.addOperators(path);
-            solution.setCost(goal.g);
+            //solution.setCost(goal.g);
             result.addSolution(solution);
         }
 
         return result;
     }
-
-    protected double getRank(Node n) {
-        return n.g+ n.h;
-    }
-
-    /**
-     * The node class
-     */
-    protected final class Node implements Comparable<Node>{
-        double h, g;
-        Operator op; //parent to san
-        //Operator pop; //san to parent
-        State state;
-        Node parent;
-        // double fPrime;
-
-        private Node(State state) {
-            this(state, null, null, null);
-        }
-
-        private Node(State state, Node parent, Operator op, Operator pop) {
-            double cost = (op != null) ? op.getCost(state, parent.state) : 0;
-            this.g = (parent != null) ? parent.g+cost : cost;
-            this.h = state.getH();
-            this.state = domain.copy(state);
-            this.parent = parent;
-            //this.pop = pop;
-            this.op = op;
-        }
-
-        @Override
-        public int compareTo(Node o) {
-            if (this.g + this.h > o.g + o.h) {
-                return 1;
-            }
-            else{
-                return -1;
-            }
-        }
-    }
-
 }
