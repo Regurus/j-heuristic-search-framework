@@ -1,18 +1,22 @@
 package core.algorithms;
 
 import core.*;
+import core.collections.Pair;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 public abstract class ImprovingSearch extends SearchAlgorithm {
+    protected SearchDomain domain;
     protected long expanded;
     protected long generated;
     protected double suboptimalityBound;//should be initialized by inheriting classes.
 
     @Override
     public SearchResult search(SearchDomain domain) {
-        Node initial = this.findInitialSolution(domain,new IDAstar(this.suboptimalityBound*4));
+        Node initial = this.findInitialSolution(domain,new IDAstar(this.suboptimalityBound*2));
         Node bounded = this.improveSolution(domain, initial);
         return this.transformSolution(bounded);
     }
@@ -33,7 +37,9 @@ public abstract class ImprovingSearch extends SearchAlgorithm {
      */
     protected Node findInitialSolution(SearchDomain domain, SearchAlgorithm solver){
         SearchResult result = solver.search(domain);
-        System.out.println("initial found");
+        System.out.println("initial found, stats: ");
+        System.out.println("Generated: "+result.getGenerated());
+        System.out.println("Expanded: "+result.getExpanded());
         return transformSolution(result);
     }
 
@@ -80,6 +86,24 @@ public abstract class ImprovingSearch extends SearchAlgorithm {
         return result;
     }
 
+    protected Pair<Node,Operator>[] orderByComparator(Node parent, Operator reverse,Comparator comparator){
+        int ops = this.domain.getNumOperators(parent.getCurrent());
+        PriorityQueue<Pair<Node,Operator>> structure = new PriorityQueue<>(comparator);
+        for(int i=0;i<ops;i++){
+            Operator op = this.domain.getOperator(parent.getCurrent(),i);
+            if(op.equals(reverse))
+                continue;
+            this.generated++;
+            State next = this.domain.applyOperator(parent.getCurrent(),op);
+            Node nextNode = new Node(parent,next,parent.getG()+op.getCost(next,parent.getCurrent()),parent.getDepth()+1);
+            structure.add(new Pair<>(nextNode,op));
+        }
+        Pair<Node,Operator>[] res = new Pair[structure.size()];
+        for(int i=0;i<res.length;i++){
+            res[i] = structure.poll();
+        }
+        return res;
+    }
     /**
      * Solution improvement procedure every inheriting class should implement this on his own
      * @param domain search domain
