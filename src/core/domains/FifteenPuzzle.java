@@ -735,6 +735,14 @@ public final class FifteenPuzzle implements SearchDomain {
             }
             return sb.toString();
         }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(blank, h, d, parent);
+            result = 31 * result + Arrays.hashCode(tiles);
+            result = 31 * result + Arrays.hashCode(positionsOfTiles);
+            return result;
+        }
     }
 
     @Override

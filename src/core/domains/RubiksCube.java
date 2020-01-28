@@ -336,12 +336,7 @@ public class RubiksCube implements SearchDomain {
         for(byte[] coordinate: cubie){
             res.add(coordinate[0]);
         }
-        res.sort(new Comparator<Byte>() {
-            @Override
-            public int compare(Byte o1, Byte o2) {
-                return  o2-o1;
-            }
-        });
+        res.sort((o1, o2) -> o2-o1);
         if(res.size()==2)
             return ""+res.get(0)+res.get(1);
         return ""+res.get(0)+res.get(1)+res.get(2);

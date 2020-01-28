@@ -21,7 +21,7 @@ public class BnBTest {
             domain.setInitialState(newState);
 
             System.out.println("wBnB-------------------------------------------");
-            SearchAlgorithm bnb = new ImpovingBnB(1.5);
+            SearchAlgorithm bnb = new ImprovingBnB(1.5);
             SearchResult bnbRes = bnb.search(domain);
             System.out.println(bnbRes);
 
@@ -30,19 +30,19 @@ public class BnBTest {
             SearchResult IDAstarRes = ida.search(domain);
             System.out.println(IDAstarRes);
 
-            System.out.println("IDPS-------------------------------------------");
+            /*System.out.println("IDPS-------------------------------------------");
             SearchAlgorithm idps = new ImprovingPS(1.5);
             SearchResult IDPSRes = idps.search(domain);
-            System.out.println(IDPSRes);
+            System.out.println(IDPSRes);*/
 
             avgDeltaExpanded += IDAstarRes.getExpanded()-bnbRes.getExpanded();
             avgDeltaGenerated += IDAstarRes.getGenerated()-bnbRes.getGenerated();
             avgDeltaSolutionLen += IDAstarRes.getSolutions().get(0).getLength()-bnbRes.getSolutions().get(0).getLength();
         }
 
-        System.out.println("Delta Expanded: "+avgDeltaExpanded/runs);
-        System.out.println("Delta Generated: "+avgDeltaGenerated/runs);
-        System.out.println("Delta Solution Length: "+avgDeltaSolutionLen/runs);
+        System.out.println("AVG Delta Expanded: "+avgDeltaExpanded/runs);
+        System.out.println("AVG Delta Generated: "+avgDeltaGenerated/runs);
+        System.out.println("AVG Delta Solution Length: "+avgDeltaSolutionLen/runs);
 
     }
     @Test
@@ -56,7 +56,7 @@ public class BnBTest {
     @Test
     public void G2Test(){
         OverrideDomain domain = Graphs.graph2;
-        SearchAlgorithm solver = new ImpovingBnB(2);
+        SearchAlgorithm solver = new ImprovingBnB(2);
         SearchResult result = solver.search(domain);
         Solution sol = result.getSolutions().get(0);
         TestAllBasics.showSolution(result,0);
@@ -64,7 +64,7 @@ public class BnBTest {
     @Test
     public void G3Test(){
         OverrideDomain domain = Graphs.graph3;
-        SearchAlgorithm solver = new ImpovingBnB(2);
+        SearchAlgorithm solver = new ImprovingBnB(2);
         SearchResult result = solver.search(domain);
         Solution sol = result.getSolutions().get(0);
         TestAllBasics.showSolution(result,0);

@@ -46,7 +46,7 @@ public class IDDPSTest {
 
     @Test
     public void test() {
-        ImpovingBnB solver = new ImpovingBnB(2);
+        ImprovingBnB solver = new ImprovingBnB(2);
         UniversalGenerator generator = new UniversalGenerator();
         State newState = generator.generate(domain,10);
         domain.setInitialState(newState);
