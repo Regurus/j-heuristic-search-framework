@@ -5,6 +5,7 @@ import core.SearchDomain;
 import core.algorithms.IDAstar;
 import core.algorithms.IDDPS;
 import core.algorithms.PHS;
+import core.algorithms.WAStar;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,14 +35,14 @@ public class RubiksCubeTest {
     @Test
     public void D1Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
         testSearchAlgorithm(domain, new IDAstar(3), 0, 0, 0);
     }
     @Test
     public void D2Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
@@ -49,7 +50,7 @@ public class RubiksCubeTest {
     @Test
     public void D3Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
@@ -58,7 +59,7 @@ public class RubiksCubeTest {
     @Test
     public void D4Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
@@ -68,7 +69,7 @@ public class RubiksCubeTest {
     @Test
     public void D5Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
@@ -79,7 +80,7 @@ public class RubiksCubeTest {
     @Test
     public void D6Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
@@ -91,20 +92,20 @@ public class RubiksCubeTest {
     @Test
     public void D7Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.GAP);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     @Test
     public void D8Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
@@ -112,13 +113,13 @@ public class RubiksCubeTest {
         operator.applyTL3651(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
-        testSearchAlgorithm(domain, new IDDPS(2), 0, 0, 0);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.COLORS);
+        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     @Test
     public void D9Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
@@ -126,7 +127,7 @@ public class RubiksCubeTest {
         operator.applyTL3651(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
-        operator.applyML2345(cubeForOperations);
+        operator.applyTL2345(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
@@ -134,7 +135,7 @@ public class RubiksCubeTest {
     @Test
     public void fullRunTest() {
         RubiksCube.RubiksOperator operator = test.getTestOperator();
-        operator.applyML2345(cubeForOperations);
+        operator.applyBL2345(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
         operator.applyBL2345(cubeForOperations);
         operator.applyBL3651(cubeForOperations);
@@ -142,10 +143,10 @@ public class RubiksCubeTest {
         operator.applyTL3651(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
         operator.applyTL3651(cubeForOperations);
-        operator.applyML2345(cubeForOperations);
+        operator.applyTL2345(cubeForOperations);
         operator.applyTR1462(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.PARALLEL_LINES);
-        testSearchAlgorithm(domain, new IDAstar(3), 0, 0, 0);
+        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     @Test
     public void operatorRotateTest(){
@@ -179,14 +180,6 @@ public class RubiksCubeTest {
         //check if returned to original
         assertThat(tested,equalTo(ORIGINAL_CUBE));
 
-        //ML2345-MR2345 PAIR
-        tested = operator.applyML2345(cubeForOperations);
-        //check if changed
-        assertThat(tested,not(equalTo(ORIGINAL_CUBE)));
-        tested = operator.applyMR2345(tested);
-        //check if returned to original
-        assertThat(tested,equalTo(ORIGINAL_CUBE));
-
         //BL2345-BR2345 PAIR
         tested = operator.applyBL2345(cubeForOperations);
         //check if changed
@@ -203,14 +196,6 @@ public class RubiksCubeTest {
         //check if returned to original
         assertThat(tested,equalTo(ORIGINAL_CUBE));
 
-        //ML1462-MR1462 PAIR
-        tested = operator.applyML1462(cubeForOperations);
-        //check if changed
-        assertThat(tested,not(equalTo(ORIGINAL_CUBE)));
-        tested = operator.applyMR1462(tested);
-        //check if returned to original
-        assertThat(tested,equalTo(ORIGINAL_CUBE));
-
         //BL1462-BR1462 PAIR
         tested = operator.applyBL1462(cubeForOperations);
         //check if changed
@@ -224,14 +209,6 @@ public class RubiksCubeTest {
         //check if changed
         assertThat(tested,not(equalTo(ORIGINAL_CUBE)));
         tested = operator.applyTR3651(tested);
-        //check if returned to original
-        assertThat(tested,equalTo(ORIGINAL_CUBE));
-
-        //ML2345-MR2345 PAIR
-        tested = operator.applyML3651(cubeForOperations);
-        //check if changed
-        assertThat(tested,not(equalTo(ORIGINAL_CUBE)));
-        tested = operator.applyMR3651(tested);
         //check if returned to original
         assertThat(tested,equalTo(ORIGINAL_CUBE));
 

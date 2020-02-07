@@ -175,20 +175,14 @@ public class RubiksCube implements SearchDomain {
     enum Operators{
         TOP_RIGHT_2345,
         TOP_LEFT_2345,
-        MID_RIGHT_2345,
-        MID_LEFT_2345,
         BOT_RIGHT_2345,
         BOT_LEFT_2345,
         TOP_RIGHT_1462,
         TOP_LEFT_1462,
-        MID_RIGHT_1462,
-        MID_LEFT_1462,
         BOT_RIGHT_1462,
         BOT_LEFT_1462,
         TOP_RIGHT_3651,
         TOP_LEFT_3651,
-        MID_RIGHT_3651,
-        MID_LEFT_3651,
         BOT_RIGHT_3651,
         BOT_LEFT_3651,
     }
@@ -199,7 +193,9 @@ public class RubiksCube implements SearchDomain {
         PARALLEL_LINES,
         PARALLEL_LINES_COMPLEX,
         BASELINE_HERISTIC, //manhattan distance equivalent
-        NO_HEURISTIC
+        NO_HEURISTIC,
+        COLORS,
+        GAP
     }
 
     static byte[][][] deepCopyCube(byte[][][] cube){
@@ -384,6 +380,10 @@ public class RubiksCube implements SearchDomain {
                     return getComplexParallelStripeHeuristic();
                 case BASELINE_HERISTIC:
                     return getBaselineHeuristic();
+                case COLORS:
+                    return getColorsHeuristic();
+                case GAP:
+                    return getGapHeuristic();
             }
             if(debugMode)
                 log.debug("H requested: "+res+" returned");
@@ -396,7 +396,51 @@ public class RubiksCube implements SearchDomain {
                 log.debug("D requested: "+currentCost+" returned");
             return currentCost;
         }
+        private int getColorsHeuristic(){
+            int result = 0;
+            int[] colorsCounter = {0, 0, 0, 0, 0, 0};
+            int movesCounter = 0;
+            for (int face = 0; face < this.cube.length; face++){
+                for (int i = 0; i < this.cube[face].length; i++) {
+                    for (int j = 0; j < this.cube[face][i].length; j++) {
+                        colorsCounter[this.cube[face][i][j]] = 1;
+                    }
+                }
+                for (int i = 0; i < colorsCounter.length; i++) {
+                    movesCounter += colorsCounter[i];
+                }
+                result = Math.max(result, movesCounter-1);
+            }
+            return result;
+        }
 
+        private int getGapHeuristic(){
+            int gaps = 0;
+            for (int face=0; face<cube.length; face++){
+                for (int i=0; i<cube[face].length; i++){
+                    for (int j=0; j<cube[face][i].length-1; j++){
+                        if (cube[face][i][j] != cube[face][i][j+1]){
+                            gaps += 1;
+                            if (cube[face][i][j]+cube[face][i][j+1] == 7){
+                                gaps+=1;
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < cube[face].length-1; i++) {
+                    for (int j = 0; j < cube[face][i].length; j++) {
+                        if(cube[face][i][j] != cube[face][i+1][j]){
+                            gaps += 1;
+                            if(cube[face][i][j]+cube[face][i+1][j] == 7){
+                                gaps += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            return gaps/12;
+        }
         @Override
         public String convertToString() {
             return "not implemented";
@@ -597,12 +641,6 @@ public class RubiksCube implements SearchDomain {
                 case TOP_RIGHT_1462:
                     resultCube = this.applyTR1462(resultCube);
                     break;
-                case MID_LEFT_1462:
-                    resultCube = this.applyML1462(resultCube);
-                    break;
-                case MID_RIGHT_1462:
-                    resultCube = this.applyMR1462(resultCube);
-                    break;
                 case BOT_LEFT_1462:
                     resultCube = this.applyBL1462(resultCube);
                     break;
@@ -615,12 +653,6 @@ public class RubiksCube implements SearchDomain {
                 case TOP_RIGHT_2345:
                     resultCube = this.applyTR2345(resultCube);
                     break;
-                case MID_LEFT_2345:
-                    resultCube = this.applyML2345(resultCube);
-                    break;
-                case MID_RIGHT_2345:
-                    resultCube = this.applyMR2345(resultCube);
-                    break;
                 case BOT_LEFT_2345:
                     resultCube = this.applyBL2345(resultCube);
                     break;
@@ -632,12 +664,6 @@ public class RubiksCube implements SearchDomain {
                     break;
                 case TOP_RIGHT_3651:
                     resultCube = this.applyTR3651(resultCube);
-                    break;
-                case MID_LEFT_3651:
-                    resultCube = this.applyML3651(resultCube);
-                    break;
-                case MID_RIGHT_3651:
-                    resultCube = this.applyMR3651(resultCube);
                     break;
                 case BOT_LEFT_3651:
                     resultCube = this.applyBL3651(resultCube);
@@ -667,22 +693,6 @@ public class RubiksCube implements SearchDomain {
             cube[4][0] = savedValues[0];
             cube[1][0] = savedValues[1];
             cube[0] = rotateRight(cube[0]);
-            return cube;
-        }
-        byte[][][] applyMR2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][1],cube[2][1],cube[3][1],cube[4][1]};
-            cube[2][1] = savedValues[0];
-            cube[3][1] = savedValues[1];
-            cube[4][1] = savedValues[2];
-            cube[1][1] = savedValues[3];
-            return cube;
-        }
-        byte[][][] applyML2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][1],cube[2][1],cube[3][1],cube[4][1]};
-            cube[2][1] = savedValues[2];
-            cube[3][1] = savedValues[3];
-            cube[4][1] = savedValues[0];
-            cube[1][1] = savedValues[1];
             return cube;
         }
         byte[][][] applyBR2345(byte[][][] cube){
@@ -743,46 +753,6 @@ public class RubiksCube implements SearchDomain {
             cube[1][2][0] = savedValues[3][2];
 
             cube[4] = rotateRight(cube[4]);
-            return cube;
-        }
-        byte[][][] applyMR1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][1],cube[3][1][1],cube[3][2][1]},
-                    cube[5][1],
-                    {cube[1][0][1],cube[1][1][1],cube[1][2][1]},
-                    cube[0][1]};
-            //[0] 3,4,5 -> [3] 1,4,7
-            cube[3][0][1] = savedValues[3][0];
-            cube[3][1][1] = savedValues[3][1];
-            cube[3][2][1] = savedValues[3][2];
-            //[3] 1,4,7 -> [5] 3,4,5
-            cube[5][1] = savedValues[0];
-            //[5] 3,4,5 -> [1] 1,4,7
-            cube[1][0][1] = savedValues[1][0];
-            cube[1][1][1] = savedValues[1][1];
-            cube[1][2][1] = savedValues[1][2];
-            //[1] 1,4,7 -> [0] 3,4,5
-            cube[0][1] = savedValues[2];
-
-            return cube;
-        }
-        byte[][][] applyML1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][1],cube[3][1][1],cube[3][2][1]},
-                    cube[5][1],
-                    {cube[1][0][1],cube[1][1][1],cube[1][2][1]},
-                    cube[0][1]};
-            //[3] 1,4,7 -> [0] 3,4,5
-            cube[0][1] = savedValues[0];
-            //[5] 3,4,5 -> [3] 1,4,7
-            cube[3][0][1] = savedValues[1][0];
-            cube[3][1][1] = savedValues[1][1];
-            cube[3][2][1] = savedValues[1][2];
-            //[1] 1,4,7 -> [5] 3,4,5
-            cube[5][1] = savedValues[2];
-            //[0] 3,4,5 -> [1] 1,4,7
-            cube[1][0][1] = savedValues[3][0];
-            cube[1][1][1] = savedValues[3][1];
-            cube[1][2][1] = savedValues[3][2];
-
             return cube;
         }
         byte[][][] applyBR1462(byte[][][] cube){
@@ -879,54 +849,6 @@ public class RubiksCube implements SearchDomain {
 
             //TODO verify this
             cube[3] = rotateRight(cube[3]);
-            return cube;
-        }
-        byte[][][] applyMR3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[5][0][1],cube[5][1][1],cube[5][2][1]},
-                    {cube[4][0][1],cube[4][1][1],cube[4][2][1]},
-                    {cube[0][0][1],cube[0][1][1],cube[0][2][1]},
-                    {cube[2][0][1],cube[2][1][1],cube[2][2][1]}};
-            //[2] 1,4,7 -> [5] 1,4,7
-            cube[5][0][1] = savedValues[3][0];
-            cube[5][1][1] = savedValues[3][1];
-            cube[5][2][1] = savedValues[3][2];
-            //[5] 1,4,7 -> [4] 1,4,7
-            cube[4][0][1] = savedValues[0][0];
-            cube[4][1][1] = savedValues[0][1];
-            cube[4][2][1] = savedValues[0][2];
-            //[4] 1,4,7 -> [0] 1,4,7
-            cube[0][0][1] = savedValues[1][0];
-            cube[0][1][1] = savedValues[1][1];
-            cube[0][2][1] = savedValues[1][2];
-            //[0] 1,4,7 -> [2] 1,4,7
-            cube[2][0][1] = savedValues[2][0];
-            cube[2][1][1] = savedValues[2][1];
-            cube[2][2][1] = savedValues[2][2];
-
-            return cube;
-        }
-        byte[][][] applyML3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[2][0][1],cube[2][1][1],cube[2][2][1]},
-                    {cube[5][0][1],cube[5][1][1],cube[5][2][1]},
-                    {cube[4][0][1],cube[4][1][1],cube[4][2][1]},
-                    {cube[0][0][1],cube[0][1][1],cube[0][2][1]}};
-            //[5] 1,4,7 -> [2] 1,4,7
-            cube[2][0][1] = savedValues[1][0];
-            cube[2][1][1] = savedValues[1][1];
-            cube[2][2][1] = savedValues[1][2];
-            //[4] 1,4,7 -> [5] 1,4,7
-            cube[5][0][1] = savedValues[2][0];
-            cube[5][1][1] = savedValues[2][1];
-            cube[5][2][1] = savedValues[2][2];
-            //[0] 1,4,7 -> [4] 1,4,7
-            cube[4][0][1] = savedValues[3][0];
-            cube[4][1][1] = savedValues[3][1];
-            cube[4][2][1] = savedValues[3][2];
-            //[2] 1,4,7 -> [0] 1,4,7
-            cube[0][0][1] = savedValues[0][0];
-            cube[0][1][1] = savedValues[0][1];
-            cube[0][2][1] = savedValues[0][2];
-
             return cube;
         }
         byte[][][] applyBR3651(byte[][][] cube){
