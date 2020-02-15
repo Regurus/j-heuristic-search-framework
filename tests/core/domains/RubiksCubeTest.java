@@ -32,7 +32,7 @@ public class RubiksCubeTest {
     public void D1Test(){
         RubiksCube.RubiksOperator operator = test.getTestOperator();
         operator.applyTR0351(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HERISTIC);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
         testSearchAlgorithm(domain, new IDAstar(3), 0, 0, 0);
     }
     @Test
@@ -82,7 +82,7 @@ public class RubiksCubeTest {
         operator.applyBL2540(cubeForOperations);
         operator.applyTR0351(cubeForOperations);
         operator.applyTL2540(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HERISTIC);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
         testSearchAlgorithm(domain, new IDAstar(5), 0, 0, 0);
     }
     @Test
@@ -95,7 +95,7 @@ public class RubiksCubeTest {
         operator.applyTR0351(cubeForOperations);
         operator.applyTL2540(cubeForOperations);
         operator.applyTR0351(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HERISTIC);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     @Test
@@ -109,7 +109,7 @@ public class RubiksCubeTest {
         operator.applyTL2540(cubeForOperations);
         operator.applyTR0351(cubeForOperations);
         operator.applyTL2540(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HERISTIC);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     @Test
@@ -141,7 +141,7 @@ public class RubiksCubeTest {
         operator.applyTL2540(cubeForOperations);
         operator.applyTL1234(cubeForOperations);
         operator.applyTR0351(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.GAP);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
         testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
     }
     /*@Test
