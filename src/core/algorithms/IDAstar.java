@@ -132,7 +132,7 @@ public class IDAstar extends SearchAlgorithm {
      * @return Whether a solution was found
      */
     private boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
-        double f = cost + this.weight * parent.getH();
+        double f =  this.weight*(cost + parent.getH());
 
         if (f <= this.bound && domain.isGoal(parent)) {
             this.solution.setCost(f);
