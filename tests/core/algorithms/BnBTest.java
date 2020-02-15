@@ -3,6 +3,7 @@ package core.algorithms;
 import core.*;
 import core.domains.FifteenPuzzle;
 import core.domains.OverrideDomain;
+import core.domains.Pancakes;
 import core.generators.UniversalGenerator;
 import org.junit.Test;
 
@@ -10,7 +11,7 @@ public class BnBTest {
 
     @Test
     public void PuzzleTest(){
-        FifteenPuzzle domain = new FifteenPuzzle();
+        Pancakes domain = new Pancakes(25);
         UniversalGenerator universal = new UniversalGenerator();
         long avgDeltaExpanded = 0;
         long avgDeltaGenerated = 0;
