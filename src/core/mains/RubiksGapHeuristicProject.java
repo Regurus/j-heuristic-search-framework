@@ -11,10 +11,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Timer;
-
-import static org.junit.Assert.assertTrue;
 
 public class RubiksGapHeuristicProject {
     public static void main(String[] args) {
@@ -28,29 +24,32 @@ public class RubiksGapHeuristicProject {
         long start = 0;
         long finish = 0;
         long timeElapsed = 0;
-        final int RUNS = 10000;
+        final int RUNS = 10;
         for(int i=0; i<RUNS; i++){
             //initializing
             RubiksCube gapCube = new RubiksCube(RubiksCube.HeuristicType.GAP);
-            RubiksCube baselineCube = new RubiksCube(RubiksCube.HeuristicType.BASELINE_HERISTIC);
+            RubiksCube baselineCube = new RubiksCube(RubiksCube.HeuristicType.BASELINE_HEURISTIC);
             State newState = universalGenerator.generate(gapCube,depth);
             gapCube.setInitialState(newState);
             baselineCube.setInitialState(newState);
             //GAP run
+            RubiksCube.activeHeuristic = RubiksCube.HeuristicType.GAP;
             start = System.currentTimeMillis();
             SearchResult gapResult = solver.search(gapCube);
             finish = System.currentTimeMillis();
             timeElapsed = finish - start;
             Solution gapSolution = gapResult.getSolutions().get(0);
             gapResults.add(""+i+","+gapResult.getExpanded()+","+gapResult.getGenerated()+","+gapSolution.getLength()+","+timeElapsed);
-
+            System.out.println(""+i+","+gapResult.getExpanded()+","+gapResult.getGenerated()+","+gapSolution.getLength()+","+timeElapsed);
             //3DMH run
+            RubiksCube.activeHeuristic = RubiksCube.HeuristicType.BASELINE_HEURISTIC;
             start = System.currentTimeMillis();
-            SearchResult baseResult = solver.search(gapCube);
+            SearchResult baseResult = solver.search(baselineCube);
             finish = System.currentTimeMillis();
             timeElapsed = finish - start;
             Solution baseSolution = baseResult.getSolutions().get(0);
-            gapResults.add(""+i+","+baseResult.getExpanded()+","+baseResult.getGenerated()+","+baseSolution.getLength()+","+timeElapsed);
+            baseResults.add(""+i+","+baseResult.getExpanded()+","+baseResult.getGenerated()+","+baseSolution.getLength()+","+timeElapsed);
+            System.out.println(""+i+","+baseResult.getExpanded()+","+baseResult.getGenerated()+","+baseSolution.getLength()+","+timeElapsed);
         }
 
         //save to files

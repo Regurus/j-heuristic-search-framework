@@ -348,7 +348,7 @@ public class RubiksCube implements SearchDomain {
         BASE_RING_COMPLEX,
         PARALLEL_LINES,
         PARALLEL_LINES_COMPLEX,
-        BASELINE_HERISTIC, //manhattan distance equivalent
+        BASELINE_HEURISTIC, //manhattan distance equivalent
         NO_HEURISTIC,
         COLORS,
         GAP
@@ -521,7 +521,7 @@ public class RubiksCube implements SearchDomain {
                     return getParallelStripeHeuristic();
                 case PARALLEL_LINES_COMPLEX:
                     return getComplexParallelStripeHeuristic();
-                case BASELINE_HERISTIC:
+                case BASELINE_HEURISTIC:
                     return getBaselineHeuristic();
                 case COLORS:
                     return getColorsHeuristic();
