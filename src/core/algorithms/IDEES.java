@@ -24,10 +24,6 @@ public class IDEES extends SearchAlgorithm {
     private int nodesExpanded;
     private int totalChildren;
 
-    private List<Node> openBestF;
-    private List<Node> openBestFHat;
-    private List<Node> openBestDHat;
-
     private Node incumbent;
     private double incF;
     private double tFHat;
@@ -35,8 +31,8 @@ public class IDEES extends SearchAlgorithm {
     private double minF;
     private double minFNext;
 
-    private double[]  dataFHat;
-    private double[]  dataLHat;
+    private int[]  dataFHat;
+    private int[]  dataLHat;
 
     public IDEES(){
         this(1.0);
@@ -50,39 +46,42 @@ public class IDEES extends SearchAlgorithm {
         return "IDEES";
     }
 
-    private void _initDataStructures(){
-        openBestF = new ArrayList<>();
-        openBestFHat = new ArrayList<>();
-        openBestDHat = new ArrayList<>();
-        dataFHat = new double[MAX_BUCKETS];
-        dataLHat = new double[MAX_BUCKETS];
+    private Node _selectNode(List<Node> children){
+        Node toReturn = null;
 
-        System.gc();
-    }
+        children.sort((Node n1, Node n2)-> {
+            return (int)(n1.f - n2.f);
+        });
+        Node bestF = children.get(0);
 
-    private Node _selectNode(){
-        Node toReturn;
-        Node bestF = openBestF.get(openBestF.size()-1);
-        Node bestFHat = openBestFHat.get(openBestFHat.size()-1);
-        Node bestDHat = openBestDHat.get(openBestDHat.size()-1);
-        if(bestDHat.fHat <= weight*bestF.f){
+        children.sort((Node n1, Node n2)-> {
+            return (int)(n1.fHat - n2.fHat);
+        });
+        Node bestFHat = children.get(0);
+
+        children.sort((Node n1, Node n2)-> {
+            return (int)(n1.dHat - n2.dHat);
+        });
+        Node bestDHat = null;
+        for(Node node : children){
+            if(node.fHat <= weight*bestFHat.fHat){
+                if(bestDHat == null || node.dHat < bestDHat.dHat)
+                    bestDHat = node;
+            }
+        }
+
+        if(bestDHat != null && bestDHat.fHat <= weight*bestF.f)
             toReturn = bestDHat;
-        }
-        else if(bestFHat.fHat <= weight * bestF.f){
+        else if(bestFHat.fHat <= weight*bestF.f)
             toReturn = bestFHat;
-        }
-        else{
+        else
             toReturn = bestF;
-        }
-        //Here we remove the returned node from all three queues. (But what it doesnt exist in all 3 queues??)
-        openBestF.removeAll(Collections.singleton(toReturn));
-        openBestFHat.removeAll(Collections.singleton(toReturn));
-        openBestDHat.removeAll(Collections.singleton(toReturn));
 
+        children.remove(toReturn);
         return toReturn;
     }
 
-    private void _expandNode(Node node){
+    private List<Node> _expandNode(Node node){
         List<Node> tempList = new ArrayList<>();
         int numOps = domain.getNumOperators(node.state);
         //Initiate all the nodes of the father
@@ -90,42 +89,13 @@ public class IDEES extends SearchAlgorithm {
             Operator op = domain.getOperator(node.state,i);
             Operator pop = op.reverse(node.state);
             State newState = domain.applyOperator(node.state, op);
-
+//            System.out.println(newState.convertToString());
             tempList.add(new Node(newState, node, node.state, op, pop));
         }
-
-        //Sort them by their F and add them to the relevant DataStructure
-        tempList.sort((Node n1, Node n2) ->{
-            if(n1.f < n2.f)
-                return 1;
-            else
-                return -1;
-        });
-        openBestF.addAll(tempList);
-
-        //Sort them by their fHat and add them to the relevant DataStructure
-        tempList.sort((Node n1, Node n2) ->{
-            if(n1.fHat < n2.fHat)
-                return 1;
-            else
-                return -1;
-        });
-        openBestFHat.addAll(tempList);
-
-        //Sort them by their dHat and add them to the relevant DataStructure
-        tempList.sort((Node n1, Node n2) ->{
-            if(n1.dHat < n2.dHat)
-                return 1;
-            else
-                return -1;
-        });
-        openBestDHat.addAll(tempList);
+        return tempList;
     }
 
     public SearchResult search(SearchDomain domain){
-        // Init all the queues relevant to search (destroy previous results)
-        this._initDataStructures();
-
         this.domain = domain;
         k = 0; //Iteration number
 
@@ -142,6 +112,11 @@ public class IDEES extends SearchAlgorithm {
         this.solution.setCost(incumbent.f);
         this.result.stopTimer();
 
+        while(incumbent.parent!=null){
+            this.solution.addOperator(incumbent.op);
+            this.solution.addState(incumbent.state);
+            incumbent = incumbent.parent;
+        }
         SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
         List<Operator> path = this.solution.getOperators();
         List<State> statesPath = this.solution.getStates();
@@ -169,6 +144,9 @@ public class IDEES extends SearchAlgorithm {
 
     private Node IDEESSearch(Node initNode){
         try{
+            dataFHat = new int[50];
+            dataLHat = new int[50];
+
             incumbent = null; //Lines 1-3
             incF = Double.MAX_VALUE;
             tFHat = initNode.h;
@@ -176,6 +154,7 @@ public class IDEES extends SearchAlgorithm {
             minF = Double.MAX_VALUE;
 
             do{
+                // Init all the queues relevant to search (destroy previous results)
                 nodesExpanded = 0;
                 totalChildren = 0;
                 k++;
@@ -218,21 +197,19 @@ public class IDEES extends SearchAlgorithm {
             pruneNode(n);
         }
         else{ //Lines 20-24
-            _expandNode(n);
-            int children = domain.getNumOperators(n.state);
+            List<Node> children = _expandNode(n);
+            int numChild = children.size();
             nodesExpanded++;
-            totalChildren += children;
+            totalChildren += numChild;
 
             ++result.expanded; //Tracks expanded nodes
 
-            for(int i=0;i<children;i++){
+            for(int i=0;i<numChild;i++){
                 ++result.generated; //Tracks generated nodes
 
-                Node child = _selectNode();
+                Node child = _selectNode(children);
 
                 if(DFS(child)) {
-                    this.solution.addOperator(child.op);
-                    this.solution.addState(n.state);
                     return true;
                 }
             }
@@ -253,7 +230,7 @@ public class IDEES extends SearchAlgorithm {
         }
     }
 
-    private double updateData(double[] bucketsArr, double defaultVal) {
+    private double updateData(int[] bucketsArr, double defaultVal) {
         int count = 0;
         int bound = (int) Math.pow(b, k);
         double res = 0;
@@ -343,7 +320,7 @@ public class IDEES extends SearchAlgorithm {
          * @return The calculated sseHMean
          */
         private double __calculateSSEMean(double totalSSE) {
-            return (this.g == 0) ? totalSSE : totalSSE / this.depth;
+            return (this.g == 0) ? totalSSE : totalSSE / (this.depth+1); //I corrected it cause EES initializes depth as 1.
         }
 
         /**
