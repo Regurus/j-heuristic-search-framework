@@ -1,9 +1,6 @@
 package core.algorithms;
 
-import core.Operator;
-import core.SearchDomain;
-import core.SearchResult;
-import core.State;
+import core.*;
 
 import java.util.*;
 
@@ -12,7 +9,7 @@ import java.util.*;
  *
  * @Implementor Lior Yakobson
  */
-public class IDEES {
+public class IDEES extends SearchAlgorithm {
     private final int MAX_BUCKETS = 50;
 
     // The domain for the search
@@ -275,6 +272,16 @@ public class IDEES {
             res = 1.5;
         }
         return defaultVal*res;
+    }
+
+    @Override
+    public Map<String, Class> getPossibleParameters() {
+        return null;
+    }
+
+    @Override
+    public void setAdditionalParameter(String parameterName, String value) {
+
     }
 
     private class Node{
