@@ -169,11 +169,6 @@ public class IDEES extends SearchAlgorithm {
 
     private Node IDEESSearch(Node initNode){
         try{
-            // Insert the initial node into all the lists
-            openBestF.add(initNode);
-            openBestDHat.add(initNode);
-            openBestFHat.add(initNode);
-
             incumbent = null; //Lines 1-3
             incF = Double.MAX_VALUE;
             tFHat = initNode.h;
@@ -199,7 +194,9 @@ public class IDEES extends SearchAlgorithm {
         catch (Exception e) {
             System.out.println("[INFO] IDEES OutOfMemory :-( "+e);
             System.out.println("[INFO] OutOfMemory IDEES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
-            e.printStackTrace();
+
+            System.out.println("Nodes Generated while crashing: "+result.getGenerated());
+            System.out.println("Nodes Expanded while crashing: "+result.getExpanded());
         }
 
         return incumbent;
