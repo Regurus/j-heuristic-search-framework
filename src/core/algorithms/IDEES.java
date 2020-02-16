@@ -395,7 +395,4 @@ public class IDEES extends SearchAlgorithm {
             assert this.dHat >= 0;
         }
     }
-
-
-
 }
