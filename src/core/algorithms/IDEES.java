@@ -54,6 +54,10 @@ public class IDEES extends SearchAlgorithm {
         openBestF = new ArrayList<>();
         openBestFHat = new ArrayList<>();
         openBestDHat = new ArrayList<>();
+        dataFHat = new double[MAX_BUCKETS];
+        dataLHat = new double[MAX_BUCKETS];
+
+        System.gc();
     }
 
     private Node _selectNode(){
@@ -79,7 +83,7 @@ public class IDEES extends SearchAlgorithm {
     }
 
     private void _expandNode(Node node){
-        ArrayList<Node> tempList = new ArrayList<>();
+        List<Node> tempList = new ArrayList<>();
         int numOps = domain.getNumOperators(node.state);
         //Initiate all the nodes of the father
         for(int i=0;i<numOps;i++){
@@ -134,8 +138,8 @@ public class IDEES extends SearchAlgorithm {
         State initState = domain.initialState();
         Node initNode = new Node(initState, null, null, null, null);
 
-        IDEESSearch(initNode);
-
+        Node incumbent = IDEESSearch(initNode);
+        this.solution.setCost(incumbent.f);
         this.result.stopTimer();
 
         SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
@@ -157,9 +161,6 @@ public class IDEES extends SearchAlgorithm {
     }
 
     private void _resetBuckets() {
-        dataFHat = new double[MAX_BUCKETS];
-        dataLHat = new double[MAX_BUCKETS];
-
         for(int i=0; i<50; i++){
             dataFHat[i] = 0;
             dataLHat[i] = 0;
@@ -179,7 +180,7 @@ public class IDEES extends SearchAlgorithm {
             tLHat = initNode.d;
             minF = Double.MAX_VALUE;
 
-            while(incF > weight*minF){ //Line 4
+            do{
                 nodesExpanded = 0;
                 totalChildren = 0;
                 k++;
@@ -193,11 +194,11 @@ public class IDEES extends SearchAlgorithm {
                 b = totalChildren/nodesExpanded;
                 tFHat = updateData(dataFHat, tFHat);
                 tLHat = updateData(dataLHat, tLHat);
-            }
+            } while(incF >= weight*minF); //Line 4
         }
         catch (Exception e) {
-//            System.out.println("[INFO] EES OutOfMemory :-( "+e);
-//            System.out.println("[INFO] OutOfMemory EES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
+            System.out.println("[INFO] IDEES OutOfMemory :-( "+e);
+            System.out.println("[INFO] OutOfMemory IDEES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
             e.printStackTrace();
         }
 
@@ -311,11 +312,11 @@ public class IDEES extends SearchAlgorithm {
             // Calculate the cost of the node:
             double cost = (op != null) ? op.getCost(state, parentState) : 0;
             this.g = cost;
-            this.depth = 1;
+            this.depth = 0;
             // Our g equals to the cost + g value of the parent
             if (parent != null) {
                 this.g += parent.g;
-                this.depth += parent.depth;
+                this.depth = parent.depth + 1;
             }
 
             this.h = state.getH();
@@ -418,18 +419,6 @@ public class IDEES extends SearchAlgorithm {
             // This must be true assuming the heuristic is consistent (fHat may only overestimate the cost to the goal)
             assert !domain.isCurrentHeuristicConsistent() || this.fHat >= this.f;
             assert this.dHat >= 0;
-        }
-
-        public int compareTo(Node other) {
-            // Nodes are compared by default by their f value (and if f values are equal - by g value)
-
-            // F value: lower f is better
-            int diff = (int) (this.f - other.f);
-            if (diff == 0) {
-                // G value: higher g is better
-                return (int) (other.g - this.g);
-            }
-            return diff;
         }
     }
 
