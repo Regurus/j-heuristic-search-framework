@@ -12,11 +12,12 @@ public class IDEESTest {
     public void PuzzleTest(){
         Pancakes domain = new Pancakes(25);
         UniversalGenerator universal = new UniversalGenerator();
-        long avgDeltaExpanded = 0;
-        long avgDeltaGenerated = 0;
-        long avgDeltaSolutionLen = 0;
+        double avgDeltaExpanded = 0;
+        double avgDeltaGenerated = 0;
+        double avgDeltaSolutionLen = 0;
         int runs = 100;
         for(int i=0;i<runs;i++){
+            System.out.println("****ITERATION " + i + "****");
             State newState = universal.generate(domain,50);
             domain.setInitialState(newState);
 
@@ -39,6 +40,7 @@ public class IDEESTest {
             avgDeltaGenerated += IDAstarRes.getGenerated()-ideesRes.getGenerated();
             avgDeltaSolutionLen += IDAstarRes.getSolutions().get(0).getLength()-ideesRes.getSolutions().get(0).getLength();
         }
+//
 
         System.out.println("AVG Delta Expanded: "+avgDeltaExpanded/runs);
         System.out.println("AVG Delta Generated: "+avgDeltaGenerated/runs);
