@@ -22,10 +22,10 @@ public class IDEES {
     private SearchResultImpl.SolutionImpl solution;
 
     private double weight;
-    private double k;
-    private double b;
-    private double nodesExpanded;
-    private double totalChildren;
+    private int k;
+    private int b;
+    private int nodesExpanded;
+    private int totalChildren;
 
     private List<Node> openBestF;
     private List<Node> openBestFHat;
@@ -121,36 +121,74 @@ public class IDEES {
         openBestDHat.addAll(tempList);
     }
 
-    public Node search(SearchDomain domain){
+    public SearchResult search(SearchDomain domain){
         // Init all the queues relevant to search (destroy previous results)
         this._initDataStructures();
 
         this.domain = domain;
         k = 0; //Iteration number
 
+        this.result = new SearchResultImpl();
+        this.solution = new SearchResultImpl.SolutionImpl();
+
+        this.result.startTimer();
+
+        // Create the initial state and node
+        State initState = domain.initialState();
+        Node initNode = new Node(initState, null, null, null, null);
+
+        IDEESSearch(initNode);
+
+        this.result.stopTimer();
+
+        SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
+        List<Operator> path = this.solution.getOperators();
+        List<State> statesPath = this.solution.getStates();
+
+        path.remove(0);
+        Collections.reverse(path);
+        solution.addOperators(path);
+
+        statesPath.remove(0);
+        Collections.reverse(statesPath);
+        solution.addStates(statesPath);
+
+        solution.setCost(this.solution.getCost());
+        result.addSolution(solution);
+
+        return this.result;
+    }
+
+    private void _resetBuckets() {
+        dataFHat = new double[MAX_BUCKETS];
+        dataLHat = new double[MAX_BUCKETS];
+
+        for(int i=0; i<50; i++){
+            dataFHat[i] = 0;
+            dataLHat[i] = 0;
+        }
+    }
+
+    private Node IDEESSearch(Node initNode){
         try{
-            // Create the initial state and node
-            State initState = domain.initialState();
-            Node initNode = new Node(initState, null, null, null, null);
             // Insert the initial node into all the lists
             openBestF.add(initNode);
             openBestDHat.add(initNode);
             openBestFHat.add(initNode);
 
-            incumbent = null;
+            incumbent = null; //Lines 1-3
             incF = Double.MAX_VALUE;
             tFHat = initNode.h;
             tLHat = initNode.d;
             minF = Double.MAX_VALUE;
 
-            nodesExpanded = 0;
-            totalChildren = 0;
-
-            while(incF > weight*minF){
+            while(incF > weight*minF){ //Line 4
+                nodesExpanded = 0;
+                totalChildren = 0;
                 k++;
                 _resetBuckets();
 
-                minFNext = Double.MAX_VALUE;
+                minFNext = Double.MAX_VALUE; //Lines 5-9
                 if(DFS(initNode))
                     break;
                 minF = minFNext;
@@ -167,16 +205,6 @@ public class IDEES {
         }
 
         return incumbent;
-    }
-
-    private void _resetBuckets() {
-        dataFHat = new double[MAX_BUCKETS];
-        dataLHat = new double[MAX_BUCKETS];
-
-        for(int i=0; i<50; i++){
-            dataFHat[i] = 0;
-            dataLHat[i] = 0;
-        }
     }
 
     private boolean DFS(Node n){
@@ -200,11 +228,18 @@ public class IDEES {
             nodesExpanded++;
             totalChildren += children;
 
+            ++result.expanded; //Tracks expanded nodes
+
             for(int i=0;i<children;i++){
+                ++result.generated; //Tracks generated nodes
+
                 Node child = _selectNode();
 
-                if(DFS(child))
+                if(DFS(child)) {
+                    this.solution.addOperator(child.op);
+                    this.solution.addState(n.state);
                     return true;
+                }
             }
         }
         return false;
