@@ -13,6 +13,8 @@ import java.util.*;
  * @Implementor Lior Yakobson
  */
 public class IDEES {
+    private final int MAX_BUCKETS = 50;
+
     // The domain for the search
     private SearchDomain domain;
 
@@ -36,9 +38,8 @@ public class IDEES {
     private double minF;
     private double minFNext;
 
-    //TODO: What histograms to do / how to calculate?
-    private HashMap<Double, Integer>  dataFHat;
-    private HashMap<Double, Integer>  dataLHat;
+    private double[]  dataFHat;
+    private double[]  dataLHat;
 
     public IDEES(){
         this(1.0);
@@ -147,8 +148,7 @@ public class IDEES {
 
             while(incF > weight*minF){
                 k++;
-                dataFHat = new HashMap<>();
-                dataLHat = new HashMap<>();
+                _resetBuckets();
 
                 minFNext = Double.MAX_VALUE;
                 if(DFS(initNode))
@@ -167,6 +167,16 @@ public class IDEES {
         }
 
         return incumbent;
+    }
+
+    private void _resetBuckets() {
+        dataFHat = new double[MAX_BUCKETS];
+        dataLHat = new double[MAX_BUCKETS];
+
+        for(int i=0; i<50; i++){
+            dataFHat[i] = 0;
+            dataLHat[i] = 0;
+        }
     }
 
     private boolean DFS(Node n){
@@ -192,8 +202,6 @@ public class IDEES {
 
             for(int i=0;i<children;i++){
                 Node child = _selectNode();
-                //TODO: Observe both Data fHat and data lHat -
-                // according to the algorithm - this is done while pruning... what is it there for then?
 
                 if(DFS(child))
                     return true;
@@ -203,31 +211,35 @@ public class IDEES {
     }
 
     private void pruneNode(Node n){
-        int prunedFHat = dataFHat.containsKey(n.fHat) ? dataFHat.get(n.fHat) : 0;
-        dataFHat.put(n.fHat, prunedFHat + 1);
+        for(int i=0;i<50;i++){
+            double btmLimit = 1 + (double)i/100;
+            double upLimit = 1 + (double)(i+1)/100;
 
-        double nLHat = n.depth + n.dHat;
-        int prunedLHat = dataLHat.containsKey(nLHat) ? dataLHat.get(nLHat) : 0;
-        dataFHat.put(n.fHat, prunedLHat + 1);
+            if((tFHat*btmLimit < n.fHat) && (n.fHat <= tFHat*upLimit))
+                dataFHat[i]++;
+            double nLHat = n.depth + n.dHat;
+            if((tLHat*btmLimit < nLHat) && (nLHat <= tLHat*upLimit))
+                dataLHat[i]++;
+        }
     }
 
-    private double updateData(HashMap<Double, Integer> map, double defaultVal) {
-        SortedSet<Double> keys = new TreeSet<>(map.keySet());
+    private double updateData(double[] bucketsArr, double defaultVal) {
         int count = 0;
         int bound = (int) Math.pow(b, k);
         double res = 0;
-        for (Double key : keys) {
-            count += map.get(key);
+
+        for (int i=0; i<50; i++) {
+            count += bucketsArr[i];
             if (count >= bound) {
-                res = key;
+                res = 1 + (double)i/100;
                 break;
             }
         }
 
         if (res == 0) {
-            res = defaultVal;
+            res = 1.5;
         }
-        return res;
+        return defaultVal*res;
     }
 
     private class Node{
