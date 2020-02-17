@@ -7,10 +7,12 @@ import core.algorithms.IDAstar;
 import core.domains.RubiksCube;
 import core.generators.UniversalGenerator;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class RubiksGapHeuristicProject {
     public static void main(String[] args) {
@@ -24,8 +26,9 @@ public class RubiksGapHeuristicProject {
         long start = 0;
         long finish = 0;
         long timeElapsed = 0;
-        final int RUNS = 10;
-        for(int i=0; i<RUNS; i++){
+        final int RUNS = 2500;
+        final int DUMP_PERIOD = 99;
+        for(int i=1; i<RUNS+1; i++){
             //initializing
             RubiksCube gapCube = new RubiksCube(RubiksCube.HeuristicType.GAP);
             RubiksCube baselineCube = new RubiksCube(RubiksCube.HeuristicType.BASELINE_HEURISTIC);
@@ -50,29 +53,51 @@ public class RubiksGapHeuristicProject {
             Solution baseSolution = baseResult.getSolutions().get(0);
             baseResults.add(""+i+","+baseResult.getExpanded()+","+baseResult.getGenerated()+","+baseSolution.getLength()+","+timeElapsed);
             System.out.println(""+i+","+baseResult.getExpanded()+","+baseResult.getGenerated()+","+baseSolution.getLength()+","+timeElapsed);
+            if(i%DUMP_PERIOD==0){
+                dumpToFile(gapResults,baseResults);
+                gapResults = new ArrayList<>();
+                baseResults = new ArrayList<>();
+            }
+        }
+        dumpToFile(gapResults,baseResults);
+    }
+    private static void dumpToFile(List<String> gaps,List<String> base){
+        System.out.println("Result dump in progress...");
+        //save to files
+        BufferedWriter gapWriter = null;
+        BufferedWriter baseWriter = null;
+        try {
+            FileWriter gapFile = new FileWriter("GAPResults.csv", true); //true tells to append data.
+            FileWriter baseFile = new FileWriter("3DMHResults.csv", true); //true tells to append data.
+            gapWriter = new BufferedWriter(gapFile);
+            baseWriter = new BufferedWriter(baseFile);
+            for(String gapLine:gaps){
+                gapWriter.write(gapLine+'\n');
+
+            }
+            for(String baseLine:base){
+                baseWriter.write(baseLine+'\n');
+            }
+        }
+        catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
         }
 
-        //save to files
-        File file = new File("GAPResults.csv");
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(file);
-            for(String line :gapResults){
-                writer.write(line+"\n");
+        finally {
+            if(gapWriter != null) {
+                try {
+                    gapWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        file = new File("BaseResults.csv");
-        try {
-            writer = new FileWriter(file);
-            for(String line :baseResults){
-                writer.write(line+"\n");
+            if(baseWriter != null) {
+                try {
+                    baseWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
     }

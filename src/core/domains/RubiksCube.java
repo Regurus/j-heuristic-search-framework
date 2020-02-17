@@ -703,7 +703,7 @@ public class RubiksCube implements SearchDomain {
             int pair05 = getHorizontalStripes(this.cube[0], this.cube[5]) + getVerticalStripes(this.cube[0], this.cube[5]);
             int pair13 = getHorizontalStripes(this.cube[1], this.cube[3]) + getVerticalStripes(this.cube[1], this.cube[3]);
             int pair24 = getHorizontalStripes(this.cube[2], this.cube[4]) + getVerticalStripes(this.cube[2], this.cube[4]);
-            return pair05 + pair13 + pair24;
+            return (double)(pair05 + pair13 + pair24)/6;
         }
 
         private double getComplexParallelStripeHeuristic() {

@@ -2,6 +2,7 @@ package core.domains;
 
 import core.SearchDomain;
 import core.algorithms.IDAstar;
+import core.algorithms.IDDPS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class RubiksCubeTest {
         RubiksCube.RubiksOperator operator = test.getTestOperator();
         operator.applyTR0351(cubeForOperations);
         SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
-        testSearchAlgorithm(domain, new IDAstar(3), 0, 0, 0);
+        testSearchAlgorithm(domain, new IDDPS(), 0, 0, 0);
     }
     @Test
     public void D2Test(){
@@ -70,8 +71,8 @@ public class RubiksCubeTest {
         operator.applyBL1234(cubeForOperations);
         operator.applyBL2540(cubeForOperations);
         operator.applyTR0351(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.NO_HEURISTIC);
-        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.GAP);
+        testSearchAlgorithm(domain, new IDDPS(), 0, 0, 0);
     }
     @Test
     public void D6Test(){
@@ -141,8 +142,8 @@ public class RubiksCubeTest {
         operator.applyTL2540(cubeForOperations);
         operator.applyTL1234(cubeForOperations);
         operator.applyTR0351(cubeForOperations);
-        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.BASELINE_HEURISTIC);
-        testSearchAlgorithm(domain, new IDAstar(), 0, 0, 0);
+        SearchDomain domain = new RubiksCube(cubeForOperations, RubiksCube.HeuristicType.GAP);
+        testSearchAlgorithm(domain, new IDDPS(), 0, 0, 0);
     }
     /*@Test
     public void operatorRotateTest(){

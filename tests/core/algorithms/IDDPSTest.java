@@ -29,7 +29,7 @@ public class IDDPSTest {
             SearchResult IDAstarRes = idAstar.search(this.domain);
             System.out.println("IDA*--------------------------------------------");
             System.out.println(IDAstarRes);
-            IDDPS idps = new IDDPS(2);
+            IDDPS idps = new IDDPS();
             SearchResult IDPSres = idps.search(this.domain);
             System.out.println("IDDPS*--------------------------------------------");
             System.out.println(IDPSres);
