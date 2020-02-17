@@ -184,7 +184,7 @@ public class DockyardRobotGenerator extends GeneralInstancesGenerator {
 
         if (args.length == 0) {
             args = new String[7];
-            args[0] = System.getProperty("user.dir") + "\\testResources\\core\\algorithms\\DockyardRobot";
+            args[0] = System.getProperty("user.dir") + "\\testResources\\core\\domains\\DockyardRobot";
             // Count of Problems
             args[1] = 100 + "";
             // Count of Locations
