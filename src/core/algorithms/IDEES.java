@@ -125,7 +125,7 @@ public class IDEES extends SearchAlgorithm {
         Collections.reverse(path);
         solution.addOperators(path);
 
-        statesPath.remove(0);
+//        statesPath.remove(0);
         Collections.reverse(statesPath);
         solution.addStates(statesPath);
 
