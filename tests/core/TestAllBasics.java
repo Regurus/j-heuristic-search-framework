@@ -53,7 +53,7 @@ public class TestAllBasics {
 	@Test
 	public void testIDDPS() throws FileNotFoundException {
 		SearchDomain domain = createFifteenPuzzle("12");
-		SearchAlgorithm algo = new IDDPS(1);
+		SearchAlgorithm algo = new IDDPS();
 		testSearchAlgorithm(domain, algo, 546343, 269708, 45);
 	}
 
