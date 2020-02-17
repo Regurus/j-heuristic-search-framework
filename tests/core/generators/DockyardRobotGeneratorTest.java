@@ -13,7 +13,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class DockyardRobotGeneratorTest {
-    private static final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\algorithms\\DockyardRobot";
+    private static final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\DockyardRobot";
     private static final int LOCATIONS = 0, CRANES = 1, BOXES = 2, PILES = 3, ROBOTS = 4;
 
     /**

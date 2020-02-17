@@ -1,9 +1,6 @@
 package core.algorithms;
 
-import core.Operator;
-import core.SearchDomain;
-import core.SearchResult;
-import core.State;
+import core.*;
 
 import java.util.*;
 
@@ -12,7 +9,9 @@ import java.util.*;
  *
  * @Implementor Lior Yakobson
  */
-public class IDEES {
+public class IDEES extends SearchAlgorithm {
+    private final int MAX_BUCKETS = 50;
+
     // The domain for the search
     private SearchDomain domain;
 
@@ -20,14 +19,10 @@ public class IDEES {
     private SearchResultImpl.SolutionImpl solution;
 
     private double weight;
-    private double k;
-    private double b;
-    private double nodesExpanded;
-    private double totalChildren;
-
-    private List<Node> openBestF;
-    private List<Node> openBestFHat;
-    private List<Node> openBestDHat;
+    private int k;
+    private int b;
+    private int nodesExpanded;
+    private int totalChildren;
 
     private Node incumbent;
     private double incF;
@@ -36,9 +31,8 @@ public class IDEES {
     private double minF;
     private double minFNext;
 
-    //TODO: What histograms to do / how to calculate?
-    private HashMap<Double, Integer>  dataFHat;
-    private HashMap<Double, Integer>  dataLHat;
+    private int[]  dataFHat;
+    private int[]  dataLHat;
 
     public IDEES(){
         this(1.0);
@@ -52,105 +46,121 @@ public class IDEES {
         return "IDEES";
     }
 
-    private void _initDataStructures(){
-        openBestF = new ArrayList<>();
-        openBestFHat = new ArrayList<>();
-        openBestDHat = new ArrayList<>();
-    }
+    private Node _selectNode(List<Node> children){
+        Node toReturn = null;
 
-    private Node _selectNode(){
-        Node toReturn;
-        Node bestF = openBestF.get(openBestF.size()-1);
-        Node bestFHat = openBestFHat.get(openBestFHat.size()-1);
-        Node bestDHat = openBestDHat.get(openBestDHat.size()-1);
-        if(bestDHat.fHat <= weight*bestF.f){
+        children.sort((Node n1, Node n2)-> {
+            return (int)(n1.f - n2.f);
+        });
+        Node bestF = children.get(0);
+
+        children.sort((Node n1, Node n2)-> {
+            return (int)(n1.fHat - n2.fHat);
+        });
+        Node bestFHat = children.get(0);
+
+        children.sort((Node n1, Node n2)-> {
+            return (int)(n1.dHat - n2.dHat);
+        });
+        Node bestDHat = null;
+        for(Node node : children){
+            if(node.fHat <= weight*bestFHat.fHat){
+                if(bestDHat == null || node.dHat < bestDHat.dHat)
+                    bestDHat = node;
+            }
+        }
+
+        if(bestDHat != null && bestDHat.fHat <= weight*bestF.f)
             toReturn = bestDHat;
-        }
-        else if(bestFHat.fHat <= weight * bestF.f){
+        else if(bestFHat.fHat <= weight*bestF.f)
             toReturn = bestFHat;
-        }
-        else{
+        else
             toReturn = bestF;
-        }
-        //Here we remove the returned node from all three queues. (But what it doesnt exist in all 3 queues??)
-        openBestF.removeAll(Collections.singleton(toReturn));
-        openBestFHat.removeAll(Collections.singleton(toReturn));
-        openBestDHat.removeAll(Collections.singleton(toReturn));
 
+        children.remove(toReturn);
         return toReturn;
     }
 
-    private void _expandNode(Node node){
-        ArrayList<Node> tempList = new ArrayList<>();
+    private List<Node> _expandNode(Node node){
+        List<Node> tempList = new ArrayList<>();
         int numOps = domain.getNumOperators(node.state);
         //Initiate all the nodes of the father
         for(int i=0;i<numOps;i++){
             Operator op = domain.getOperator(node.state,i);
             Operator pop = op.reverse(node.state);
             State newState = domain.applyOperator(node.state, op);
-
+//            System.out.println(newState.convertToString());
             tempList.add(new Node(newState, node, node.state, op, pop));
         }
-
-        //Sort them by their F and add them to the relevant DataStructure
-        tempList.sort((Node n1, Node n2) ->{
-            if(n1.f < n2.f)
-                return 1;
-            else
-                return -1;
-        });
-        openBestF.addAll(tempList);
-
-        //Sort them by their fHat and add them to the relevant DataStructure
-        tempList.sort((Node n1, Node n2) ->{
-            if(n1.fHat < n2.fHat)
-                return 1;
-            else
-                return -1;
-        });
-        openBestFHat.addAll(tempList);
-
-        //Sort them by their dHat and add them to the relevant DataStructure
-        tempList.sort((Node n1, Node n2) ->{
-            if(n1.dHat < n2.dHat)
-                return 1;
-            else
-                return -1;
-        });
-        openBestDHat.addAll(tempList);
+        return tempList;
     }
 
-    public Node search(SearchDomain domain){
-        // Init all the queues relevant to search (destroy previous results)
-        this._initDataStructures();
-
+    public SearchResult search(SearchDomain domain){
         this.domain = domain;
         k = 0; //Iteration number
 
-        try{
-            // Create the initial state and node
-            State initState = domain.initialState();
-            Node initNode = new Node(initState, null, null, null, null);
-            // Insert the initial node into all the lists
-            openBestF.add(initNode);
-            openBestDHat.add(initNode);
-            openBestFHat.add(initNode);
+        this.result = new SearchResultImpl();
+        this.solution = new SearchResultImpl.SolutionImpl();
 
-            incumbent = null;
+        this.result.startTimer();
+
+        // Create the initial state and node
+        State initState = domain.initialState();
+        Node initNode = new Node(initState, null, null, null, null);
+
+        Node incumbent = IDEESSearch(initNode);
+        this.solution.setCost(incumbent.f);
+        this.result.stopTimer();
+
+        while(incumbent.parent!=null){
+            this.solution.addOperator(incumbent.op);
+            this.solution.addState(incumbent.state);
+            incumbent = incumbent.parent;
+        }
+        SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
+        List<Operator> path = this.solution.getOperators();
+        List<State> statesPath = this.solution.getStates();
+
+        path.remove(0);
+        Collections.reverse(path);
+        solution.addOperators(path);
+
+//        statesPath.remove(0);
+        Collections.reverse(statesPath);
+        solution.addStates(statesPath);
+
+        solution.setCost(this.solution.getCost());
+        result.addSolution(solution);
+
+        return this.result;
+    }
+
+    private void _resetBuckets() {
+        for(int i=0; i<50; i++){
+            dataFHat[i] = 0;
+            dataLHat[i] = 0;
+        }
+    }
+
+    private Node IDEESSearch(Node initNode){
+        try{
+            dataFHat = new int[50];
+            dataLHat = new int[50];
+
+            incumbent = null; //Lines 1-3
             incF = Double.MAX_VALUE;
             tFHat = initNode.h;
             tLHat = initNode.d;
             minF = Double.MAX_VALUE;
 
-            nodesExpanded = 0;
-            totalChildren = 0;
-
-            while(incF > weight*minF){
+            do{
+                // Init all the queues relevant to search (destroy previous results)
+                nodesExpanded = 0;
+                totalChildren = 0;
                 k++;
-                dataFHat = new HashMap<>();
-                dataLHat = new HashMap<>();
+                _resetBuckets();
 
-                minFNext = Double.MAX_VALUE;
+                minFNext = Double.MAX_VALUE; //Lines 5-9
                 if(DFS(initNode))
                     break;
                 minF = minFNext;
@@ -158,12 +168,14 @@ public class IDEES {
                 b = totalChildren/nodesExpanded;
                 tFHat = updateData(dataFHat, tFHat);
                 tLHat = updateData(dataLHat, tLHat);
-            }
+            } while(incF >= weight*minF); //Line 4
         }
         catch (Exception e) {
-//            System.out.println("[INFO] EES OutOfMemory :-( "+e);
-//            System.out.println("[INFO] OutOfMemory EES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
-            e.printStackTrace();
+            System.out.println("[INFO] IDEES OutOfMemory :-( "+e);
+            System.out.println("[INFO] OutOfMemory IDEES on:"+this.domain.getClass().getSimpleName()+" generated:"+result.getGenerated());
+
+            System.out.println("Nodes Generated while crashing: "+result.getGenerated());
+            System.out.println("Nodes Expanded while crashing: "+result.getExpanded());
         }
 
         return incumbent;
@@ -185,49 +197,66 @@ public class IDEES {
             pruneNode(n);
         }
         else{ //Lines 20-24
-            _expandNode(n);
-            int children = domain.getNumOperators(n.state);
+            List<Node> children = _expandNode(n);
+            int numChild = children.size();
             nodesExpanded++;
-            totalChildren += children;
+            totalChildren += numChild;
 
-            for(int i=0;i<children;i++){
-                Node child = _selectNode();
-                //TODO: Observe both Data fHat and data lHat -
-                // according to the algorithm - this is done while pruning... what is it there for then?
+            ++result.expanded; //Tracks expanded nodes
 
-                if(DFS(child))
+            for(int i=0;i<numChild;i++){
+                ++result.generated; //Tracks generated nodes
+
+                Node child = _selectNode(children);
+
+                if(DFS(child)) {
                     return true;
+                }
             }
         }
         return false;
     }
 
     private void pruneNode(Node n){
-        int prunedFHat = dataFHat.containsKey(n.fHat) ? dataFHat.get(n.fHat) : 0;
-        dataFHat.put(n.fHat, prunedFHat + 1);
+        for(int i=0;i<50;i++){
+            double btmLimit = 1 + (double)i/100;
+            double upLimit = 1 + (double)(i+1)/100;
 
-        double nLHat = n.depth + n.dHat;
-        int prunedLHat = dataLHat.containsKey(nLHat) ? dataLHat.get(nLHat) : 0;
-        dataFHat.put(n.fHat, prunedLHat + 1);
+            if((tFHat*btmLimit < n.fHat) && (n.fHat <= tFHat*upLimit))
+                dataFHat[i]++;
+            double nLHat = n.depth + n.dHat;
+            if((tLHat*btmLimit < nLHat) && (nLHat <= tLHat*upLimit))
+                dataLHat[i]++;
+        }
     }
 
-    private double updateData(HashMap<Double, Integer> map, double defaultVal) {
-        SortedSet<Double> keys = new TreeSet<>(map.keySet());
+    private double updateData(int[] bucketsArr, double defaultVal) {
         int count = 0;
         int bound = (int) Math.pow(b, k);
         double res = 0;
-        for (Double key : keys) {
-            count += map.get(key);
+
+        for (int i=0; i<50; i++) {
+            count += bucketsArr[i];
             if (count >= bound) {
-                res = key;
+                res = 1 + (double)i/100;
                 break;
             }
         }
 
         if (res == 0) {
-            res = defaultVal;
+            res = 1.5;
         }
-        return res;
+        return defaultVal*res;
+    }
+
+    @Override
+    public Map<String, Class> getPossibleParameters() {
+        return null;
+    }
+
+    @Override
+    public void setAdditionalParameter(String parameterName, String value) {
+
     }
 
     private class Node{
@@ -257,11 +286,11 @@ public class IDEES {
             // Calculate the cost of the node:
             double cost = (op != null) ? op.getCost(state, parentState) : 0;
             this.g = cost;
-            this.depth = 1;
+            this.depth = 0;
             // Our g equals to the cost + g value of the parent
             if (parent != null) {
                 this.g += parent.g;
-                this.depth += parent.depth;
+                this.depth = parent.depth + 1;
             }
 
             this.h = state.getH();
@@ -291,7 +320,7 @@ public class IDEES {
          * @return The calculated sseHMean
          */
         private double __calculateSSEMean(double totalSSE) {
-            return (this.g == 0) ? totalSSE : totalSSE / this.depth;
+            return (this.g == 0) ? totalSSE : totalSSE / (this.depth+1); //I corrected it cause EES initializes depth as 1.
         }
 
         /**
@@ -365,20 +394,5 @@ public class IDEES {
             assert !domain.isCurrentHeuristicConsistent() || this.fHat >= this.f;
             assert this.dHat >= 0;
         }
-
-        public int compareTo(Node other) {
-            // Nodes are compared by default by their f value (and if f values are equal - by g value)
-
-            // F value: lower f is better
-            int diff = (int) (this.f - other.f);
-            if (diff == 0) {
-                // G value: higher g is better
-                return (int) (other.g - this.g);
-            }
-            return diff;
-        }
     }
-
-
-
 }
