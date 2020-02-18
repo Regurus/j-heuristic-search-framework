@@ -1,19 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package core.algorithms;
 
 import java.util.*;
@@ -28,7 +12,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 /**
  * Recursive Best-First Search
  *
- * @author Matthew Hatem
  */
 public class NewBnB extends SearchAlgorithm {
 
@@ -41,22 +24,31 @@ public class NewBnB extends SearchAlgorithm {
 
     private SearchResultImpl result;
     private SearchDomain domain;
-    private Node goal;
+//    private Node goal;
     protected double weight; //weight for heuristic
     private double boundFactor; //above this bound, cut the branch
+    public double userLimitboundFactor;
     private Stack<Node> open; //open list, nodes to check
-    private HashSet<PackedElement> visited; // nodes already visited
+    private HashMap<PackedElement, Double> visited; // nodes already visited
 
 
     private List<Operator> path = new ArrayList<Operator>();
 
     public NewBnB() {
         this.weight = 1;
+        this.userLimitboundFactor = Double.MAX_VALUE;
     }
 
     public NewBnB(double weight) {
         this.weight = weight;
+        this.userLimitboundFactor = Double.MAX_VALUE;
     }
+
+    public NewBnB(double weight, double limit) {
+        this.weight = weight;
+        this.userLimitboundFactor = limit;
+    }
+
 
     @Override
     public String getName() {
@@ -77,66 +69,78 @@ public class NewBnB extends SearchAlgorithm {
     public SearchResult search(SearchDomain domain) {
         //initialize params
         open = new Stack<>();
-        visited = new HashSet<PackedElement>();
-        boundFactor = Double.MAX_VALUE;
+        Node goal = null;
+        visited = new HashMap<>();
         this.domain = domain;
         result = new SearchResultImpl();
-
         result.startTimer();
+        this.boundFactor = Double.MAX_VALUE;
+        if (this.boundFactor >= this.userLimitboundFactor) {
+            this.boundFactor = this.userLimitboundFactor;
+        }
 
         State initialState = domain.initialState();
         Node initialNode = new Node(null, initialState, 0);
         open.add(initialNode);
-        visited.add(domain.pack(initialState));
-        while (!open.isEmpty()) {
-            Node currentNode = this.open.pop();
-            State state = currentNode.getCurrent();
-            visited.remove(domain.pack(state));
+        visited.put(domain.pack(initialState), 0.0);
 
-            if (domain.isGoal(currentNode.getCurrent())) {
-                System.out.println("Found!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                System.out.println(boundFactor);
-                if(boundFactor> currentNode.getG()/weight){
+        while (!open.isEmpty()) {
+            Node currentNode = open.pop();
+            State state = currentNode.getCurrent();
+            if (domain.isGoal(state)) {
+//                System.out.println("Found!!!!: G:" + currentNode.getG() +" generated:" + result.generated );
+                if(boundFactor >= currentNode.getG()){
+                    if(goal!= null){
+                        System.gc();
+                    }
                     goal = currentNode;
-                    boundFactor = currentNode.getG()/weight;
+                    boundFactor = currentNode.getG();
                 }
                 continue;
             }
 
-            System.out.println(open.size()+"**openSize**");
+            visited.remove(domain.pack(state));
+            if(currentNode.getG()+state.getH()*weight> boundFactor){
+                continue;
+            }
+
             //expand node
             result.expanded++;
             int numOperators = domain.getNumOperators(state);
             List<Node> priority = new ArrayList<>();
-
-            for (int i=0; i< numOperators; ++i) {
+            for(int i=0; i< numOperators; ++i) {
                 Operator op = domain.getOperator(state, i);
                 State childState = domain.applyOperator(state, op);
+
                 if(currentNode.getPrevious()!= null && childState.equals(currentNode.getPrevious().getCurrent())){
 //                    System.out.println("WAS HERE!!!");
                     continue;
                 }
                 PackedElement childPack = domain.pack(childState);
-                if (!visited.add(childPack)) {
-                    System.gc();
-                    continue;
+                double child_g = currentNode.getG()+op.getCost(childState, state);
+                if (visited.containsKey(childPack)) {
+                    if (visited.get(childPack) < child_g) {
+                        continue;
+                    }
+                    else {
+                        visited.put(childPack, child_g);
+                    }
                 }
                 result.generated++;
-                Node childNode = new Node(currentNode, childState, currentNode.getG()+op.getCost(childState, state));
 
                 //add to open stack. else: cut the branch
-                if (childNode.getF() < boundFactor) {
-                    //open.add(childNode);
-                    priority.add(childNode);
+                if (childState.getH()*weight + child_g > boundFactor) {
+                    continue;
                 }
+
+                Node childNode = new Node(currentNode, childState, child_g);
+                priority.add(childNode);
+
             }
             priority.sort(new BnBNodeComparator());
             open.addAll(priority);
         }
-        System.out.println("cost"+goal.getG());
-        //finish running the algorithm. restore path
-        result.stopTimer();
-
+        //TODO: finish running the algorithm. restore path
         if (goal != null) {
             SolutionImpl solution = new SolutionImpl();
             for (Node p = goal; p != null; p = p.getPrevious()) {
@@ -144,10 +148,10 @@ public class NewBnB extends SearchAlgorithm {
             }
             Collections.reverse(path);
             solution.addOperators(path);
-            //solution.setCost(goal.g);
+            solution.setCost(goal.getG());
             result.addSolution(solution);
         }
-
+        result.stopTimer();
         return result;
     }
 }
