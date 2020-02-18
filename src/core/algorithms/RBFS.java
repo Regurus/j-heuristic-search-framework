@@ -96,8 +96,7 @@ public class RBFS extends SearchAlgorithm {
     if (goal != null) { 
       return Double.MAX_VALUE;
     }
-    
-    // FIXME compute solution via parents
+
     // goal found
     if (domain.isGoal(n.state)) {
       goal = n;
