@@ -7,14 +7,10 @@ import core.State;
 import core.algorithms.IDAstar;
 import core.collections.PackedElement;
 
-import java.lang.reflect.Array;
+import java.io.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
-
-/**
- *
- */
 
 public class RubiksCube implements SearchDomain {
 
@@ -23,43 +19,286 @@ public class RubiksCube implements SearchDomain {
     public static Logger log = Logger.getLogger(RubiksCube.class.getName());
     private final byte[][][] ORIGINAL_CUBE = {{{0,0,0},{0,0,0},{0,0,0}},{{1,1,1},{1,1,1},{1,1,1}},{{2,2,2},{2,2,2},{2,2,2}},
             {{3,3,3},{3,3,3},{3,3,3}},{{4,4,4},{4,4,4},{4,4,4}},{{5,5,5},{5,5,5},{5,5,5}}};
-    static final HashMap<String,HashMap> database = new HashMap<>();
-    static final HashMap<String,byte[][]> cubiesMap = new HashMap<>();
-    private byte[][] cubieTarget = null;
+    //<editor-fold desc=MD variables>
+    static final HashMap<Integer,HashMap> database = new HashMap<>();
+    private byte[] cubieTarget = null;
     private byte[][] cubiePosition = null;
-    byte[] order = null;
+    enum Operators{
+        TOP_RIGHT_1234,
+        TOP_LEFT_1234,
+        BOT_RIGHT_1234,
+        BOT_LEFT_1234,
+        TOP_RIGHT_0351,
+        TOP_LEFT_0351,
+        BOT_RIGHT_0351,
+        BOT_LEFT_0351,
+        TOP_RIGHT_2540,
+        TOP_LEFT_2540,
+        BOT_RIGHT_2540,
+        BOT_LEFT_2540,
+    }
     public static final byte[][][] CUBIES_LIST = {
-        {{0,0,0},{1,0,0},{4,0,2}},
-        {{0,0,1},{4,0,1}},
-        {{0,0,2},{3,0,2},{4,0,0}},
-        {{0,1,0},{1,0,1}},
-        {{3,0,1},{0,1,2}},
-        {{0,2,2},{2,0,2},{3,0,0}},
-        {{0,2,1},{2,0,1}},
-        {{2,0,0},{0,2,0},{1,0,2}},
-        {{1,2,2},{2,2,0},{5,0,0}},
-        {{2,2,1},{5,0,1}},
-        {{3,2,0},{2,2,2},{5,0,2}},
-        {{3,2,1},{5,1,2}},
-        {{1,2,1},{5,1,0}},
-        {{4,2,2},{1,2,0},{5,2,0}},
-        {{4,2,1},{5,2,1}},
-        {{3,2,2},{4,2,0},{5,2,2}},
-        {{4,1,2},{1,1,0}},
-        {{3,1,2},{4,1,0}},
-        {{2,1,2},{3,1,0}},
-        {{1,1,2},{2,1,0}}};
+        {{0,0,0},{1,0,0},{4,2,0}},
+        {{0,0,2},{1,2,0},{2,0,0}},
+        {{0,2,2},{2,2,0},{3,0,0}},
+        {{1,2,2},{2,0,2},{5,0,0}},
+        {{3,2,0},{0,2,0},{4,0,0}},
+        {{4,2,2},{1,0,2},{5,0,2}},
+        {{3,2,2},{4,0,2},{5,2,2}},
+        {{2,2,2},{3,0,2},{5,2,0}},
+        {{0,0,1},{1,1,0}},
+        {{0,1,0},{4,1,0}},
+        {{3,0,1},{2,2,1}},
+        {{0,2,1},{3,1,0}},
+        {{2,0,1},{1,2,1}},
+        {{1,0,1},{4,2,1}},
+        {{1,1,2},{5,0,1}},
+        {{5,1,2},{4,1,2}},
+        {{3,1,2},{5,2,1}},
+        {{0,1,2},{2,1,0}},
+        {{2,1,2},{5,1,0}},
+        {{3,2,1},{4,0,1}}};
+    private static final byte[][] COLOR_COMBOS_1 = {
+            {1,0,2},{0,2,1},{2,1,0},
+            {2,0,3},{0,3,2},{3,2,0},
+            {4,3,0},{3,0,4},{0,4,3},
+            {4,0,1},{0,1,4},{1,4,0},
+            {5,1,2},{1,2,5},{2,5,1},
+            {5,2,3},{2,3,5},{3,5,2},
+            {5,3,4},{3,4,5},{4,5,3},
+            {5,4,1},{4,1,5},{1,5,4}
+    };
+    private static final byte[][] COLOR_COMBOS_2 = {
+            {1,2,0},{2,0,1},{0,1,2},
+            {2,3,0},{3,0,2},{0,2,3},
+            {4,0,3},{0,3,4},{3,4,0},
+            {4,1,0},{1,0,4},{0,4,1},
+            {5,2,1},{2,1,5},{1,5,2},
+            {5,3,2},{3,2,5},{2,5,3},
+            {5,4,3},{4,3,5},{3,5,4},
+            {5,1,4},{1,4,5},{4,5,1}
+    };
+    //</editor-fold>
 
-    public RubiksCube(byte[][][] cube, HeuristicType active) {
-        /*if(cubiesMap.isEmpty()) TODO: uncomment this when MD works
-            initCubiesList();
-        if(database.isEmpty())
-            this.init3DMD();*/
-        this.startingState = cube;
-        activeHeuristic = active;
+    //<editor-fold desc=MD functions>
+    private byte[][] getCubieByIndex(int index){
+        return CUBIES_LIST[index];
+    }
+    /**
+     * encode coordinate to single digit representation, ignoring permutation
+     * @param coordinate
+     * @return single digit representation of a coordinate or -1 if incorrect coordinate given
+     */
+    public int getCubieIndex(byte[][] coordinate){
+        if(coordinate.length==3){
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[0][0])||Arrays.equals(coordinate[1], CUBIES_LIST[0][0])||Arrays.equals(coordinate[2], CUBIES_LIST[0][0])){
+                return 0;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[1][0])||Arrays.equals(coordinate[1], CUBIES_LIST[1][0])||Arrays.equals(coordinate[2], CUBIES_LIST[1][0])){
+                return 1;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[2][0])||Arrays.equals(coordinate[1], CUBIES_LIST[2][0])||Arrays.equals(coordinate[2], CUBIES_LIST[2][0])){
+                return 2;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[3][0])||Arrays.equals(coordinate[1], CUBIES_LIST[3][0])||Arrays.equals(coordinate[2], CUBIES_LIST[3][0])){
+                return 3;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[4][0])||Arrays.equals(coordinate[1], CUBIES_LIST[4][0])||Arrays.equals(coordinate[2], CUBIES_LIST[4][0])){
+                return 4;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[5][0])||Arrays.equals(coordinate[1], CUBIES_LIST[5][0])||Arrays.equals(coordinate[2], CUBIES_LIST[5][0])){
+                return 5;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[6][0])||Arrays.equals(coordinate[1], CUBIES_LIST[6][0])||Arrays.equals(coordinate[2], CUBIES_LIST[6][0])){
+                return 6;
+            }
+            else if(Arrays.equals(coordinate[0], CUBIES_LIST[7][0])||Arrays.equals(coordinate[1], CUBIES_LIST[7][0])||Arrays.equals(coordinate[2], CUBIES_LIST[7][0])){
+                return 7;
+            }
+        }
+        else if(coordinate.length==2){
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[8][0])||Arrays.equals(coordinate[1], CUBIES_LIST[8][0])){
+                return 8;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[9][0])||Arrays.equals(coordinate[1], CUBIES_LIST[9][0])){
+                return 9;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[10][0])||Arrays.equals(coordinate[1], CUBIES_LIST[10][0])){
+                return 10;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[11][0])||Arrays.equals(coordinate[1], CUBIES_LIST[11][0])){
+                return 11;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[12][0])||Arrays.equals(coordinate[1], CUBIES_LIST[12][0])){
+                return 12;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[13][0])||Arrays.equals(coordinate[1], CUBIES_LIST[13][0])){
+                return 13;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[14][0])||Arrays.equals(coordinate[1], CUBIES_LIST[14][0])){
+                return 14;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[15][0])||Arrays.equals(coordinate[1], CUBIES_LIST[15][0])){
+                return 15;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[16][0])||Arrays.equals(coordinate[1], CUBIES_LIST[16][0])){
+                return 16;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[17][0])||Arrays.equals(coordinate[1], CUBIES_LIST[17][0])){
+                return 17;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[18][0])||Arrays.equals(coordinate[1], CUBIES_LIST[18][0])){
+                return 18;
+            }
+            if(Arrays.equals(coordinate[0], CUBIES_LIST[19][0])||Arrays.equals(coordinate[1], CUBIES_LIST[19][0])){
+                return 19;
+            }
+        }
+        return -1;
     }
 
-    private RubiksCube(byte[][] cubieTarget, byte[][] cubiePosition, byte order){
+    public void build3DMD() {
+        if(database.size()==0)
+            this.initDatabaseStructure();
+        IDAstar algo = new IDAstar();
+        HashSet<Byte> colors = new HashSet<>(Arrays.asList(new Byte[]{0, 1, 2, 3, 4, 5}));
+        //3 color cubies
+        for (int cubieIndex = 0; cubieIndex < 8; cubieIndex++){
+            byte[][] currentCoordinates = this.getCubieByIndex(cubieIndex);
+            byte[][] colorCombos = COLOR_COMBOS_1;
+            if(cubieIndex==1||cubieIndex==2){
+                colorCombos = COLOR_COMBOS_2;
+            }
+            for(byte[] combo: colorCombos){
+                byte color1 = combo[0];
+                byte color2 = combo[1];
+                byte color3 = combo[2];
+                RubiksCube domain = new RubiksCube(new byte[]{color1,color2,color3},currentCoordinates);
+                SearchResult res = algo.search(domain);
+                System.out.println(color1 + " " + color2 + " " + color3 + " | cost: "+res.getSolutions().get(0).getLength());
+                database.get(cubieIndex).put(""+color1+color2+color3,res.getSolutions().get(0).getLength());
+            }
+            System.out.println("End cycle: "+cubieIndex);
+
+        }
+        //2 position cubies
+        for (int cubieIndex = 8; cubieIndex < 20; cubieIndex++) {
+            byte[][] currentCoordinates = this.getCubieByIndex(cubieIndex);
+            for (byte color1 : colors) {
+                HashSet<Byte> colors1 = new HashSet<>(colors);
+                colors1.remove(color1);//removing same color
+                for (byte color2 : colors1) {
+                    if((color1==5&&color2==0)||(color1==0&&color2==5))
+                        continue;
+                    if((color1==3&&color2==1)||(color1==1&&color2==3))
+                        continue;
+                    if((color1==4&&color2==2)||(color1==2&&color2==4))
+                        continue;
+                    System.out.println(color1 + " " + color2);
+                    RubiksCube domain = new RubiksCube(new byte[]{color1,color2},currentCoordinates);
+                    SearchResult res = algo.search(domain);
+                    System.out.println(color1 + " " + color2 + " | cost: "+res.getSolutions().get(0).getLength());
+                    database.get(cubieIndex).put(""+color1+color2,res.getSolutions().get(0).getLength());
+                }
+            }
+        }
+        try {
+            this.save3DMDToFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Done!");
+    }
+
+    //TODO remove this
+    private boolean validateCube(byte[][][] cube){
+        for(byte[][] positions: CUBIES_LIST){
+            String repr = "";
+            for (byte[] pos:positions){
+                repr+=cube[pos[0]][pos[1]][pos[2]];
+            }
+            if(repr.contains("0")&&repr.contains("5")){
+                System.out.print("FAIL @"+positions[0][0]+positions[0][1]+positions[0][2]+":"+positions[1][0]+positions[1][1]+positions[1][2]);
+                if(positions.length==3)
+                    System.out.println(":"+positions[2][0]+positions[2][1]+positions[2][2]);
+                else System.out.println(" ");
+                System.out.println(repr);
+                return false;
+            }
+            if(repr.contains("3")&&repr.contains("1")){
+                System.out.print("FAIL @"+positions[0][0]+positions[0][1]+positions[0][2]+":"+positions[1][0]+positions[1][1]+positions[1][2]);
+                if(positions.length==3)
+                    System.out.println(":"+positions[2][0]+positions[2][1]+positions[2][2]);
+                else System.out.println(" ");
+                System.out.println(repr);
+                return false;
+            }
+            if(repr.contains("4")&&repr.contains("2")){
+                System.out.print("FAIL @"+positions[0][0]+positions[0][1]+positions[0][2]+":"+positions[1][0]+positions[1][1]+positions[1][2]);
+                if(positions.length==3)
+                    System.out.println(":"+positions[2][0]+positions[2][1]+positions[2][2]);
+                else System.out.println(" ");
+
+                System.out.println(repr);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void save3DMDToFile() throws IOException {
+        if(database.size()==0)
+            return;
+        File file = new File("resources/3DMDData.data");
+        FileWriter writer = null;
+        writer = new FileWriter(file);
+        for(int position:database.keySet()){
+            for(Object arrangement:database.get(position).keySet()){
+                String actualArrangement = (String)arrangement;
+                writer.write(""+position+";"+arrangement+";"+database.get(position).get(actualArrangement)+"\n");
+            }
+        }
+        writer.close();
+    }
+
+    private void load3DMDFromFile() throws IOException {
+        File file = new File("resources/3DMDData.data");
+        FileReader reader = new FileReader(file);
+        BufferedReader bufferreader = new BufferedReader(reader);
+        this.initDatabaseStructure();
+        String line;
+        while((line = bufferreader.readLine()) != null){
+            String[] linecontents = line.split(";");
+            database.get(Integer.parseInt(linecontents[0])).put(linecontents[1],Integer.parseInt(linecontents[2]));
+        }
+    }
+
+    private void initDatabaseStructure(){
+        //corner cubies (3 colors)
+        database.put(0,new HashMap<String,Integer>());
+        database.put(1,new HashMap<String,Integer>());
+        database.put(2,new HashMap<String,Integer>());
+        database.put(3,new HashMap<String,Integer>());
+        database.put(4,new HashMap<String,Integer>());
+        database.put(5,new HashMap<String,Integer>());
+        database.put(6,new HashMap<String,Integer>());
+        database.put(7,new HashMap<String,Integer>());
+        //regular cubies (2 colors)
+        database.put(8,new HashMap<String,Integer>());
+        database.put(9,new HashMap<String,Integer>());
+        database.put(10,new HashMap<String,Integer>());
+        database.put(11,new HashMap<String,Integer>());
+        database.put(12,new HashMap<String,Integer>());
+        database.put(13,new HashMap<String,Integer>());
+        database.put(14,new HashMap<String,Integer>());
+        database.put(15,new HashMap<String,Integer>());
+        database.put(16,new HashMap<String,Integer>());
+        database.put(17,new HashMap<String,Integer>());
+        database.put(18,new HashMap<String,Integer>());
+        database.put(19,new HashMap<String,Integer>());
+    }
+
+    private RubiksCube(byte[] cubieTarget, byte[][] cubiePosition){
         if(cubiePosition.length!=cubieTarget.length){
             throw new RuntimeException("cubies should be same size");
         }
@@ -67,100 +306,32 @@ public class RubiksCube implements SearchDomain {
         this.cubieTarget = cubieTarget;
         this.cubiePosition = cubiePosition;
         this.startingState = deepCopyCube(ORIGINAL_CUBE);
-        if(cubiePosition.length==3){
-            if(order<0 || order>5)
-                throw new RuntimeException("order for 2 place cubies should be between 0 and 5");
-            //covering all permutations for corners
-            switch (order){
-                case 0:
-                    this.order = new byte[]{2, 1, 0};
-                    break;
-                case 1:
-                    this.order = new byte[]{2, 0, 1};
-                    break;
-                case 2:
-                    this.order = new byte[]{1, 2, 0};
-                    break;
-                case 3:
-                    this.order = new byte[]{1, 0, 2};
-                    break;
-                case 4:
-                    this.order = new byte[]{0, 1, 2};
-                    break;
-                case 5:
-                    this.order = new byte[]{0, 2, 1};
-                    break;
-            }
-        }
-        else{
-            if(order!=0 && order!=1)
-                throw new RuntimeException("order for 2 place cubies should be either 0 or 1");
-            switch (order){
-                case 0:
-                    this.order = new byte[]{1, 2};
-                    break;
-                case 1:
-                    this.order = new byte[]{2, 1};
-                    break;
-            }
-        }
     }
-
-    public RubiksCube(HeuristicType active) {
-        /*if(cubiesMap.isEmpty())TODO: uncomment this when MD works
-            initCubiesList();
-        if(database.isEmpty())
-            this.init3DMD();*/
-        byte[][][] cube = deepCopyCube(ORIGINAL_CUBE);
+    //</editor-fold>
+    public RubiksCube(byte[][][] cube, HeuristicType active) {
+        //this.build3DMD();
+        if(database.size()==0){
+            try {
+                this.load3DMDFromFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         this.startingState = cube;
         activeHeuristic = active;
     }
 
-    public void init3DMD(){
-        byte[][][] stateList = RubiksCube.CUBIES_LIST;
-        IDAstar algo = new IDAstar();
-        for(byte[][] innerState: stateList){
-            HashMap<String, List> destinationList = new HashMap<>();// destination -> permutation
-            for(byte[][] state: stateList){
-                ArrayList<Integer> permutations = new ArrayList<>();
-                if (state.length!=innerState.length||innerState.equals(state))
-                    continue;
-                int maxIndex=6;
-                if(innerState.length==2)
-                    maxIndex=2;
-                for(byte i=0;i<maxIndex;i++){
-                    RubiksCube domain = new RubiksCube(state,innerState,i);
-                    SearchResult res = algo.search(domain);
-                    permutations.add(res.getSolutions().get(0).getLength());
-                }
-                destinationList.put(getCubieName(state),permutations);
+    public RubiksCube(HeuristicType active) {
+        if(database.size()==0){
+            try {
+                this.load3DMDFromFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            database.put(getCubieName(innerState),destinationList);
         }
-    }
-
-    private void initCubiesList(){
-        cubiesMap.put("410",new byte[][]{{0,0,0},{1,0,0},{4,0,2}});
-        cubiesMap.put("430",new byte[][]{{0,0,2},{3,0,2},{4,0,0}});
-        cubiesMap.put("320",new byte[][]{{0,2,2},{2,0,2},{3,0,0}});
-        cubiesMap.put("210",new byte[][]{{2,0,0},{0,2,0},{1,0,2}});
-        cubiesMap.put("521",new byte[][]{{1,2,2},{2,2,0},{5,0,0}});
-        cubiesMap.put("532",new byte[][]{{3,2,0},{2,2,2},{5,0,2}});
-        cubiesMap.put("541",new byte[][]{{4,2,2},{1,2,0},{5,2,0}});
-        cubiesMap.put("543",new byte[][]{{3,2,2},{4,2,0},{5,2,2}});
-
-        cubiesMap.put("40",new byte[][]{{0,0,1},{4,0,1}});
-        cubiesMap.put("10",new byte[][]{{0,1,0},{1,0,1}});
-        cubiesMap.put("30",new byte[][]{{3,0,1},{0,1,2}});
-        cubiesMap.put("20",new byte[][]{{0,2,1},{2,0,1}});
-        cubiesMap.put("52",new byte[][]{{2,2,1},{5,0,1}});
-        cubiesMap.put("53",new byte[][]{{3,2,1},{5,1,2}});
-        cubiesMap.put("51",new byte[][]{{1,2,1},{5,1,0}});
-        cubiesMap.put("54",new byte[][]{{4,2,1},{5,2,1}});
-        cubiesMap.put("41",new byte[][]{{4,1,2},{1,1,0}});
-        cubiesMap.put("43",new byte[][]{{3,1,2},{4,1,0}});
-        cubiesMap.put("32",new byte[][]{{2,1,2},{3,1,0}});
-        cubiesMap.put("21",new byte[][]{{1,1,2},{2,1,0}});
+        byte[][][] cube = deepCopyCube(ORIGINAL_CUBE);
+        this.startingState = cube;
+        activeHeuristic = active;
     }
 
     public void setInitialState(State state){
@@ -169,28 +340,7 @@ public class RubiksCube implements SearchDomain {
     }
 
     RubiksOperator getTestOperator(){
-        return new RubiksOperator(Operators.BOT_LEFT_1462);
-    }
-
-    enum Operators{
-        TOP_RIGHT_2345,
-        TOP_LEFT_2345,
-        MID_RIGHT_2345,
-        MID_LEFT_2345,
-        BOT_RIGHT_2345,
-        BOT_LEFT_2345,
-        TOP_RIGHT_1462,
-        TOP_LEFT_1462,
-        MID_RIGHT_1462,
-        MID_LEFT_1462,
-        BOT_RIGHT_1462,
-        BOT_LEFT_1462,
-        TOP_RIGHT_3651,
-        TOP_LEFT_3651,
-        MID_RIGHT_3651,
-        MID_LEFT_3651,
-        BOT_RIGHT_3651,
-        BOT_LEFT_3651,
+        return new RubiksOperator(Operators.BOT_LEFT_0351);
     }
 
     public enum HeuristicType{
@@ -198,8 +348,10 @@ public class RubiksCube implements SearchDomain {
         BASE_RING_COMPLEX,
         PARALLEL_LINES,
         PARALLEL_LINES_COMPLEX,
-        BASELINE_HERISTIC, //manhattan distance equivalent
-        NO_HEURISTIC
+        BASELINE_HEURISTIC, //manhattan distance equivalent
+        NO_HEURISTIC,
+        COLORS,
+        GAP
     }
 
     static byte[][][] deepCopyCube(byte[][][] cube){
@@ -230,16 +382,14 @@ public class RubiksCube implements SearchDomain {
         }
         //for 3DMD building
         if(this.cubieTarget !=null){
+            /*if(!this.validateCube(((RubiksState) state).cube))
+                System.out.println(111);*/
             // in coordinates from @cubiePosition should be located colors from @cubieTarget in order @order
-            byte[] colors = new byte[this.cubiePosition.length];
-            for(int i=0;i<this.cubieTarget.length;i++){
-                colors[i] = cubieTarget[i][0];
-            }
-            boolean loc1 = ((RubiksState) state).cube[this.cubiePosition[0][0]][this.cubiePosition[0][1]][this.cubiePosition[0][2]]==colors[0];
-            boolean loc2 = ((RubiksState) state).cube[this.cubiePosition[1][0]][this.cubiePosition[1][1]][this.cubiePosition[1][2]]==colors[1];
+            boolean loc1 = ((RubiksState) state).cube[this.cubiePosition[0][0]][this.cubiePosition[0][1]][this.cubiePosition[0][2]]==cubieTarget[0];
+            boolean loc2 = ((RubiksState) state).cube[this.cubiePosition[1][0]][this.cubiePosition[1][1]][this.cubiePosition[1][2]]==cubieTarget[1];
             boolean loc3 = true;
             if(this.cubiePosition.length==3)
-                loc3 = ((RubiksState) state).cube[this.cubiePosition[2][0]][this.cubiePosition[2][1]][this.cubiePosition[2][2]]==colors[2];
+                loc3 = ((RubiksState) state).cube[this.cubiePosition[2][0]][this.cubiePosition[2][1]][this.cubiePosition[2][2]]==cubieTarget[2];
             return loc1 && loc2 && loc3;
         }
         for(int i=0;i<6;i++){
@@ -331,22 +481,6 @@ public class RubiksCube implements SearchDomain {
 
     }
 
-    private String getCubieName(byte[][] cubie){
-        ArrayList<Byte> res = new ArrayList<>();
-        for(byte[] coordinate: cubie){
-            res.add(coordinate[0]);
-        }
-        res.sort(new Comparator<Byte>() {
-            @Override
-            public int compare(Byte o1, Byte o2) {
-                return  o2-o1;
-            }
-        });
-        if(res.size()==2)
-            return ""+res.get(0)+res.get(1);
-        return ""+res.get(0)+res.get(1)+res.get(2);
-    }
-
     protected class RubiksState extends PackedElement implements State {
         private byte[][][] cube;
         private RubiksState previous;
@@ -387,8 +521,12 @@ public class RubiksCube implements SearchDomain {
                     return getParallelStripeHeuristic();
                 case PARALLEL_LINES_COMPLEX:
                     return getComplexParallelStripeHeuristic();
-                case BASELINE_HERISTIC:
+                case BASELINE_HEURISTIC:
                     return getBaselineHeuristic();
+                case COLORS:
+                    return getColorsHeuristic();
+                case GAP:
+                    return getGapHeuristic();
             }
             if(debugMode)
                 log.debug("H requested: "+res+" returned");
@@ -401,7 +539,51 @@ public class RubiksCube implements SearchDomain {
                 log.debug("D requested: "+currentCost+" returned");
             return currentCost;
         }
+        private int getColorsHeuristic(){
+            int result = 0;
+            int[] colorsCounter = {0, 0, 0, 0, 0, 0};
+            int movesCounter = 0;
+            for (int face = 0; face < this.cube.length; face++){
+                for (int i = 0; i < this.cube[face].length; i++) {
+                    for (int j = 0; j < this.cube[face][i].length; j++) {
+                        colorsCounter[this.cube[face][i][j]] = 1;
+                    }
+                }
+                for (int i = 0; i < colorsCounter.length; i++) {
+                    movesCounter += colorsCounter[i];
+                }
+                result = Math.max(result, movesCounter-1);
+            }
+            return result;
+        }
 
+        private int getGapHeuristic(){
+            int gaps = 0;
+            for (int face=0; face<cube.length; face++){
+                for (int i=0; i<cube[face].length; i++){
+                    for (int j=0; j<cube[face][i].length-1; j++){
+                        if (cube[face][i][j] != cube[face][i][j+1]){
+                            gaps += 1;
+                            if (cube[face][i][j]+cube[face][i][j+1] == 7){
+                                gaps+=1;
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < cube[face].length-1; i++) {
+                    for (int j = 0; j < cube[face][i].length; j++) {
+                        if(cube[face][i][j] != cube[face][i+1][j]){
+                            gaps += 1;
+                            if(cube[face][i][j]+cube[face][i+1][j] == 7){
+                                gaps += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            return gaps/12;
+        }
         @Override
         public String convertToString() {
             return "not implemented";
@@ -521,7 +703,7 @@ public class RubiksCube implements SearchDomain {
             int pair05 = getHorizontalStripes(this.cube[0], this.cube[5]) + getVerticalStripes(this.cube[0], this.cube[5]);
             int pair13 = getHorizontalStripes(this.cube[1], this.cube[3]) + getVerticalStripes(this.cube[1], this.cube[3]);
             int pair24 = getHorizontalStripes(this.cube[2], this.cube[4]) + getVerticalStripes(this.cube[2], this.cube[4]);
-            return pair05 + pair13 + pair24;
+            return (double)(pair05 + pair13 + pair24)/6;
         }
 
         private double getComplexParallelStripeHeuristic() {
@@ -530,10 +712,25 @@ public class RubiksCube implements SearchDomain {
         }
 
         private double getBaselineHeuristic(){
-            for(byte[][] cubie:CUBIES_LIST){
+            double result = 0;
+            for(int i=0;i<20;i++){
+                byte[][] currentPosition = RubiksCube.CUBIES_LIST[i];
+                String coordinateName = "";
+                for(byte[] singleCoordinate:currentPosition){
+                    coordinateName = coordinateName+this.cube[singleCoordinate[0]][singleCoordinate[1]][singleCoordinate[2]];
+
+                }
+                Integer res = 0;
+                try {
+                    res = (int)RubiksCube.database.get(i).get(coordinateName);
+                }
+                catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
+                result = result + res;
 
             }
-            return 0;
+            return result/8.0;
         }
 
         private int getHorizontalStripes(byte[][] sideA, byte[][] sideB) {
@@ -574,7 +771,7 @@ public class RubiksCube implements SearchDomain {
 
         @Override
         public double getCost(State state, State parent) {
-            return 6;
+            return 1;
         }
 
         @Override
@@ -596,394 +793,311 @@ public class RubiksCube implements SearchDomain {
             RubiksState prev = (RubiksState) state;
             byte[][][] resultCube = RubiksCube.deepCopyCube(prev.cube);
             switch (this.operator){
-                case TOP_LEFT_1462:
-                    resultCube = this.applyTL1462(resultCube);
+                case TOP_LEFT_0351:
+                    resultCube = this.applyTL0351(resultCube);
                     break;
-                case TOP_RIGHT_1462:
-                    resultCube = this.applyTR1462(resultCube);
+                case TOP_RIGHT_0351:
+                    resultCube = this.applyTR0351(resultCube);
                     break;
-                case MID_LEFT_1462:
-                    resultCube = this.applyML1462(resultCube);
+                case BOT_LEFT_0351:
+                    resultCube = this.applyBL0351(resultCube);
                     break;
-                case MID_RIGHT_1462:
-                    resultCube = this.applyMR1462(resultCube);
+                case BOT_RIGHT_0351:
+                    resultCube = this.applyBR0351(resultCube);
                     break;
-                case BOT_LEFT_1462:
-                    resultCube = this.applyBL1462(resultCube);
+                case TOP_LEFT_1234:
+                    resultCube = this.applyTL1234(resultCube);
                     break;
-                case BOT_RIGHT_1462:
-                    resultCube = this.applyBR1462(resultCube);
+                case TOP_RIGHT_1234:
+                    resultCube = this.applyTR1234(resultCube);
                     break;
-                case TOP_LEFT_2345:
-                    resultCube = this.applyTL2345(resultCube);
+                case BOT_LEFT_1234:
+                    resultCube = this.applyBL1234(resultCube);
                     break;
-                case TOP_RIGHT_2345:
-                    resultCube = this.applyTR2345(resultCube);
+                case BOT_RIGHT_1234:
+                    resultCube = this.applyBR1234(resultCube);
                     break;
-                case MID_LEFT_2345:
-                    resultCube = this.applyML2345(resultCube);
+                case TOP_LEFT_2540:
+                    resultCube = this.applyTL2540(resultCube);
                     break;
-                case MID_RIGHT_2345:
-                    resultCube = this.applyMR2345(resultCube);
+                case TOP_RIGHT_2540:
+                    resultCube = this.applyTR2540(resultCube);
                     break;
-                case BOT_LEFT_2345:
-                    resultCube = this.applyBL2345(resultCube);
+                case BOT_LEFT_2540:
+                    resultCube = this.applyBL2540(resultCube);
                     break;
-                case BOT_RIGHT_2345:
-                    resultCube = this.applyBR2345(resultCube);
-                    break;
-                case TOP_LEFT_3651:
-                    resultCube = this.applyTL3651(resultCube);
-                    break;
-                case TOP_RIGHT_3651:
-                    resultCube = this.applyTR3651(resultCube);
-                    break;
-                case MID_LEFT_3651:
-                    resultCube = this.applyML3651(resultCube);
-                    break;
-                case MID_RIGHT_3651:
-                    resultCube = this.applyMR3651(resultCube);
-                    break;
-                case BOT_LEFT_3651:
-                    resultCube = this.applyBL3651(resultCube);
-                    break;
-                case BOT_RIGHT_3651:
-                    resultCube = this.applyBR3651(resultCube);
+                case BOT_RIGHT_2540:
+                    resultCube = this.applyBR2540(resultCube);
                     break;
                 default:
                     break;}
             return new RubiksState(resultCube,prev,prev.currentCost+1);
         }
 
+        byte[][][] applyTR1234(byte[][][] cube){
+            byte[] savedValues = {cube[1][0][0],cube[1][1][0],cube[1][2][0]};
 
-        byte[][][] applyTR2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][0],cube[2][0],cube[3][0],cube[4][0]};
-            cube[2][0] = savedValues[0];
-            cube[3][0] = savedValues[1];
-            cube[4][0] = savedValues[2];
-            cube[1][0] = savedValues[3];
-            cube[0] = rotateLeft(cube[0]);
-            return cube;
-        }
-        byte[][][] applyTL2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][0],cube[2][0],cube[3][0],cube[4][0]};
-            cube[2][0] = savedValues[2];
-            cube[3][0] = savedValues[3];
-            cube[4][0] = savedValues[0];
-            cube[1][0] = savedValues[1];
-            cube[0] = rotateRight(cube[0]);
-            return cube;
-        }
-        byte[][][] applyMR2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][1],cube[2][1],cube[3][1],cube[4][1]};
-            cube[2][1] = savedValues[0];
-            cube[3][1] = savedValues[1];
-            cube[4][1] = savedValues[2];
-            cube[1][1] = savedValues[3];
-            return cube;
-        }
-        byte[][][] applyML2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][1],cube[2][1],cube[3][1],cube[4][1]};
-            cube[2][1] = savedValues[2];
-            cube[3][1] = savedValues[3];
-            cube[4][1] = savedValues[0];
-            cube[1][1] = savedValues[1];
-            return cube;
-        }
-        byte[][][] applyBR2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][2],cube[2][2],cube[3][2],cube[4][2]};
-            cube[2][2] = savedValues[0];
-            cube[3][2] = savedValues[1];
-            cube[4][2] = savedValues[2];
-            cube[1][2] = savedValues[3];
-            cube[5] = rotateLeft(cube[5]);
-            return cube;
-        }
-        byte[][][] applyBL2345(byte[][][] cube){
-            byte[][] savedValues = {cube[1][2],cube[2][2],cube[3][2],cube[4][2]};
-            cube[2][2] = savedValues[2];
-            cube[3][2] = savedValues[3];
-            cube[4][2] = savedValues[0];
-            cube[1][2] = savedValues[1];
-            cube[5] = rotateRight(cube[5]);
-            return cube;
-        }
-        byte[][][] applyTR1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][2],cube[3][1][2],cube[3][2][2]},
-                    cube[5][2],
-                    {cube[1][0][0],cube[1][1][0],cube[1][2][0]},
-                    cube[0][0]};
-            //[0] 0,1,2 -> [3] 2,5,8
-            cube[3][0][2] = savedValues[3][0];
-            cube[3][1][2] = savedValues[3][1];
-            cube[3][2][2] = savedValues[3][2];
-            //[3] 2,5,8 -> [5] 6,7,8
-            cube[5][2] = savedValues[0];
-            //[5] 6,7,8 -> [1] 0,3,6
-            cube[1][0][0] = savedValues[1][0];
-            cube[1][1][0] = savedValues[1][1];
-            cube[1][2][0] = savedValues[1][2];
-            //[1] 0,3,6 -> [0] 0,1,2
-            cube[0][0] = savedValues[2];
+            cube[1][0][0] = cube[4][0][0];
+            cube[1][1][0] = cube[4][1][0];
+            cube[1][2][0] = cube[4][2][0];
 
-            cube[4] = rotateLeft(cube[4]);
-            return cube;
-        }
-        byte[][][] applyTL1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][2],cube[3][1][2],cube[3][2][2]},
-                    cube[5][2],
-                    {cube[1][0][0],cube[1][1][0],cube[1][2][0]},
-                    cube[0][0]};
-            //[3] 2,5,8 -> [0] 0,1,2
-            cube[0][0] = savedValues[0];
-            //[5] 6,7,8 -> [3] 2,5,8
-            cube[3][0][2] = savedValues[1][0];
-            cube[3][1][2] = savedValues[1][1];
-            cube[3][2][2] = savedValues[1][2];
-            //[1] 0,3,6 -> [5] 6,7,8
-            cube[5][2] = savedValues[2];
-            //[0] 0,1,2 -> [1] 0,3,6
-            cube[1][0][0] = savedValues[3][0];
-            cube[1][1][0] = savedValues[3][1];
-            cube[1][2][0] = savedValues[3][2];
+            cube[4][0][0] = cube[3][0][0];
+            cube[4][1][0] = cube[3][1][0];
+            cube[4][2][0] = cube[3][2][0];
 
-            cube[4] = rotateRight(cube[4]);
+            cube[3][0][0] = cube[2][0][0];
+            cube[3][1][0] = cube[2][1][0];
+            cube[3][2][0] = cube[2][2][0];
+
+            cube[2][0][0] = savedValues[0];
+            cube[2][1][0] = savedValues[1];
+            cube[2][2][0] = savedValues[2];
+
+            cube[0] = rotateCounterClock(cube[0]);
             return cube;
         }
-        byte[][][] applyMR1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][1],cube[3][1][1],cube[3][2][1]},
-                    cube[5][1],
-                    {cube[1][0][1],cube[1][1][1],cube[1][2][1]},
-                    cube[0][1]};
-            //[0] 3,4,5 -> [3] 1,4,7
-            cube[3][0][1] = savedValues[3][0];
-            cube[3][1][1] = savedValues[3][1];
-            cube[3][2][1] = savedValues[3][2];
-            //[3] 1,4,7 -> [5] 3,4,5
-            cube[5][1] = savedValues[0];
-            //[5] 3,4,5 -> [1] 1,4,7
-            cube[1][0][1] = savedValues[1][0];
-            cube[1][1][1] = savedValues[1][1];
-            cube[1][2][1] = savedValues[1][2];
-            //[1] 1,4,7 -> [0] 3,4,5
-            cube[0][1] = savedValues[2];
+        byte[][][] applyTL1234(byte[][][] cube){
+            byte[] savedValues = {cube[1][0][0],cube[1][1][0],cube[1][2][0]};
+
+            cube[1][0][0] = cube[2][0][0];
+            cube[1][1][0] = cube[2][1][0];
+            cube[1][2][0] = cube[2][2][0];
+
+            cube[2][0][0] = cube[3][0][0];
+            cube[2][1][0] = cube[3][1][0];
+            cube[2][2][0] = cube[3][2][0];
+
+            cube[3][0][0] = cube[4][0][0];
+            cube[3][1][0] = cube[4][1][0];
+            cube[3][2][0] = cube[4][2][0];
+
+            cube[4][0][0] = savedValues[0];
+            cube[4][1][0] = savedValues[1];
+            cube[4][2][0] = savedValues[2];
+
+            cube[0] = rotateClock(cube[0]);
+            return cube;
+        }
+        byte[][][] applyBR1234(byte[][][] cube){
+            byte[] savedValues = {cube[1][0][2],cube[1][1][2],cube[1][2][2]};
+
+            cube[1][0][2] = cube[4][0][2];
+            cube[1][1][2] = cube[4][1][2];
+            cube[1][2][2] = cube[4][2][2];
+
+            cube[4][0][2] = cube[3][0][2];
+            cube[4][1][2] = cube[3][1][2];
+            cube[4][2][2] = cube[3][2][2];
+
+            cube[3][0][2] = cube[2][0][2];
+            cube[3][1][2] = cube[2][1][2];
+            cube[3][2][2] = cube[2][2][2];
+
+            cube[2][0][2] = savedValues[0];
+            cube[2][1][2] = savedValues[1];
+            cube[2][2][2] = savedValues[2];
+
+            cube[5] = rotateClock(cube[5]);
 
             return cube;
         }
-        byte[][][] applyML1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][1],cube[3][1][1],cube[3][2][1]},
-                    cube[5][1],
-                    {cube[1][0][1],cube[1][1][1],cube[1][2][1]},
-                    cube[0][1]};
-            //[3] 1,4,7 -> [0] 3,4,5
-            cube[0][1] = savedValues[0];
-            //[5] 3,4,5 -> [3] 1,4,7
-            cube[3][0][1] = savedValues[1][0];
-            cube[3][1][1] = savedValues[1][1];
-            cube[3][2][1] = savedValues[1][2];
-            //[1] 1,4,7 -> [5] 3,4,5
-            cube[5][1] = savedValues[2];
-            //[0] 3,4,5 -> [1] 1,4,7
-            cube[1][0][1] = savedValues[3][0];
-            cube[1][1][1] = savedValues[3][1];
-            cube[1][2][1] = savedValues[3][2];
+        byte[][][] applyBL1234(byte[][][] cube){
+            byte[] savedValues = {cube[1][0][2],cube[1][1][2],cube[1][2][2]};
+
+            cube[1][0][2] = cube[2][0][2];
+            cube[1][1][2] = cube[2][1][2];
+            cube[1][2][2] = cube[2][2][2];
+
+            cube[2][0][2] = cube[3][0][2];
+            cube[2][1][2] = cube[3][1][2];
+            cube[2][2][2] = cube[3][2][2];
+
+            cube[3][0][2] = cube[4][0][2];
+            cube[3][1][2] = cube[4][1][2];
+            cube[3][2][2] = cube[4][2][2];
+
+            cube[4][0][2] = savedValues[0];
+            cube[4][1][2] = savedValues[1];
+            cube[4][2][2] = savedValues[2];
+
+            cube[5] = rotateCounterClock(cube[5]);
 
             return cube;
         }
-        byte[][][] applyBR1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][0],cube[3][1][0],cube[3][2][0]},
-                    cube[5][0],
-                    {cube[1][0][2],cube[1][1][2],cube[1][2][2]},
-                    cube[0][2]};
+        byte[][][] applyTR0351(byte[][][] cube){
+            byte[] savedValues = {cube[0][0][2],cube[0][1][2],cube[0][2][2]};
 
-            //[0] 6,7,8 -> [3] 0,3,6
-            cube[3][0][0] = savedValues[3][0];
-            cube[3][1][0] = savedValues[3][1];
-            cube[3][2][0] = savedValues[3][2];
-            //[3] 0,3,6 -> [5] 0,1,2
-            cube[5][0] = savedValues[0];
-            //[5] 0,1,2 -> [1] 2,5,8
-            cube[1][0][2] = savedValues[1][0];
-            cube[1][1][2] = savedValues[1][1];
-            cube[1][2][2] = savedValues[1][2];
-            //[1] 2,5,8 -> [0] 6,7,8
-            cube[0][2] = savedValues[2];
+            cube[0][0][2] = cube[1][2][2];
+            cube[0][1][2] = cube[1][2][1];
+            cube[0][2][2] = cube[1][2][0];
 
-            cube[2] = rotateRight(cube[2]);
+            cube[1][2][0] = cube[5][0][0];
+            cube[1][2][1] = cube[5][1][0];
+            cube[1][2][2] = cube[5][2][0];
+
+            cube[5][0][0] = cube[3][0][2];
+            cube[5][1][0] = cube[3][0][1];
+            cube[5][2][0] = cube[3][0][0];
+
+            cube[3][0][0] = savedValues[0];
+            cube[3][0][1] = savedValues[1];
+            cube[3][0][2] = savedValues[2];
+
+            cube[2] = rotateClock(cube[2]);
             return cube;
         }
-        byte[][][] applyBL1462(byte[][][] cube){
-            byte[][] savedValues = {{cube[3][0][0],cube[3][1][0],cube[3][2][0]},
-                    cube[5][0],
-                    {cube[1][0][2],cube[1][1][2],cube[1][2][2]},
-                    cube[0][2]};
+        byte[][][] applyTL0351(byte[][][] cube){
+            byte[] savedValues = {cube[0][0][2],cube[0][1][2],cube[0][2][2]};
 
-            //[3] 0,3,6 -> [0] 6,7,8
-            cube[0][2] = savedValues[0];
-            //[5] 0,1,2 -> [3] 0,3,6
-            cube[3][0][0] = savedValues[1][0];
-            cube[3][1][0] = savedValues[1][1];
-            cube[3][2][0] = savedValues[1][2];
-            //[1] 2,5,8 -> [5] 0,1,2
-            cube[5][0] = savedValues[2];
-            //[0] 6,7,8 -> [1] 2,5,8
-            cube[1][0][2] = savedValues[3][0];
-            cube[1][1][2] = savedValues[3][1];
-            cube[1][2][2] = savedValues[3][2];
+            cube[0][0][2] = cube[3][0][0];
+            cube[0][1][2] = cube[3][0][1];
+            cube[0][2][2] = cube[3][0][2];
 
-            cube[2] = rotateLeft(cube[2]);
+            cube[3][0][0] = cube[5][2][0];
+            cube[3][0][1] = cube[5][1][0];
+            cube[3][0][2] = cube[5][0][0];
+
+            cube[5][0][0] = cube[1][2][0];
+            cube[5][1][0] = cube[1][2][1];
+            cube[5][2][0] = cube[1][2][2];
+
+            cube[1][2][0] = savedValues[2];
+            cube[1][2][1] = savedValues[1];
+            cube[1][2][2] = savedValues[0];
+
+            cube[2] = rotateCounterClock(cube[2]);
             return cube;
         }
-        byte[][][] applyTR3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[5][0][2],cube[5][1][2],cube[5][2][2]},
-                    {cube[4][0][0],cube[4][1][0],cube[4][2][0]},
-                    {cube[0][0][2],cube[0][1][2],cube[0][2][2]},
-                    {cube[2][0][2],cube[2][1][2],cube[2][2][2]}};
-            //[2] 2,5,8 -> [5] 2,5,8
-            cube[5][0][2] = savedValues[3][0];
-            cube[5][1][2] = savedValues[3][1];
-            cube[5][2][2] = savedValues[3][2];
-            //[5] 2,5,8 -> [4] 0,3,6
-            cube[4][0][0] = savedValues[0][0];
-            cube[4][1][0] = savedValues[0][1];
-            cube[4][2][0] = savedValues[0][2];
-            //[4] 0,3,6 -> [0] 2,5,8
-            cube[0][0][2] = savedValues[1][0];
-            cube[0][1][2] = savedValues[1][1];
-            cube[0][2][2] = savedValues[1][2];
-            //[0] 2,5,8 -> [2] 2,5,8
-            cube[2][0][2] = savedValues[2][0];
-            cube[2][1][2] = savedValues[2][1];
-            cube[2][2][2] = savedValues[2][2];
+        byte[][][] applyBR0351(byte[][][] cube){
+            byte[] savedValues = {cube[0][0][0],cube[0][1][0],cube[0][2][0]};
 
-            //TODO verify this
-            cube[3] = rotateLeft(cube[3]);
+            cube[0][0][0] = cube[1][0][2];
+            cube[0][1][0] = cube[1][0][1];
+            cube[0][2][0] = cube[1][0][0];
+
+            cube[1][0][0] = cube[5][0][2];
+            cube[1][0][1] = cube[5][1][2];
+            cube[1][0][2] = cube[5][2][2];
+
+            cube[5][0][2] = cube[3][2][2];
+            cube[5][1][2] = cube[3][2][1];
+            cube[5][2][2] = cube[3][2][0];
+
+            cube[3][2][0] = savedValues[0];
+            cube[3][2][1] = savedValues[1];
+            cube[3][2][2] = savedValues[2];
+
+            cube[4] = rotateCounterClock(cube[4]);
             return cube;
         }
-        byte[][][] applyTL3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[5][0][2],cube[5][1][2],cube[5][2][2]},
-                    {cube[4][0][0],cube[4][1][0],cube[4][2][0]},
-                    {cube[0][0][2],cube[0][1][2],cube[0][2][2]},
-                    {cube[2][0][2],cube[2][1][2],cube[2][2][2]}};
-            //[5] 2,5,8 -> [2] 2,5,8
-            cube[2][0][2] = savedValues[0][0];
-            cube[2][1][2] = savedValues[0][1];
-            cube[2][2][2] = savedValues[0][2];
-            //[4] 0,3,6 -> [5] 2,5,8
-            cube[5][0][2] = savedValues[1][0];
-            cube[5][1][2] = savedValues[1][1];
-            cube[5][2][2] = savedValues[1][2];
-            //[0] 2,5,8 -> [4] 0,3,6
-            cube[4][0][0] = savedValues[2][0];
-            cube[4][1][0] = savedValues[2][1];
-            cube[4][2][0] = savedValues[2][2];
-            //[2] 2,5,8 -> [0] 2,5,8
-            cube[0][0][2] = savedValues[3][0];
-            cube[0][1][2] = savedValues[3][1];
-            cube[0][2][2] = savedValues[3][2];
+        byte[][][] applyBL0351(byte[][][] cube){
+            byte[] savedValues = {cube[0][0][0],cube[0][1][0],cube[0][2][0]};
 
-            //TODO verify this
-            cube[3] = rotateRight(cube[3]);
+            cube[0][0][0] = cube[3][2][0];
+            cube[0][1][0] = cube[3][2][1];
+            cube[0][2][0] = cube[3][2][2];
+
+            cube[3][2][0] = cube[5][2][2];
+            cube[3][2][1] = cube[5][1][2];
+            cube[3][2][2] = cube[5][0][2];
+
+            cube[5][0][2] = cube[1][0][0];
+            cube[5][1][2] = cube[1][0][1];
+            cube[5][2][2] = cube[1][0][2];
+
+            cube[1][0][0] = savedValues[2];
+            cube[1][0][1] = savedValues[1];
+            cube[1][0][2] = savedValues[0];
+
+            cube[4] = rotateClock(cube[4]);
             return cube;
         }
-        byte[][][] applyMR3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[5][0][1],cube[5][1][1],cube[5][2][1]},
-                    {cube[4][0][1],cube[4][1][1],cube[4][2][1]},
-                    {cube[0][0][1],cube[0][1][1],cube[0][2][1]},
-                    {cube[2][0][1],cube[2][1][1],cube[2][2][1]}};
-            //[2] 1,4,7 -> [5] 1,4,7
-            cube[5][0][1] = savedValues[3][0];
-            cube[5][1][1] = savedValues[3][1];
-            cube[5][2][1] = savedValues[3][2];
-            //[5] 1,4,7 -> [4] 1,4,7
-            cube[4][0][1] = savedValues[0][0];
-            cube[4][1][1] = savedValues[0][1];
-            cube[4][2][1] = savedValues[0][2];
-            //[4] 1,4,7 -> [0] 1,4,7
-            cube[0][0][1] = savedValues[1][0];
-            cube[0][1][1] = savedValues[1][1];
-            cube[0][2][1] = savedValues[1][2];
-            //[0] 1,4,7 -> [2] 1,4,7
-            cube[2][0][1] = savedValues[2][0];
-            cube[2][1][1] = savedValues[2][1];
-            cube[2][2][1] = savedValues[2][2];
+        byte[][][] applyTR2540(byte[][][] cube){
+            byte[] savedValues = {cube[0][0][0],cube[0][0][1],cube[0][0][2]};
 
+            cube[0][0][0] = cube[2][0][0];
+            cube[0][0][1] = cube[2][0][1];
+            cube[0][0][2] = cube[2][0][2];
+
+            cube[2][0][0] = cube[5][0][0];
+            cube[2][0][1] = cube[5][0][1];
+            cube[2][0][2] = cube[5][0][2];
+
+            cube[5][0][0] = cube[4][2][2];
+            cube[5][0][1] = cube[4][2][1];
+            cube[5][0][2] = cube[4][2][0];
+
+            cube[4][2][0] = savedValues[2];
+            cube[4][2][1] = savedValues[1];
+            cube[4][2][2] = savedValues[0];
+
+            cube[1] = rotateCounterClock(cube[1]);
             return cube;
         }
-        byte[][][] applyML3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[2][0][1],cube[2][1][1],cube[2][2][1]},
-                    {cube[5][0][1],cube[5][1][1],cube[5][2][1]},
-                    {cube[4][0][1],cube[4][1][1],cube[4][2][1]},
-                    {cube[0][0][1],cube[0][1][1],cube[0][2][1]}};
-            //[5] 1,4,7 -> [2] 1,4,7
-            cube[2][0][1] = savedValues[1][0];
-            cube[2][1][1] = savedValues[1][1];
-            cube[2][2][1] = savedValues[1][2];
-            //[4] 1,4,7 -> [5] 1,4,7
-            cube[5][0][1] = savedValues[2][0];
-            cube[5][1][1] = savedValues[2][1];
-            cube[5][2][1] = savedValues[2][2];
-            //[0] 1,4,7 -> [4] 1,4,7
-            cube[4][0][1] = savedValues[3][0];
-            cube[4][1][1] = savedValues[3][1];
-            cube[4][2][1] = savedValues[3][2];
-            //[2] 1,4,7 -> [0] 1,4,7
-            cube[0][0][1] = savedValues[0][0];
-            cube[0][1][1] = savedValues[0][1];
-            cube[0][2][1] = savedValues[0][2];
+        byte[][][] applyTL2540(byte[][][] cube){
+            byte[] savedValues = {cube[0][0][0],cube[0][0][1],cube[0][0][2]};
 
+            cube[0][0][0] = cube[4][2][2];
+            cube[0][0][1] = cube[4][2][1];
+            cube[0][0][2] = cube[4][2][0];
+
+            cube[4][2][0] = cube[5][0][2];
+            cube[4][2][1] = cube[5][0][1];
+            cube[4][2][2] = cube[5][0][0];
+
+            cube[5][0][0] = cube[2][0][0];
+            cube[5][0][1] = cube[2][0][1];
+            cube[5][0][2] = cube[2][0][2];
+
+            cube[2][0][0] = savedValues[0];
+            cube[2][0][1] = savedValues[1];
+            cube[2][0][2] = savedValues[2];
+
+            cube[1] = rotateClock(cube[1]);
             return cube;
         }
-        byte[][][] applyBR3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[5][0][0],cube[5][1][0],cube[5][2][0]},
-                    {cube[4][0][2],cube[4][1][2],cube[4][2][2]},
-                    {cube[0][0][0],cube[0][1][0],cube[0][2][0]},
-                    {cube[2][0][0],cube[2][1][0],cube[2][2][0]}};
-            //[2] 0,3,6 -> [5] 0,3,6
-            cube[5][0][0] = savedValues[3][0];
-            cube[5][1][0] = savedValues[3][1];
-            cube[5][2][0] = savedValues[3][2];
-            //[5] 0,3,6 -> [4] 2,5,8
-            cube[4][0][2] = savedValues[0][0];
-            cube[4][1][2] = savedValues[0][1];
-            cube[4][2][2] = savedValues[0][2];
-            //[4] 2,5,8 -> [0] 0,3,6
-            cube[0][0][0] = savedValues[1][0];
-            cube[0][1][0] = savedValues[1][1];
-            cube[0][2][0] = savedValues[1][2];
-            //[0] 0,3,6 -> [2] 0,3,6
-            cube[2][0][0] = savedValues[2][0];
-            cube[2][1][0] = savedValues[2][1];
-            cube[2][2][0] = savedValues[2][2];
+        byte[][][] applyBR2540(byte[][][] cube){
+            byte[] savedValues = {cube[0][2][0],cube[0][2][1],cube[0][2][2]};
 
-            //TODO verify this
-            cube[1] = rotateRight(cube[1]);
+            cube[0][2][0] = cube[2][2][0];
+            cube[0][2][1] = cube[2][2][1];
+            cube[0][2][2] = cube[2][2][2];
+
+            cube[2][2][0] = cube[5][2][0];
+            cube[2][2][1] = cube[5][2][1];
+            cube[2][2][2] = cube[5][2][2];
+
+            cube[5][2][0] = cube[4][0][2];
+            cube[5][2][1] = cube[4][0][1];
+            cube[5][2][2] = cube[4][0][0];
+
+            cube[4][0][0] = savedValues[2];
+            cube[4][0][1] = savedValues[1];
+            cube[4][0][2] = savedValues[0];
+
+            cube[3] = rotateClock(cube[3]);
             return cube;
         }
-        byte[][][] applyBL3651(byte[][][] cube){
-            byte[][] savedValues = {{cube[5][0][0],cube[5][1][0],cube[5][2][0]},
-                    {cube[4][0][2],cube[4][1][2],cube[4][2][2]},
-                    {cube[0][0][0],cube[0][1][0],cube[0][2][0]},
-                    {cube[2][0][0],cube[2][1][0],cube[2][2][0]}};
-            //[5] 0,3,6 -> [2] 0,3,6
-            cube[2][0][0] = savedValues[0][0];
-            cube[2][1][0] = savedValues[0][1];
-            cube[2][2][0] = savedValues[0][2];
-            //[4] 2,5,8 -> [5] 0,3,6
-            cube[5][0][0] = savedValues[1][0];
-            cube[5][1][0] = savedValues[1][1];
-            cube[5][2][0] = savedValues[1][2];
-            //[0] 0,3,6 -> [4] 2,5,8
-            cube[4][0][2] = savedValues[2][0];
-            cube[4][1][2] = savedValues[2][1];
-            cube[4][2][2] = savedValues[2][2];
-            //[2] 0,3,6 -> [0] 0,3,6
-            cube[0][0][0] = savedValues[3][0];
-            cube[0][1][0] = savedValues[3][1];
-            cube[0][2][0] = savedValues[3][2];
+        byte[][][] applyBL2540(byte[][][] cube){
+            byte[] savedValues = {cube[0][2][0],cube[0][2][1],cube[0][2][2]};
 
-            //TODO verify this
-            cube[1] = rotateLeft(cube[1]);
+            cube[0][2][0] = cube[4][0][2];
+            cube[0][2][1] = cube[4][0][1];
+            cube[0][2][2] = cube[4][0][0];
+
+            cube[4][0][0] = cube[5][2][2];
+            cube[4][0][1] = cube[5][2][1];
+            cube[4][0][2] = cube[5][2][0];
+
+            cube[5][2][0] = cube[2][2][0];
+            cube[5][2][1] = cube[2][2][1];
+            cube[5][2][2] = cube[2][2][2];
+
+            cube[2][2][0] = savedValues[0];
+            cube[2][2][1] = savedValues[1];
+            cube[2][2][2] = savedValues[2];
+
+            cube[3] = rotateCounterClock(cube[3]);
             return cube;
         }
         private byte[][] getNewSide(){
@@ -993,20 +1107,7 @@ public class RubiksCube implements SearchDomain {
             result[2] = new byte[3];
             return result;
         }
-        public byte[][] rotateLeft(byte[][] side){
-            byte[][] result = this.getNewSide();
-            result[0][0] = side[0][2];
-            result[0][1] = side[1][2];
-            result[0][2] = side[2][2];
-            result[1][0] = side[0][1];
-            result[1][1] = side[1][1];
-            result[1][2] = side[2][1];
-            result[2][0] = side[0][0];
-            result[2][1] = side[1][0];
-            result[2][2] = side[2][0];
-            return result;
-        }
-        public byte[][] rotateRight(byte[][] side){
+        public byte[][] rotateCounterClock(byte[][] side){
             byte[][] result = this.getNewSide();
             result[0][0] = side[2][0];
             result[0][1] = side[1][0];
@@ -1017,6 +1118,19 @@ public class RubiksCube implements SearchDomain {
             result[2][0] = side[2][2];
             result[2][1] = side[1][2];
             result[2][2] = side[0][2];
+            return result;
+        }
+        public byte[][] rotateClock(byte[][] side){
+            byte[][] result = this.getNewSide();
+            result[0][0] = side[0][2];
+            result[0][1] = side[1][2];
+            result[0][2] = side[2][2];
+            result[1][0] = side[0][1];
+            result[1][1] = side[1][1];
+            result[1][2] = side[2][1];
+            result[2][0] = side[0][0];
+            result[2][1] = side[1][0];
+            result[2][2] = side[2][0];
             return result;
         }
     }

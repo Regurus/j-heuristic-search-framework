@@ -12,7 +12,6 @@ public class ImprovingPS extends ImprovingSearch {
 
     private static double currentC;
     private Node currentSolution;
-    private SearchDomain domain;
 
     public ImprovingPS(double suboptimalityBound) {
         this.suboptimalityBound = suboptimalityBound;
@@ -48,6 +47,7 @@ public class ImprovingPS extends ImprovingSearch {
         }
         return ans;
     }
+
     //returns false if no improvement achieved
     private boolean PTSIteration(Node current,Operator reverse,int maxDepth){
         if(current.getG()>=currentC)
@@ -59,7 +59,7 @@ public class ImprovingPS extends ImprovingSearch {
             this.currentSolution = current;
             return true;
         }
-        Pair<Node,Operator>[] ordered = this.orderByPotential(current,reverse);
+        Pair<Node,Operator>[] ordered = this.orderByComparator(current,reverse,new ByKeyComparator());
         this.expanded++;
         for(Pair<Node,Operator> next : ordered){
             //one positive answer is enough to make whole run finish
@@ -68,25 +68,6 @@ public class ImprovingPS extends ImprovingSearch {
                 break;
         }
         return answer;
-    }
-
-    private Pair<Node,Operator>[] orderByPotential(Node parent, Operator reverse){
-        int ops = this.domain.getNumOperators(parent.getCurrent());
-        PriorityQueue<Pair<Node,Operator>> structure = new PriorityQueue<>(new ByKeyComparator());
-        for(int i=0;i<ops;i++){
-            Operator op = this.domain.getOperator(parent.getCurrent(),i);
-            if(op.equals(reverse))
-                continue;
-            this.generated++;
-            State next = this.domain.applyOperator(parent.getCurrent(),op);
-            Node nextNode = new Node(parent,next,parent.getG()+op.getCost(next,parent.getCurrent()),parent.getDepth()+1);
-            structure.add(new Pair<>(nextNode,op));
-        }
-        Pair<Node,Operator>[] res = new Pair[structure.size()];
-        for(int i=0;i<res.length;i++){
-            res[i] = structure.poll();
-        }
-        return res;
     }
 
     private static double getPotential(Node node){

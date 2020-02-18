@@ -29,7 +29,7 @@ public class IDDPSTest {
             SearchResult IDAstarRes = idAstar.search(this.domain);
             System.out.println("IDA*--------------------------------------------");
             System.out.println(IDAstarRes);
-            IDDPS idps = new IDDPS(2);
+            IDDPS idps = new IDDPS();
             SearchResult IDPSres = idps.search(this.domain);
             System.out.println("IDDPS*--------------------------------------------");
             System.out.println(IDPSres);
@@ -46,7 +46,7 @@ public class IDDPSTest {
 
     @Test
     public void test() {
-        ImpovingBnB solver = new ImpovingBnB(2);
+        ImprovingBnB solver = new ImprovingBnB(2);
         UniversalGenerator generator = new UniversalGenerator();
         State newState = generator.generate(domain,10);
         domain.setInitialState(newState);

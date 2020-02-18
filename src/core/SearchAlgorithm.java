@@ -18,9 +18,8 @@ package core;
 
 
 /**
- * The search algorithm interface.
+ * The search algorithm abstract class.
  *
- * @author Matthew Hatem
  */
 public abstract class SearchAlgorithm implements SearchConfigurable{
 
@@ -34,6 +33,10 @@ public abstract class SearchAlgorithm implements SearchConfigurable{
      */
     public abstract SearchResult search(SearchDomain domain);
 
+    /**
+     * basic node class allows retrieval of g value and depth as well as works as linked list
+     * and allows to extract path to the node
+     */
     protected class Node{
         private Node previous;
         private State current;
