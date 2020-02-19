@@ -17,10 +17,36 @@ import java.util.PriorityQueue;
 
 
 public class IDDPS extends IDAstar {
-
-
     @Override
-    protected boolean expandNode(State parent, Operator pop, double cost, SearchDomain domain) {
+    protected boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
+        double f =  this.weight*(cost + parent.getH());
+        if(this.checkIfSolution(domain,f,pop,parent))
+            return true;
+        if(!this.recordLowestValue(f))
+            return false;
+        return this.expandNode(parent,pop,cost,domain);
+    }
+
+    private boolean recordLowestValue(double f){
+        if (f > this.bound) {
+            // Let's record the lowest value of f that is greater than the bound
+            if (this.minNextF < 0 || f < this.minNextF)
+                this.minNextF = f;
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkIfSolution(SearchDomain domain,double f, Operator pop,State parent){
+        if (f <= this.bound && domain.isGoal(parent)) {
+            this.solution.setCost(f);
+            this.solution.addOperator(pop);
+            this.solution.addState(parent);
+            return true;
+        }
+        return false;
+    }
+    private boolean expandNode(State parent, Operator pop, double cost, SearchDomain domain) {
         result.expanded++;
         ArrayList<ComparableState> states = this.getNextNodes(parent,pop,cost,domain);
         for(ComparableState next: states){
