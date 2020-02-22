@@ -123,7 +123,6 @@ public class IDAstar extends SearchAlgorithm {
 
     /**
      * A single iteration of the IDA*
-     * regurus: broken down into few functions
      *
      * @param domain The domain on which the search is performed
      * @param parent The parent state
@@ -133,35 +132,21 @@ public class IDAstar extends SearchAlgorithm {
      * @return Whether a solution was found
      */
     protected boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
-        double f =  this.weight*(cost + parent.getH());
-        if(this.checkIfSolution(domain,f,pop,parent))
-            return true;
-        if(!this.recordLowestValue(f))
-            return false;
-        return this.expandNode(parent,pop,cost,domain);
-    }
+        double f = cost + this.weight * parent.getH();
 
-    protected boolean recordLowestValue(double f){
+        if (f <= this.bound && domain.isGoal(parent)) {
+            this.solution.setCost(f);
+            this.solution.addOperator(pop);
+            return true;
+        }
+
         if (f > this.bound) {
             // Let's record the lowest value of f that is greater than the bound
             if (this.minNextF < 0 || f < this.minNextF)
                 this.minNextF = f;
             return false;
         }
-        return true;
-    }
 
-    protected boolean checkIfSolution(SearchDomain domain,double f, Operator pop,State parent){
-        if (f <= this.bound && domain.isGoal(parent)) {
-            this.solution.setCost(f);
-            this.solution.addOperator(pop);
-            this.solution.addState(parent);
-            return true;
-        }
-        return false;
-    }
-
-    protected boolean expandNode(State parent, Operator pop, double cost, SearchDomain domain){
         // Expand the current node
         ++result.expanded;
         int numOps = domain.getNumOperators(parent);
@@ -180,7 +165,9 @@ public class IDAstar extends SearchAlgorithm {
                 return true;
             }
         }
-        //no solution here
+
+        // No solution was found
         return false;
     }
+
 }
