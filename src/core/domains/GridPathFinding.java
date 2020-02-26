@@ -910,7 +910,9 @@ public class GridPathFinding implements SearchDomain {
 
     @Override
     public int maxGeneratedSize() {
-        throw new NotImplementedException();
+        //changed by Lior to support creating VacuumRobot instances
+        return 3000000;
+//        throw new NotImplementedException();
     }
 
     /**

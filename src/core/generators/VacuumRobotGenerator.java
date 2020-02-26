@@ -347,6 +347,22 @@ public class VacuumRobotGenerator extends GeneralInstancesGenerator {
         double obstaclesPercentage;
         int dirtyCount;
 
+        //FOR EXPERIMENTS
+        if(args.length == 0){
+            args = new String[6];
+            args[0] = System.getProperty("user.dir") + "\\ExperimentInstances\\VacuumRobot";
+            // Count of Problems
+            args[1] = 150 + "";
+            // Width
+            args[2] = 200 + "";
+            // Height
+            args[3] = 200 + "";
+            // Obstacle Precentage
+            args[4] = 35 + "";
+            // Count of dirt piles
+            args[5] = 10 + "";
+        }
+
         // TODO: Read all the input parameters from a single file
         if (args.length != 6) {
             System.out.println("Usage: <OutputPath> <Count> <Width> <Height> <ObstaclesPercentage> <DirtyCount>");
