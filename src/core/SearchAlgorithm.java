@@ -42,6 +42,7 @@ public abstract class SearchAlgorithm implements SearchConfigurable{
         private State current;
         private int depth = 0;
         private double g;
+        public Operator op;
 
         public Node(Node previous, State current, double g) {
             this.previous = previous;
@@ -54,6 +55,13 @@ public abstract class SearchAlgorithm implements SearchConfigurable{
             this.current = current;
             this.g = g;
             this.depth = depth;
+        }
+
+        public Node(Node previous, State current, double g, Operator op) {
+            this.previous = previous;
+            this.current = current;
+            this.g = g;
+            this.op = op;
         }
 
         public double getG() {

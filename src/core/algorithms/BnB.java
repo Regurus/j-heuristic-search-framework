@@ -13,7 +13,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  * Recursive Best-First Search
  *
  */
-public class NewBnB extends SearchAlgorithm {
+public class BnB extends SearchAlgorithm {
 
     class BnBNodeComparator implements Comparator<Node> {
         @Override
@@ -34,17 +34,17 @@ public class NewBnB extends SearchAlgorithm {
 
     private List<Operator> path = new ArrayList<Operator>();
 
-    public NewBnB() {
+    public BnB() {
         this.weight = 1;
         this.userLimitboundFactor = Double.MAX_VALUE;
     }
 
-    public NewBnB(double weight) {
+    public BnB(double weight) {
         this.weight = weight;
         this.userLimitboundFactor = Double.MAX_VALUE;
     }
 
-    public NewBnB(double weight, double limit) {
+    public BnB(double weight, double limit) {
         this.weight = weight;
         this.userLimitboundFactor = limit;
     }
@@ -80,7 +80,7 @@ public class NewBnB extends SearchAlgorithm {
         }
 
         State initialState = domain.initialState();
-        Node initialNode = new Node(null, initialState, 0);
+        Node initialNode = new Node(null, initialState, 0, null);
         open.add(initialNode);
         visited.put(domain.pack(initialState), 0.0);
 
@@ -90,9 +90,6 @@ public class NewBnB extends SearchAlgorithm {
             if (domain.isGoal(state)) {
 //                System.out.println("Found!!!!: G:" + currentNode.getG() +" generated:" + result.generated );
                 if(boundFactor >= currentNode.getG()){
-                    if(goal!= null){
-                        System.gc();
-                    }
                     goal = currentNode;
                     boundFactor = currentNode.getG();
                 }
@@ -118,6 +115,7 @@ public class NewBnB extends SearchAlgorithm {
                 }
                 PackedElement childPack = domain.pack(childState);
                 double child_g = currentNode.getG()+op.getCost(childState, state);
+
                 if (visited.containsKey(childPack)) {
                     if (visited.get(childPack) < child_g) {
                         continue;
@@ -133,7 +131,7 @@ public class NewBnB extends SearchAlgorithm {
                     continue;
                 }
 
-                Node childNode = new Node(currentNode, childState, child_g);
+                Node childNode = new Node(currentNode, childState, child_g, op);
                 priority.add(childNode);
 
             }
@@ -141,10 +139,21 @@ public class NewBnB extends SearchAlgorithm {
             open.addAll(priority);
         }
         //TODO: finish running the algorithm. restore path
+//        if (goal != null) {
+//            SolutionImpl solution = new SolutionImpl();
+//            for (Node p = goal; p != null; p = p.getPrevious()) {
+//                //path.add(p);
+//            }
+//            Collections.reverse(path);
+//            solution.addOperators(path);
+//            solution.setCost(goal.getG());
+//            result.addSolution(solution);
+//        }
+
         if (goal != null) {
             SolutionImpl solution = new SolutionImpl();
             for (Node p = goal; p != null; p = p.getPrevious()) {
-                //path.add(p);
+                path.add(p.op);
             }
             Collections.reverse(path);
             solution.addOperators(path);

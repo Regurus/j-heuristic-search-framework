@@ -4,7 +4,6 @@ import java.util.*;
 
 import core.SearchAlgorithm;
 import core.*;
-import core.algorithms.SearchResultImpl.SolutionImpl;
 import core.SearchResult;
 import core.collections.PackedElement;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -13,7 +12,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  * Recursive Best-First Search
  *
  */
-public class IBnB extends SearchAlgorithm {
+public class WBnB extends SearchAlgorithm {
 
     private SearchResultImpl result;
     private SearchDomain domain;
@@ -27,7 +26,7 @@ public class IBnB extends SearchAlgorithm {
 
     private List<Operator> path = new ArrayList<Operator>();
 
-    public IBnB(double weight) {
+    public WBnB(double weight) {
         assert weight > 1: "bound factor should increase in each iteration";
         this.weight = weight;
     }
@@ -35,7 +34,7 @@ public class IBnB extends SearchAlgorithm {
 
     @Override
     public String getName() {
-        return "IBnB";
+        return "WBnB";
     }
 
     @Override
@@ -55,7 +54,7 @@ public class IBnB extends SearchAlgorithm {
         State initialState = domain.initialState();
         double boundFactor = initialState.getH() * this.weight;
         SearchResultImpl output;
-        NewBnB bnbBaseSearch = new NewBnB(weight, boundFactor);
+        BnB bnbBaseSearch = new BnB(weight, boundFactor);
         int i=0;
         do{
             output = (SearchResultImpl) bnbBaseSearch.search(domain);

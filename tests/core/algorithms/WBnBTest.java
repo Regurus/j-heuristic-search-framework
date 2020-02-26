@@ -14,9 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Random;
 
-import static org.junit.Assert.*;
-
-public class IBnBTest {
+public class WBnBTest {
 
     private double weight;
     @Before
@@ -24,7 +22,7 @@ public class IBnBTest {
         this.weight = 2;
     }
     @Test
-    public void testIBNBPancakes() {
+    public void testWBNBPancakes() {
         //weight = 2
         final int SIZE = 300;
         // create shuffled array of size
@@ -46,7 +44,7 @@ public class IBnBTest {
         Pancakes pancakes = new Pancakes(array);
         System.out.println("Pancakes problem: num pancakes:" + SIZE+" weight = "+ weight);
         System.out.println("WBNB");
-        SearchAlgorithm bnb = new IBnB(weight);
+        SearchAlgorithm bnb = new WBnB(weight);
         testSearchAlgorithm(pancakes, bnb, 123075, 413, 413);
         System.out.println("IDA*");
         SearchAlgorithm ida = new IDAstar(weight);
@@ -63,11 +61,11 @@ public class IBnBTest {
     }
 
     @Test
-    public void testIBNBFifteenPuzzle() throws FileNotFoundException {
+    public void testWBNBFifteenPuzzle() throws FileNotFoundException {
         //weight = 2
         SearchDomain domain = createFifteenPuzzle("12");
         System.out.println("FifteenPuzzle: weight = "+ weight);
-        SearchAlgorithm bnb = new IBnB(weight);
+        SearchAlgorithm bnb = new WBnB(weight);
         System.out.println("WBNB");
         testSearchAlgorithm(domain, bnb, 922346, 447488, 60);
         System.out.println("IDA*");
@@ -107,5 +105,7 @@ public class IBnBTest {
         System.out.println("Expanded: "+(searchResult).getExpanded());
         System.out.println("Generated: "+(searchResult).getGenerated());
     }
+
+
 
 }
