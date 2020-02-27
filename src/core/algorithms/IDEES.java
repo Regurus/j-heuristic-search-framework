@@ -34,6 +34,8 @@ public class IDEES extends SearchAlgorithm {
     private int[]  dataFHat;
     private int[]  dataLHat;
 
+    private HashSet<String> currentPath;
+
     public IDEES(){
         this(1.0);
     }
@@ -89,6 +91,9 @@ public class IDEES extends SearchAlgorithm {
             Operator op = domain.getOperator(node.state,i);
             Operator pop = op.reverse(node.state);
             State newState = domain.applyOperator(node.state, op);
+            if(currentPath.contains(newState.convertToString()))
+                continue;
+            currentPath.add(newState.convertToString());
 //            System.out.println(newState.convertToString());
             tempList.add(new Node(newState, node, node.state, op, pop));
         }
@@ -121,7 +126,7 @@ public class IDEES extends SearchAlgorithm {
         List<Operator> path = this.solution.getOperators();
         List<State> statesPath = this.solution.getStates();
 
-        path.remove(0);
+//        path.remove(0);
         Collections.reverse(path);
         solution.addOperators(path);
 
@@ -144,14 +149,16 @@ public class IDEES extends SearchAlgorithm {
 
     private Node IDEESSearch(Node initNode){
         try{
-            dataFHat = new int[50];
-            dataLHat = new int[50];
+            dataFHat = new int[MAX_BUCKETS];
+            dataLHat = new int[MAX_BUCKETS];
 
             incumbent = null; //Lines 1-3
             incF = Double.MAX_VALUE;
             tFHat = initNode.h;
             tLHat = initNode.d;
             minF = Double.MAX_VALUE;
+
+            currentPath = new HashSet<>();
 
             do{
                 // Init all the queues relevant to search (destroy previous results)
@@ -190,11 +197,11 @@ public class IDEES extends SearchAlgorithm {
             return incF <= weight*minF;
         }
         else if((incF == Double.MAX_VALUE) && ((n.fHat > weight*tFHat) || (n.depth + n.dHat > tLHat))){ //Lines 15-17
-            pruneNode(n);
+            observe(n);
             minFNext = Math.min(minFNext, n.f);
         }
         else if(incF < Double.MAX_VALUE && incF <= weight*n.f){ //Lines 18-19
-            pruneNode(n);
+            observe(n);
         }
         else{ //Lines 20-24
             List<Node> children = _expandNode(n);
@@ -214,13 +221,14 @@ public class IDEES extends SearchAlgorithm {
                 }
             }
         }
+        currentPath.remove(n.state.convertToString());
         return false;
     }
 
-    private void pruneNode(Node n){
+    private void observe(Node n){
         for(int i=0;i<50;i++){
-            double btmLimit = 1 + (double)i/100;
-            double upLimit = 1 + (double)(i+1)/100;
+            double btmLimit = 1 + (double)(i+1)/100;
+            double upLimit = 1 + (double)(i+2)/100;
 
             if((tFHat*btmLimit < n.fHat) && (n.fHat <= tFHat*upLimit))
                 dataFHat[i]++;
@@ -238,7 +246,7 @@ public class IDEES extends SearchAlgorithm {
         for (int i=0; i<50; i++) {
             count += bucketsArr[i];
             if (count >= bound) {
-                res = 1 + (double)i/100;
+                res = 1 + (double)(i+1)/100;
                 break;
             }
         }
@@ -344,6 +352,7 @@ public class IDEES extends SearchAlgorithm {
          */
         private double _computeHHat() {
             double hHat = Double.MAX_VALUE;
+//            double hHat = 2*this.h;
             double sseDMean = this._calculateSSEDMean();
             if (sseDMean < 1) {
                 double sseHMean = this._calculateSSEHMean();
@@ -359,6 +368,7 @@ public class IDEES extends SearchAlgorithm {
          */
         private double _computeDHat() {
             double dHat = Double.MAX_VALUE;
+//            double dHat = 2*this.d;
             double sseDMean = this._calculateSSEDMean();
             if (sseDMean < 1) {
                 dHat = this.d / (1 - sseDMean);
