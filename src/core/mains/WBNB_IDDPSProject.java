@@ -2,17 +2,14 @@ package core.mains;
 
 import core.SearchAlgorithm;
 import core.SearchResult;
-import core.Solution;
 import core.State;
 import core.algorithms.IDAstar;
-import core.algorithms.IDDPS;
-import core.domains.DockyardRobot;
 import core.domains.FifteenPuzzle;
 import core.domains.Pancakes;
-import core.domains.RubiksCube;
 import core.generators.UniversalGenerator;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,10 +19,19 @@ import java.util.Stack;
 public class WBNB_IDDPSProject {
     private static final int DUMP_PERIOD=20;
     private static final int iterations = 50;
+    private static final int PAN_DEPTH = 50;
+    private static final int FIFTEEN_DEPTH = 50;
+    private static String VACUUM_FOLDER = "testResources/core/domains/VacuumRobotTestFiles";
+    private static String[] VACCUM_FILES;
+
     public static void main(String[] args) {
+        File f = new File(VACUUM_FOLDER);
+        VACCUM_FILES = f.list();
+
         for(double i=1.0; i<3.0; i+=0.1){
             singleWeight(i,iterations);
         }
+
     }
 
     public static void singleWeight(double weight,int iterations){
@@ -41,19 +47,19 @@ public class WBNB_IDDPSProject {
     private static void runAlgorithm(SearchAlgorithm algorithm,int iterations,double weight){
         Stack<List> lists = new Stack<>();
         Stack<String> fileNames = new Stack<>();
-
+        //fifteen puzzle initiation
         FifteenPuzzle fifteenPuzzle = new FifteenPuzzle();
         String fifteeenName = algorithm.getClass().getSimpleName()+"_"+weight+"_FifteenPuzzle.csv";
         ArrayList<String> fifteenResults = new ArrayList<>();
         lists.push(fifteenResults);
         fileNames.push(fifteeenName);
-
+        //pancakes initiation
         Pancakes pancakes = new Pancakes(50);
         String panName = algorithm.getClass().getSimpleName()+"_"+weight+"_Pancakes.csv";
         ArrayList<String> pancakesResults = new ArrayList<>();
         lists.push(pancakesResults);
         fileNames.push(panName);
-
+        //optimal checker
         IDAstar idAstar = new IDAstar();
         final int maxDepth = 50;
         UniversalGenerator universalGenerator = new UniversalGenerator();
@@ -66,7 +72,7 @@ public class WBNB_IDDPSProject {
             SearchResult optimal = idAstar.search(fifteenPuzzle);
             String line = ""+i+","+fifteenResult.getExpanded()+","+fifteenResult.getGenerated()+","
                     +fifteenResult.getCpuTimeMillis()+","+fifteenResult.getWallTimeMillis()+
-                    ","+fifteenResult.getSolutions().get(0).getLength()+","+optimal.getSolutions().get(0).getLength();
+                    ","+fifteenResult.getSolutions().get(0).getLength()+","+optimal.getSolutions().get(0).getLength()+","+initial.convertToStringShort();
             fifteenResults.add(line);
             System.out.println("FifteenPuzzle: "+line);
             //pancakes
@@ -76,11 +82,12 @@ public class WBNB_IDDPSProject {
             optimal = idAstar.search(pancakes);
             line = ""+i+","+pancakesResult.getExpanded()+","+pancakesResult.getGenerated()+","
                     +pancakesResult.getCpuTimeMillis()+","+pancakesResult.getWallTimeMillis()+
-                    ","+pancakesResult.getSolutions().get(0).getLength()+","+optimal.getSolutions().get(0).getLength();
+                    ","+pancakesResult.getSolutions().get(0).getLength()+","+optimal.getSolutions().get(0).getLength()+","+initial.convertToStringShort();
             pancakesResults.add(line);
             System.out.println("Pancakes: "+line);
             if(i%DUMP_PERIOD==0)
                 dumpToFile(lists,fileNames);
+
         }
         dumpToFile(lists,fileNames);
     }

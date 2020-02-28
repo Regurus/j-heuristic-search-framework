@@ -6,6 +6,7 @@ import core.State;
 import core.collections.Pair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
@@ -17,9 +18,17 @@ import java.util.PriorityQueue;
 
 
 public class IDDPS extends IDAstar {
+    public IDDPS(double weight) {
+        super(weight);
+    }
+
+    public IDDPS() {
+        super();
+    }
+
     @Override
     protected boolean dfs(SearchDomain domain, State parent, double cost, Operator pop) {
-        double f =  this.weight*(cost + parent.getH());
+        double f = cost + this.weight * parent.getH();
         if(this.checkIfSolution(domain,f,pop,parent))
             return true;
         if(!this.recordLowestValue(f))
@@ -46,6 +55,7 @@ public class IDDPS extends IDAstar {
         }
         return false;
     }
+
     private boolean expandNode(State parent, Operator pop, double cost, SearchDomain domain) {
         result.expanded++;
         ArrayList<ComparableState> states = this.getNextNodes(parent,pop,cost,domain);
@@ -62,7 +72,7 @@ public class IDDPS extends IDAstar {
         return false;
     }
 
-    private ArrayList<ComparableState> getNextNodes(State parent, Operator pop, double cost,SearchDomain domain){
+    protected ArrayList<ComparableState> getNextNodes(State parent, Operator pop, double cost,SearchDomain domain){
         ArrayList<ComparableState> result = new ArrayList<>();
         PriorityQueue<ComparableState> queue = new PriorityQueue<>();
         for(int i=0; i<domain.getNumOperators(parent);i++){
@@ -84,13 +94,13 @@ public class IDDPS extends IDAstar {
         return result;
     }
 
-    private class ComparableState implements Comparable{
+    protected class ComparableState implements Comparable{
         private State state;
         private Operator operator;
         private double cost;
         private double bound;
 
-        public ComparableState(State state, Operator operator, double cost,double f) {
+        ComparableState(State state, Operator operator, double cost,double f) {
             this.state = state;
             this.operator = operator;
             this.cost = cost;
@@ -122,7 +132,7 @@ public class IDDPS extends IDAstar {
             else return 0;
         }
         public double getWeight(){
-            return cost;
+            return cost/state.getH();
         }
     }
 }
