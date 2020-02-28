@@ -18,7 +18,6 @@ public class WBnB extends SearchAlgorithm {
     private SearchDomain domain;
     private Node goal;
     protected double weight; //weight for heuristic
-    private double boundFactor; //above this bound, cut the branch
     private double userLimitboundFactor;
     private Stack<Node> open; //open list, nodes to check
     private HashMap<PackedElement, Double> visited; // nodes already visited

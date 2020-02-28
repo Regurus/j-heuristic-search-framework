@@ -184,41 +184,55 @@ public class BnBTest {
 //
 
     @Test
-    public void PuzzleTest(){
-        Pancakes domain = new Pancakes(200);
-        UniversalGenerator universal = new UniversalGenerator();
-        long avgDeltaExpanded = 0;
+    public void debugTest() {
+        Pancakes domain = new Pancakes(100);
+        int depth = 100;
+        UniversalGenerator generator = new UniversalGenerator();
         long avgDeltaGenerated = 0;
+        long avgDeltaGeneratedPercent = 0;
+        long avgDeltaExpanded = 0;
+        long avgDeltaExpandedPercent = 0;
         long avgDeltaSolutionLen = 0;
+        long avgDeltaSolutionLenPercent = 0;
+
+        long curDeltaExpanded = 0;
+        long curDeltaGenerated = 0;
+        long curDeltaSolution = 0;
+
         int runs = 100;
         for(int i=0;i<runs;i++){
-            State newState = universal.generate(domain,50);
+            State newState = generator.generate(domain,depth);
             domain.setInitialState(newState);
-
-            System.out.println("wBnB-------------------------------------------");
-            SearchAlgorithm wbnb = new WBnB(2);
-            SearchResult bnbRes = wbnb.search(domain);
-            System.out.println(bnbRes);
-
-            System.out.println("WIDA*-------------------------------------------");
-            SearchAlgorithm ida = new IDAstar(2);
-            SearchResult IDAstarRes = ida.search(domain);
+            IDAstar idAstar = new IDAstar(4);
+            SearchResult IDAstarRes = idAstar.search(domain);
+            System.out.println("IDA*--------------------------------------------");
             System.out.println(IDAstarRes);
+            WBnB wbnb = new WBnB(4);
+            SearchResult WBnBSres = wbnb.search(domain);
+            System.out.println("WBnB--------------------------------------------");
+            System.out.println(WBnBSres);
 
-            /*System.out.println("IDPS-------------------------------------------");
-            SearchAlgorithm idps = new ImprovingPS(1.5);
-            SearchResult IDPSRes = idps.search(domain);
-            System.out.println(IDPSRes);*/
+            curDeltaExpanded = IDAstarRes.getExpanded()-WBnBSres.getExpanded();
+            avgDeltaExpanded += curDeltaExpanded;
+            avgDeltaExpandedPercent += (IDAstarRes.getExpanded()-WBnBSres.getExpanded())/IDAstarRes.getExpanded();
+            curDeltaGenerated = IDAstarRes.getGenerated()-WBnBSres.getGenerated();
+            avgDeltaGenerated += curDeltaGenerated;
+            avgDeltaGeneratedPercent += (IDAstarRes.getGenerated()-WBnBSres.getGenerated())/IDAstarRes.getGenerated();
+            curDeltaSolution = IDAstarRes.getSolutions().get(0).getLength()-WBnBSres.getSolutions().get(0).getLength();
+            avgDeltaSolutionLen += curDeltaSolution;
+            avgDeltaSolutionLenPercent += (IDAstarRes.getSolutions().get(0).getLength()-WBnBSres.getSolutions().get(0).getLength())/IDAstarRes.getSolutions().get(0).getLength();
 
-            avgDeltaExpanded += IDAstarRes.getExpanded()-bnbRes.getExpanded();
-            avgDeltaGenerated += IDAstarRes.getGenerated()-bnbRes.getGenerated();
-            avgDeltaSolutionLen += IDAstarRes.getSolutions().get(0).getLength()-bnbRes.getSolutions().get(0).getLength();
+            System.out.println("expanded " + curDeltaExpanded);
+            System.out.println("generated " + curDeltaGenerated);
+            System.out.println("solution " + curDeltaSolution);
         }
-
-        System.out.println("AVG Delta Expanded: "+avgDeltaExpanded/runs);
-        System.out.println("AVG Delta Generated: "+avgDeltaGenerated/runs);
-        System.out.println("AVG Delta Solution Length: "+avgDeltaSolutionLen/runs);
-
+        System.out.println("Delta Expanded: "+avgDeltaExpanded/runs);
+        System.out.println("Delta % Expanded: "+avgDeltaExpandedPercent/runs+"%");
+        System.out.println("Delta Generated: "+avgDeltaGenerated/runs);
+        System.out.println("Delta % Generated: "+avgDeltaGeneratedPercent/runs+"%");
+        System.out.println("Delta Solution Length: "+avgDeltaSolutionLen/runs);
+        System.out.println("Delta Solution % Length: "+avgDeltaSolutionLenPercent/runs+"%");
+        System.out.println("Positive value for WBnB, Negative for IDA*");
     }
     @Test
     public void G1Test(){
