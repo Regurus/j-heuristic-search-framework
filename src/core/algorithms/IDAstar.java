@@ -18,10 +18,8 @@ package core.algorithms;
 
 
 import core.*;
-import core.algorithms.SearchResultImpl;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +135,7 @@ public class IDAstar extends SearchAlgorithm {
         if (f <= this.bound && domain.isGoal(parent)) {
             this.solution.setCost(f);
             this.solution.addOperator(pop);
+            this.solution.addState(parent);
             return true;
         }
 

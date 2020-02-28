@@ -1,63 +1,41 @@
 package core.domains;
 
-import core.Operator;
-import core.SearchDomain;
-import core.SearchResult;
-import core.State;
+import core.*;
 import core.algorithms.IDAstar;
 import core.collections.PackedElement;
 
 import java.io.*;
 import java.util.*;
 
+import core.data.TrueDistanceEstimator;
 import org.apache.log4j.Logger;
 
 public class RubiksCube implements SearchDomain {
-
-    public static HeuristicType activeHeuristic;
-    public byte[][][] startingState;
-    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
-    private final byte[][][] ORIGINAL_CUBE = {{{0,0,0},{0,0,0},{0,0,0}},{{1,1,1},{1,1,1},{1,1,1}},{{2,2,2},{2,2,2},{2,2,2}},
+    //<editor-fold desc=Constants>
+    private final static byte[][][] ORIGINAL_CUBE = {{{0,0,0},{0,0,0},{0,0,0}},{{1,1,1},{1,1,1},{1,1,1}},{{2,2,2},{2,2,2},{2,2,2}},
             {{3,3,3},{3,3,3},{3,3,3}},{{4,4,4},{4,4,4},{4,4,4}},{{5,5,5},{5,5,5},{5,5,5}}};
-    //<editor-fold desc=MD variables>
-    static final HashMap<Integer,HashMap> database = new HashMap<>();
-    private byte[] cubieTarget = null;
-    private byte[][] cubiePosition = null;
-    enum Operators{
-        TOP_RIGHT_1234,
-        TOP_LEFT_1234,
-        BOT_RIGHT_1234,
-        BOT_LEFT_1234,
-        TOP_RIGHT_0351,
-        TOP_LEFT_0351,
-        BOT_RIGHT_0351,
-        BOT_LEFT_0351,
-        TOP_RIGHT_2540,
-        TOP_LEFT_2540,
-        BOT_RIGHT_2540,
-        BOT_LEFT_2540,
-    }
+    private final byte[] ANTOGONIST_SIDES = {5,3,4,1,2,0};
     public static final byte[][][] CUBIES_LIST = {
-        {{0,0,0},{1,0,0},{4,2,0}},
-        {{0,0,2},{1,2,0},{2,0,0}},
-        {{0,2,2},{2,2,0},{3,0,0}},
-        {{1,2,2},{2,0,2},{5,0,0}},
-        {{3,2,0},{0,2,0},{4,0,0}},
-        {{4,2,2},{1,0,2},{5,0,2}},
-        {{3,2,2},{4,0,2},{5,2,2}},
-        {{2,2,2},{3,0,2},{5,2,0}},
-        {{0,0,1},{1,1,0}},
-        {{0,1,0},{4,1,0}},
-        {{3,0,1},{2,2,1}},
-        {{0,2,1},{3,1,0}},
-        {{2,0,1},{1,2,1}},
-        {{1,0,1},{4,2,1}},
-        {{1,1,2},{5,0,1}},
-        {{5,1,2},{4,1,2}},
-        {{3,1,2},{5,2,1}},
-        {{0,1,2},{2,1,0}},
-        {{2,1,2},{5,1,0}},
-        {{3,2,1},{4,0,1}}};
+            {{0,0,0},{1,0,0},{4,2,0}},
+            {{0,0,2},{1,2,0},{2,0,0}},
+            {{0,2,2},{2,2,0},{3,0,0}},
+            {{1,2,2},{2,0,2},{5,0,0}},
+            {{3,2,0},{0,2,0},{4,0,0}},
+            {{4,2,2},{1,0,2},{5,0,2}},
+            {{3,2,2},{4,0,2},{5,2,2}},
+            {{2,2,2},{3,0,2},{5,2,0}},
+            {{0,0,1},{1,1,0}},
+            {{0,1,0},{4,1,0}},
+            {{3,0,1},{2,2,1}},
+            {{0,2,1},{3,1,0}},
+            {{2,0,1},{1,2,1}},
+            {{1,0,1},{4,2,1}},
+            {{1,1,2},{5,0,1}},
+            {{5,1,2},{4,1,2}},
+            {{3,1,2},{5,2,1}},
+            {{0,1,2},{2,1,0}},
+            {{2,1,2},{5,1,0}},
+            {{3,2,1},{4,0,1}}};
     private static final byte[][] COLOR_COMBOS_1 = {
             {1,0,2},{0,2,1},{2,1,0},
             {2,0,3},{0,3,2},{3,2,0},
@@ -79,6 +57,31 @@ public class RubiksCube implements SearchDomain {
             {5,1,4},{1,4,5},{4,5,1}
     };
     //</editor-fold>
+    //<editor-fold desc=MD variables>
+    static final HashMap<Integer,HashMap> database = new HashMap<>();
+    private byte[] cubieTarget = null;
+    private byte[][] cubiePosition = null;
+    enum Operators{
+        TOP_RIGHT_1234,
+        TOP_LEFT_1234,
+        BOT_RIGHT_1234,
+        BOT_LEFT_1234,
+        TOP_RIGHT_0351,
+        TOP_LEFT_0351,
+        BOT_RIGHT_0351,
+        BOT_LEFT_0351,
+        TOP_RIGHT_2540,
+        TOP_LEFT_2540,
+        BOT_RIGHT_2540,
+        BOT_LEFT_2540,
+    }
+
+    //</editor-fold>
+    public static HeuristicType activeHeuristic;
+    public byte[][][] startingState;
+    public static Logger log = Logger.getLogger(RubiksCube.class.getName());
+    private static TrueDistanceEstimator estimator = new TrueDistanceEstimator(7,"resources/RubikTD.txt",new RubiksCube(ORIGINAL_CUBE, RubiksCube.HeuristicType.PARALLEL_LINES));
+
 
     //<editor-fold desc=MD functions>
     private byte[][] getCubieByIndex(int index){
@@ -308,6 +311,7 @@ public class RubiksCube implements SearchDomain {
         this.startingState = deepCopyCube(ORIGINAL_CUBE);
     }
     //</editor-fold>
+
     public RubiksCube(byte[][][] cube, HeuristicType active) {
         //this.build3DMD();
         if(database.size()==0){
@@ -319,6 +323,19 @@ public class RubiksCube implements SearchDomain {
         }
         this.startingState = cube;
         activeHeuristic = active;
+    }
+
+    public RubiksCube() {
+        if(database.size()==0){
+            try {
+                this.load3DMDFromFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        byte[][][] cube = deepCopyCube(ORIGINAL_CUBE);
+        this.startingState = cube;
+        activeHeuristic = HeuristicType.GAP;
     }
 
     public RubiksCube(HeuristicType active) {
@@ -351,7 +368,10 @@ public class RubiksCube implements SearchDomain {
         BASELINE_HEURISTIC, //manhattan distance equivalent
         NO_HEURISTIC,
         COLORS,
-        GAP
+        GAP,
+        HYBRID,
+        BORDER_PASSING,
+        TRUE_DISTANCE
     }
 
     static byte[][][] deepCopyCube(byte[][][] cube){
@@ -527,6 +547,14 @@ public class RubiksCube implements SearchDomain {
                     return getColorsHeuristic();
                 case GAP:
                     return getGapHeuristic();
+                case BORDER_PASSING:
+                    return getBorderPassingHeuristics();
+                case TRUE_DISTANCE:
+                    return estimator.getTrueDistance(this);
+                case HYBRID:
+                    double gap = getGapHeuristic();
+                    double mh = getBaselineHeuristic();
+                    return Math.max(mh,gap);
             }
             if(debugMode)
                 log.debug("H requested: "+res+" returned");
@@ -564,18 +592,17 @@ public class RubiksCube implements SearchDomain {
                     for (int j=0; j<cube[face][i].length-1; j++){
                         if (cube[face][i][j] != cube[face][i][j+1]){
                             gaps += 1;
-                            if (cube[face][i][j]+cube[face][i][j+1] == 7){
+                            if (this.isOpposite(cube[face][i][j],cube[face][i][j+1])){
                                 gaps+=1;
                             }
                         }
                     }
                 }
-
                 for (int i = 0; i < cube[face].length-1; i++) {
                     for (int j = 0; j < cube[face][i].length; j++) {
                         if(cube[face][i][j] != cube[face][i+1][j]){
                             gaps += 1;
-                            if(cube[face][i][j]+cube[face][i+1][j] == 7){
+                            if(this.isOpposite(cube[face][i][j],cube[face][i+1][j])){
                                 gaps += 1;
                             }
                         }
@@ -583,6 +610,18 @@ public class RubiksCube implements SearchDomain {
                 }
             }
             return gaps/12;
+        }
+        private boolean isOpposite(byte one,byte two){
+            if(one==0&&two==5||two==0&&one==5){
+                return true;
+            }
+            if(one==1&&two==3||two==1&&one==3){
+                return true;
+            }
+            if(one==1&&two==4||two==1&&one==4){
+                return true;
+            }
+            return false;
         }
         @Override
         public String convertToString() {
@@ -592,6 +631,19 @@ public class RubiksCube implements SearchDomain {
         @Override
         public String convertToStringShort() {
             return "not implemented";
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for(int i=0;i<this.cube.length;i++){
+                for (int j=0;j<this.cube[i].length;j++){
+                    for(int k=0;k<this.cube[i][j].length;k++){
+                        sb.append(this.cube[i][j][k]);
+                    }
+                }
+            }
+            return sb.toString();
         }
 
         public byte[][][] getCube() {
@@ -703,7 +755,7 @@ public class RubiksCube implements SearchDomain {
             int pair05 = getHorizontalStripes(this.cube[0], this.cube[5]) + getVerticalStripes(this.cube[0], this.cube[5]);
             int pair13 = getHorizontalStripes(this.cube[1], this.cube[3]) + getVerticalStripes(this.cube[1], this.cube[3]);
             int pair24 = getHorizontalStripes(this.cube[2], this.cube[4]) + getVerticalStripes(this.cube[2], this.cube[4]);
-            return (double)(pair05 + pair13 + pair24)/6;
+            return (double)(pair05 + pair13 + pair24)/2;
         }
 
         private double getComplexParallelStripeHeuristic() {
@@ -731,6 +783,23 @@ public class RubiksCube implements SearchDomain {
 
             }
             return result/8.0;
+        }
+
+        private double getBorderPassingHeuristics(){
+            double result=0;
+            for(int i=0;i<this.cube.length;i++){
+                for (int j=0;j<this.cube[i].length;j++){
+                    for(int k=0;k<this.cube[i][j].length;k++){
+                        if(this.cube[i][j][k]==ANTOGONIST_SIDES[i])
+                            result+=2;
+                        else if(this.cube[i][j][k]==i)
+                            result+=0;
+                        else
+                            result+=1;
+                    }
+                }
+            }
+            return result/12.0;
         }
 
         private int getHorizontalStripes(byte[][] sideA, byte[][] sideB) {

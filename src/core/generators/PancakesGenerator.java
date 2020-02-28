@@ -133,16 +133,16 @@ public class PancakesGenerator extends GeneralInstancesGenerator {
         int size;
         String previousInstancesDir = null;
         int previousInstancesCount = 0;
-        int pancakesNum = 201;
+        int pancakesNum = 101;
 
         // In case no arguments were given - let's specify them here
         if (args.length == 0) {
             args = new String[3];
             System.out.println("[WARNING] Using local arguments");
             // Output directory
-            args[0] = "C:\\Users\\Daniel\\Documents\\gilond\\Master\\ResearchData\\input\\pancakes\\generated-"+pancakesNum;
+            args[0] = "testResources/core/domains/PancakeTestFiles";
             // Count of pancakes (number of instances)
-            args[1] = "100";
+            args[1] = "150";
             // Size of problem
             args[2] = pancakesNum+"";
             // Previous instance ID

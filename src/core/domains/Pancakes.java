@@ -95,6 +95,10 @@ public class Pancakes implements SearchDomain {
         this.init = s.cakes;
     }
 
+    public Pancakes() {
+        this(50);
+    }
+
     /**
      * creates a goal state of this size
      *
