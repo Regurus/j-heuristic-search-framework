@@ -350,13 +350,13 @@ public class VacuumRobotGenerator extends GeneralInstancesGenerator {
         //FOR EXPERIMENTS
         if(args.length == 0){
             args = new String[6];
-            args[0] = System.getProperty("user.dir") + "\\ExperimentInstances\\VacuumRobot";
+            args[0] = "testResources/core/domains/VacuumRobotTestFiles";
             // Count of Problems
             args[1] = 150 + "";
             // Width
-            args[2] = 200 + "";
+            args[2] = 20 + "";
             // Height
-            args[3] = 200 + "";
+            args[3] = 20 + "";
             // Obstacle Precentage
             args[4] = 35 + "";
             // Count of dirt piles

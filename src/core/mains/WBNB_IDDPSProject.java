@@ -6,6 +6,7 @@ import core.SearchResult;
 import core.State;
 import core.algorithms.IDAstar;
 import core.algorithms.IDDPS;
+import core.algorithms.WBnB;
 import core.domains.FifteenPuzzle;
 import core.domains.Pancakes;
 import core.domains.VacuumRobot;
@@ -35,7 +36,7 @@ public class WBNB_IDDPSProject {
         PANCAKE_FILES = f.list();
         f = new File(FIFTEEN_FOLDER);
         FIFTEEN_FILES = f.list();
-        for(double i=2.0; i<3.0; i+=0.1){
+        for(double i=1.0; i<3.0; i+=0.5){
             singleWeight(i,iterations);
         }
 
@@ -53,18 +54,18 @@ public class WBNB_IDDPSProject {
         Thread t1 = new Thread(task1);
         System.out.println("Thread 1 started IDA* run on weight: "+weight);
         t1.start();
-        /*Runnable task2 = () -> {
-            WBNB Wbnb = new WBNB(weight);
+        Runnable task2 = () -> {
+            WBnB Wbnb = new WBnB(weight);
             try {
 
-                runAlgorithm(Wbnb, iterations,weight);
+                runAlgorithm(Wbnb, weight);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         };
         Thread t2 = new Thread(task2);
         System.out.println("Thread 2 started WBnB run on weight: "+weight);
-        t2.start();*/
+        t2.start();
         Runnable task3 = () -> {
             IDDPS iddps = new IDDPS(weight);
             try {
@@ -74,15 +75,28 @@ public class WBNB_IDDPSProject {
             }
         };
         Thread t3 = new Thread(task3);
-        System.out.println("Thread 3 started IDDPS run on weight: "+weight);
+        System.out.println("Thread 3 started WBnB run on weight: "+weight);
         t3.start();
+        Runnable task4 = () -> {
+            IDDPS iddps = new IDDPS(weight);
+            try {
+                runAlgorithm(iddps, weight);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        };
+        Thread t4 = new Thread(task4);
+        System.out.println("Thread 4 started RBFS run on weight: "+weight);
+        t4.start();
         try {
             t1.join();
             System.out.println("IDA* run finished on weight: "+weight);
-            //t2.join();
-            //System.out.println("WBnB run finished on weight: "+weight);
+            t2.join();
+            System.out.println("WBnB run finished on weight: "+weight);
             t3.join();
             System.out.println("IDDPS run finished on weight: "+weight);
+            t4.join();
+            System.out.println("RBFS run finished on weight: "+weight);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -135,10 +149,10 @@ public class WBNB_IDDPSProject {
     private static String runOnDomain(SearchDomain domain, SearchAlgorithm algorithm,String fileName){
         IDAstar idAstar = new IDAstar();
         SearchResult vacuumResult = algorithm.search(domain);
-        SearchResult optimal = idAstar.search(domain);
+        //SearchResult optimal = idAstar.search(domain);
         return ""+fileName+","+vacuumResult.getExpanded()+","+vacuumResult.getGenerated()+","
                 +vacuumResult.getCpuTimeMillis()+","+vacuumResult.getWallTimeMillis()+
-                ","+vacuumResult.getSolutions().get(0).getLength()+","+optimal.getSolutions().get(0).getLength();
+                ","+vacuumResult.getSolutions().get(0).getLength();//+","+optimal.getSolutions().get(0).getLength();
     }
 
     private static void dumpToFile(Stack<List> results, Stack<String> filenames){

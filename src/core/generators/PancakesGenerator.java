@@ -133,7 +133,7 @@ public class PancakesGenerator extends GeneralInstancesGenerator {
         int size;
         String previousInstancesDir = null;
         int previousInstancesCount = 0;
-        int pancakesNum = 101;
+        int pancakesNum = 51;
 
         // In case no arguments were given - let's specify them here
         if (args.length == 0) {
