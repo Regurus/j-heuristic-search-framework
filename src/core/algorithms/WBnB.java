@@ -51,7 +51,7 @@ public class WBnB extends SearchAlgorithm {
         result = new SearchResultImpl();
         result.startTimer();
         State initialState = domain.initialState();
-        double boundFactor = initialState.getH() * this.weight;
+        double boundFactor = initialState.getH() * 2;
         SearchResultImpl output;
         BnB bnbBaseSearch = new BnB(weight, boundFactor);
         int i=0;

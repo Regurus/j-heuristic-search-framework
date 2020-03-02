@@ -7,6 +7,7 @@ import core.State;
 import core.algorithms.IDAstar;
 import core.algorithms.IDDPS;
 import core.algorithms.WBnB;
+import core.algorithms.WRBFS;
 import core.domains.FifteenPuzzle;
 import core.domains.Pancakes;
 import core.domains.VacuumRobot;
@@ -52,7 +53,7 @@ public class WBNB_IDDPSProject {
             }
         };
         Thread t1 = new Thread(task1);
-        System.out.println("Thread 1 started IDA* run on weight: "+weight);
+        System.out.println("Thread 1 started WIDA* run on weight: "+weight);
         t1.start();
         Runnable task2 = () -> {
             WBnB Wbnb = new WBnB(weight);
@@ -78,25 +79,25 @@ public class WBNB_IDDPSProject {
         System.out.println("Thread 3 started WBnB run on weight: "+weight);
         t3.start();
         Runnable task4 = () -> {
-            IDDPS iddps = new IDDPS(weight);
+            WRBFS wrbfs = new WRBFS(weight);
             try {
-                runAlgorithm(iddps, weight);
+                runAlgorithm(wrbfs, weight);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         };
         Thread t4 = new Thread(task4);
-        System.out.println("Thread 4 started RBFS run on weight: "+weight);
+        System.out.println("Thread 4 started WRBFS run on weight: "+weight);
         t4.start();
         try {
             t1.join();
-            System.out.println("IDA* run finished on weight: "+weight);
+            System.out.println("WIDA* run finished on weight: "+weight);
             t2.join();
             System.out.println("WBnB run finished on weight: "+weight);
             t3.join();
             System.out.println("IDDPS run finished on weight: "+weight);
             t4.join();
-            System.out.println("RBFS run finished on weight: "+weight);
+            System.out.println("WRBFS run finished on weight: "+weight);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
