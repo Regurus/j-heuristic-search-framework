@@ -60,7 +60,7 @@ public class WBnB extends SearchAlgorithm {
             result.generated += output.generated;
             result.expanded += output.expanded;
             result.addIteration(i,boundFactor,output.getExpanded(),output.getGenerated());
-            bnbBaseSearch.userLimitboundFactor = bnbBaseSearch.userLimitboundFactor * this.weight;
+            bnbBaseSearch.userLimitboundFactor = bnbBaseSearch.userLimitboundFactor * 2;
 //            i++;
         }while (!output.hasSolution());
         result.addSolution(output.getSolutions().get(0));

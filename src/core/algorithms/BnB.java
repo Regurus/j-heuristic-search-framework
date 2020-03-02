@@ -92,7 +92,6 @@ public class BnB extends SearchAlgorithm {
                 if(boundFactor >= currentNode.getG()){
                     goal = currentNode;
                     boundFactor = currentNode.getG();
-                    break;
                 }
                 continue;
             }
