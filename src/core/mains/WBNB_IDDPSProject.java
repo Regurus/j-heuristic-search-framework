@@ -4,9 +4,7 @@ import core.SearchAlgorithm;
 import core.SearchDomain;
 import core.SearchResult;
 import core.State;
-import core.algorithms.IDAstar;
-import core.algorithms.IDDPS;
-import core.algorithms.WBnB;
+import core.algorithms.*;
 import core.domains.FifteenPuzzle;
 import core.domains.Pancakes;
 import core.domains.VacuumRobot;
@@ -28,7 +26,6 @@ public class WBNB_IDDPSProject {
     private static String[] PANCAKE_FILES;
     private static String[] FIFTEEN_FILES;
 
-
     public static void main(String[] args) {
         File f = new File(VACUUM_FOLDER);
         VACCUM_FILES = f.list();
@@ -36,7 +33,7 @@ public class WBNB_IDDPSProject {
         PANCAKE_FILES = f.list();
         f = new File(FIFTEEN_FOLDER);
         FIFTEEN_FILES = f.list();
-        for(double i=1.0; i<3.0; i+=0.5){
+        for(double i=1.1; i<3.0; i+=0.1){
             singleWeight(i,iterations);
         }
 
@@ -75,12 +72,12 @@ public class WBNB_IDDPSProject {
             }
         };
         Thread t3 = new Thread(task3);
-        System.out.println("Thread 3 started WBnB run on weight: "+weight);
         t3.start();
+        System.out.println("Thread 3 started WBnB run on weight: "+weight);
         Runnable task4 = () -> {
-            IDDPS iddps = new IDDPS(weight);
+            WRBFS wrbfs = new WRBFS(weight);
             try {
-                runAlgorithm(iddps, weight);
+                runAlgorithm(wrbfs, weight);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -131,13 +128,14 @@ public class WBNB_IDDPSProject {
             SearchDomain domain = new FifteenPuzzle(new FileInputStream(FIFTEEN_FOLDER+"/"+fileName));
             String line = runOnDomain(domain, algorithm, fileName);
             System.out.println("Fifteen Puzzle: "+line);
-            vacuumResults.add(line);
+            fifteenResults.add(line);
             //Pancake puzzle
             domain = new Pancakes(new FileInputStream(PANCAKES_FOLDER+"/"+fileName));
             line = runOnDomain(domain, algorithm, fileName);
             System.out.println("Pancake Puzzle: "+line);
-            vacuumResults.add(line);
+            pancakesResults.add(line);
             //Vacuum
+
             domain = new VacuumRobot(new FileInputStream(VACUUM_FOLDER+"/"+fileName));
             line = runOnDomain(domain, algorithm,fileName);
             System.out.println("Vacuum Robot: "+line);
@@ -147,12 +145,10 @@ public class WBNB_IDDPSProject {
     }
 
     private static String runOnDomain(SearchDomain domain, SearchAlgorithm algorithm,String fileName){
-        IDAstar idAstar = new IDAstar();
         SearchResult vacuumResult = algorithm.search(domain);
-        //SearchResult optimal = idAstar.search(domain);
         return ""+fileName+","+vacuumResult.getExpanded()+","+vacuumResult.getGenerated()+","
                 +vacuumResult.getCpuTimeMillis()+","+vacuumResult.getWallTimeMillis()+
-                ","+vacuumResult.getSolutions().get(0).getLength();//+","+optimal.getSolutions().get(0).getLength();
+                ","+(int)vacuumResult.getSolutions().get(0).getCost();//+","+optimal.getSolutions().get(0).getLength();
     }
 
     private static void dumpToFile(Stack<List> results, Stack<String> filenames){
@@ -168,6 +164,7 @@ public class WBNB_IDDPSProject {
             try {
                 FileWriter file = new FileWriter(filename, true); //true tells to append data.
                 writer = new BufferedWriter(file);
+                writer.write("Filename,Expanded,Generated,CPU Time,Wall Time,Solution Length\n");
                 for(String line:result){
                     writer.write(line+'\n');
                 }
