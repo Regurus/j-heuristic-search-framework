@@ -227,11 +227,8 @@ public class BnBTest {
             System.out.println("solution " + curDeltaSolution);
         }
         System.out.println("Delta Expanded: "+avgDeltaExpanded/runs);
-        System.out.println("Delta % Expanded: "+avgDeltaExpandedPercent/runs+"%");
         System.out.println("Delta Generated: "+avgDeltaGenerated/runs);
-        System.out.println("Delta % Generated: "+avgDeltaGeneratedPercent/runs+"%");
         System.out.println("Delta Solution Length: "+avgDeltaSolutionLen/runs);
-        System.out.println("Delta Solution % Length: "+avgDeltaSolutionLenPercent/runs+"%");
         System.out.println("Positive value for WBnB, Negative for IDA*");
     }
     @Test
