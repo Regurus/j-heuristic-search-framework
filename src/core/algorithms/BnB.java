@@ -30,19 +30,21 @@ public class BnB extends SearchAlgorithm {
     public double userLimitboundFactor;
     private Stack<Node> open; //open list, nodes to check
     private HashMap<PackedElement, Double> visited; // nodes already visited
+    private double fMin; //under this number we can return the goal directly
 
     private List<Operator> path = new ArrayList<Operator>();
 
     public BnB() {
         this.weight = 1;
         this.userLimitboundFactor = Double.MAX_VALUE;
+        this.fMin = 0;
     }
 
     public BnB(double weight, double limit) {
         this.weight = weight;
         this.userLimitboundFactor = limit;
+        this.fMin = 0;
     }
-
 
     @Override
     public String getName() {
@@ -77,21 +79,30 @@ public class BnB extends SearchAlgorithm {
         Node initialNode = new Node(null, initialState, 0, null);
         open.add(initialNode);
         visited.put(domain.pack(initialState), 0.0);
+        double nextIterationFMin = Double.MAX_VALUE; //fmin of current iteration
 
         while (!open.isEmpty()) {
             Node currentNode = open.pop();
             State state = currentNode.getCurrent();
             if (domain.isGoal(state)) {
-//                System.out.println("Found!!!!: G:" + currentNode.getG() +" generated:" + result.generated );
+
                 if(boundFactor >= currentNode.getG()){
                     goal = currentNode;
-                    boundFactor = currentNode.getG();
+                    boundFactor = goal.getG();
+//                    if(goal.getG() <= fMin){
+//                        break;
+//                    }
                 }
                 continue;
             }
 
             visited.remove(domain.pack(state));
-            if(currentNode.getG()+state.getH()*weight> boundFactor){
+
+            if(getF(currentNode)> boundFactor){
+                //unnecessary because we found goal and wouldn't be another iteration , i put it in remarks
+//                if(getF(currentNode) < nextIterationFMin){
+//                    nextIterationFMin = getF(currentNode);
+//                }
                 continue;
             }
 
@@ -104,9 +115,9 @@ public class BnB extends SearchAlgorithm {
                 State childState = domain.applyOperator(state, op);
 
                 if(currentNode.getPrevious()!= null && childState.equals(currentNode.getPrevious().getCurrent())){
-//                    System.out.println("WAS HERE!!!");
                     continue;
                 }
+
                 PackedElement childPack = domain.pack(childState);
                 double child_g = currentNode.getG()+op.getCost(childState, state);
 
@@ -120,12 +131,14 @@ public class BnB extends SearchAlgorithm {
                 }
                 result.generated++;
 
+                Node childNode = new Node(currentNode, childState, child_g, op);
                 //add to open stack. else: cut the branch
-                if (childState.getH()*weight + child_g > boundFactor) {
+                if (getF(childNode) > boundFactor) {
+                    if(getF(childNode) < nextIterationFMin){
+                        nextIterationFMin = getF(childNode);
+                    }
                     continue;
                 }
-
-                Node childNode = new Node(currentNode, childState, child_g, op);
                 priority.add(childNode);
 
             }
@@ -154,7 +167,12 @@ public class BnB extends SearchAlgorithm {
             solution.setCost(goal.getG());
             result.addSolution(solution);
         }
+        fMin = nextIterationFMin;
         result.stopTimer();
         return result;
+    }
+
+    private double getF(Node n){
+        return n.getG()+n.getCurrent().getH()*weight;
     }
 }
