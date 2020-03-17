@@ -2,29 +2,41 @@ package core.algorithms;
 
 import core.SearchAlgorithm;
 import core.SearchDomain;
-import core.SearchResult;
-import core.Solution;
-import core.domains.FifteenPuzzle;
-import core.domains.Pancakes;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.Random;
-
+import static core.algorithms.Utils.createFifteenPuzzle;
 import static core.algorithms.Utils.getFixedPancakes;
 import static core.algorithms.Utils.testSearchAlgorithm;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class WBnBTest {
 
     private double weight;
     private double multiplierBound;
+    private SearchAlgorithm wbnb;
     @Before
     public void setUp(){
         this.weight = 2;
         this.multiplierBound = 2;
+        wbnb = new WBnB(weight, multiplierBound);
+    }
+
+    @Test
+    public void getName() {
+        assertEquals("name OK",wbnb.getName(),"WBnB");
+    }
+
+    @Test
+    public void getPossibleParameters() {
+        assertNull(wbnb.getPossibleParameters());
+    }
+
+    @Test(expected = NotImplementedException.class)
+    public void setAdditionalParameterNotImplemented() {
+        this.wbnb.setAdditionalParameter("someOtherParamenter","somevalue");
     }
 
     /**
@@ -36,8 +48,7 @@ public class WBnBTest {
         SearchDomain pancakes = getFixedPancakes(SIZE);
         System.out.println("Pancakes problem: num pancakes:" + SIZE+" weight = "+ weight);
         System.out.println("WBNB");
-        SearchAlgorithm bnb = new WBnB(weight, multiplierBound);
-        testSearchAlgorithm(pancakes, bnb, 123075, 413, 413);
+        testSearchAlgorithm(pancakes, wbnb, 123075, 413, 413);
         System.out.println("IDA*");
         SearchAlgorithm ida = new IDAstar(weight);
         testSearchAlgorithm(pancakes, ida, 79688, 708, 590);
@@ -51,9 +62,8 @@ public class WBnBTest {
         //weight = 2
         SearchDomain domain = createFifteenPuzzle();
         System.out.println("FifteenPuzzle: weight = "+ weight);
-        SearchAlgorithm bnb = new WBnB(weight, multiplierBound);
         System.out.println("WBNB");
-        testSearchAlgorithm(domain, bnb, 922346, 447488, 60);
+        testSearchAlgorithm(domain, wbnb, 922346, 447488, 60);
         System.out.println("IDA*");
         SearchAlgorithm ida = new IDAstar(weight);
         testSearchAlgorithm(domain, ida, 1956869, 932535, 60);
@@ -61,13 +71,5 @@ public class WBnBTest {
         SearchAlgorithm wrbfs = new WRBFS(weight);
         testSearchAlgorithm(domain, wrbfs, 319630, 155498, 70);
     }
-
-    public SearchDomain createFifteenPuzzle() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("tileFormatTest.pzl");
-        FifteenPuzzle puzzle = new FifteenPuzzle(is);
-        return puzzle;
-    }
-
-
 
 }

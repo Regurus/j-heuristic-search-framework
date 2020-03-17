@@ -9,6 +9,9 @@ import core.domains.OverrideDomain;
 import core.domains.Pancakes;
 import org.junit.Assert;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Random;
 
@@ -55,7 +58,7 @@ public class Utils {
 			System.out.println(state.convertToString());
 		}*/
         System.out.println("Cost: "+solution.getCost());
-        System.out.println("Time: "+(searchResult).getCpuTimeMillis()/1000+"s");
+        System.out.println("Time: "+(searchResult).getCpuTimeMillis()+"s");
         System.out.println("Expanded: "+(searchResult).getExpanded());
         System.out.println("Generated: "+(searchResult).getGenerated());
     }
@@ -99,6 +102,18 @@ public class Utils {
                 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
         tested = new OverrideDomain(edges,vert);
         return tested;
+    }
+
+    public static SearchDomain createFifteenPuzzle() {
+        File problem = new File("resources\\tileFormatTest.pzl");
+        InputStream is = null;
+        try {
+            is = new FileInputStream(problem);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        FifteenPuzzle puzzle = new FifteenPuzzle(is);
+        return puzzle;
     }
 
 }

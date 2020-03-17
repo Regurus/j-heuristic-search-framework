@@ -3,11 +3,7 @@ package core.algorithms;
 import core.SearchAlgorithm;
 import core.SearchDomain;
 import org.junit.Test;
-import core.domains.*;
-
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-
 import static core.algorithms.Utils.*;
 
 public class RBFSTest {
@@ -32,11 +28,6 @@ public class RBFSTest {
         testSearchAlgorithm(domain, algo, 61777, 312, 248);
     }
 
-    public SearchDomain createFifteenPuzzle() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("tileFormatTest.pzl");
-        FifteenPuzzle puzzle = new FifteenPuzzle(is);
-        return puzzle;
-    }
 
 
 
