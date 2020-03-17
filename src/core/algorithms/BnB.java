@@ -18,8 +18,14 @@ public class BnB extends SearchAlgorithm {
     class BnBNodeComparator implements Comparator<Node> {
         @Override
         public int compare(Node a, Node b) {
-            return Double.compare( b.getCurrent().getD(), a.getCurrent().getD());
+            return Double.compare( b.getCurrent().getH(), a.getCurrent().getH());
         }
+
+        //comparision by ps
+//        @Override
+//        public int compare(Node a, Node b) {
+//            return Double.compare( (-b.getG())/b.getCurrent().getH(), (-a.getG())/a.getCurrent().getH());
+//        }
     }
 
     private SearchResultImpl result;
