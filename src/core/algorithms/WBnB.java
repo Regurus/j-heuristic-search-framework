@@ -15,19 +15,15 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public class WBnB extends SearchAlgorithm {
 
     private SearchResultImpl result;
-    private SearchDomain domain;
-    private Node goal;
     protected double weight; //weight for heuristic
-    private double userLimitboundFactor;
-    private Stack<Node> open; //open list, nodes to check
-    private HashMap<PackedElement, Double> visited; // nodes already visited
-
+    protected double multiplierBound; //increase the bound in each iteration multiplierBound times
 
     private List<Operator> path = new ArrayList<Operator>();
 
-    public WBnB(double weight) {
+    public WBnB(double weight, double multiplierBound) {
         assert weight > 1: "bound factor should increase in each iteration";
         this.weight = weight;
+        this.multiplierBound = multiplierBound;
     }
 
 
@@ -51,7 +47,7 @@ public class WBnB extends SearchAlgorithm {
         result = new SearchResultImpl();
         result.startTimer();
         State initialState = domain.initialState();
-        double boundFactor = initialState.getH() * 2;
+        double boundFactor = initialState.getH() * multiplierBound;
         SearchResultImpl output;
         BnB bnbBaseSearch = new BnB(weight, boundFactor);
         int i=0;
@@ -60,7 +56,7 @@ public class WBnB extends SearchAlgorithm {
             result.generated += output.generated;
             result.expanded += output.expanded;
             result.addIteration(i,boundFactor,output.getExpanded(),output.getGenerated());
-            bnbBaseSearch.userLimitboundFactor = bnbBaseSearch.userLimitboundFactor * 2;
+            bnbBaseSearch.userLimitboundFactor = bnbBaseSearch.userLimitboundFactor * multiplierBound;
 //            i++;
         }while (!output.hasSolution());
         result.addSolution(output.getSolutions().get(0));

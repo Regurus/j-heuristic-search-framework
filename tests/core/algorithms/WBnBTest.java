@@ -17,13 +17,14 @@ import java.util.Random;
 public class WBnBTest {
 
     private double weight;
+    private double multiplierBound;
     @Before
     public void setUp(){
         this.weight = 2;
+        this.multiplierBound = 2;
     }
-    @Test
-    public void testWBNBPancakes() {
-        //weight = 2
+
+    public SearchDomain getFixedPancakes(int size){
         final int SIZE = 300;
         // create shuffled array of size
         int[] array = new int[SIZE];
@@ -42,9 +43,19 @@ public class WBnBTest {
             array[i] = a;
         }
         Pancakes pancakes = new Pancakes(array);
+        return pancakes;
+    }
+
+    /**
+     * test for weight = 2 , multiplierBound = 2
+     */
+    @Test
+    public void testWBNBPancakes() {
+        final int SIZE = 300;
+        SearchDomain pancakes = getFixedPancakes(SIZE);
         System.out.println("Pancakes problem: num pancakes:" + SIZE+" weight = "+ weight);
         System.out.println("WBNB");
-        SearchAlgorithm bnb = new WBnB(weight);
+        SearchAlgorithm bnb = new WBnB(weight, multiplierBound);
         testSearchAlgorithm(pancakes, bnb, 123075, 413, 413);
         System.out.println("IDA*");
         SearchAlgorithm ida = new IDAstar(weight);
@@ -65,7 +76,7 @@ public class WBnBTest {
         //weight = 2
         SearchDomain domain = createFifteenPuzzle("12");
         System.out.println("FifteenPuzzle: weight = "+ weight);
-        SearchAlgorithm bnb = new WBnB(weight);
+        SearchAlgorithm bnb = new WBnB(weight, multiplierBound);
         System.out.println("WBNB");
         testSearchAlgorithm(domain, bnb, 922346, 447488, 60);
         System.out.println("IDA*");
@@ -75,6 +86,7 @@ public class WBnBTest {
         SearchAlgorithm wrbfs = new WRBFS(weight);
         testSearchAlgorithm(domain, wrbfs, 319630, 155498, 70);
     }
+
     public static void testSearchAlgorithm(SearchDomain domain, SearchAlgorithm algo, long generated, long expanded, double cost) {
         SearchResult result = algo.search(domain);
         if (result.getSolutions().size() > 0) {
@@ -84,15 +96,8 @@ public class WBnBTest {
         else {
             System.out.println("no solution found");
         }
-
-//        Assert.assertTrue(result.getWallTimeMillis() > 1);
-//        Assert.assertTrue(result.getWallTimeMillis() < 200);
-//         Assert.assertTrue(result.getCpuTimeMillis() > 1);
-//         Assert.assertTrue(result.getCpuTimeMillis() < 200);
-         Assert.assertTrue(result.getGenerated() == generated);
-         Assert.assertTrue(result.getExpanded() == expanded);
-//         Assert.assertTrue(sol.getCost() == cost);
-//         Assert.assertTrue(sol.getLength() == cost+1);
+        Assert.assertTrue(result.getGenerated() == generated);
+        Assert.assertTrue(result.getExpanded() == expanded);
     }
 
     public static void showSolution(SearchResult searchResult,int solutionIndex){
