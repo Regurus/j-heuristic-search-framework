@@ -31,16 +31,10 @@ public class BnB extends SearchAlgorithm {
     private Stack<Node> open; //open list, nodes to check
     private HashMap<PackedElement, Double> visited; // nodes already visited
 
-
     private List<Operator> path = new ArrayList<Operator>();
 
     public BnB() {
         this.weight = 1;
-        this.userLimitboundFactor = Double.MAX_VALUE;
-    }
-
-    public BnB(double weight) {
-        this.weight = weight;
         this.userLimitboundFactor = Double.MAX_VALUE;
     }
 
