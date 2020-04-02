@@ -58,7 +58,7 @@ public class Utils {
 			System.out.println(state.convertToString());
 		}*/
         System.out.println("Cost: "+solution.getCost());
-        System.out.println("Time: "+(searchResult).getCpuTimeMillis()+"s");
+        System.out.println("Time: "+(searchResult).getCpuTimeMillis()+" ms");
         System.out.println("Expanded: "+(searchResult).getExpanded());
         System.out.println("Generated: "+(searchResult).getGenerated());
     }

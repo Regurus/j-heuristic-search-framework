@@ -18,15 +18,11 @@ public class BnB extends SearchAlgorithm {
     class BnBNodeComparator implements Comparator<Node> {
         @Override
         public int compare(Node a, Node b) {
-            return Double.compare( b.getCurrent().getH(), a.getCurrent().getH());
+            return Double.compare( b.getG() + b.getCurrent().getH(), a.getG() + a.getCurrent().getH());
         }
 
-        //comparision by ps
-//        @Override
-//        public int compare(Node a, Node b) {
-//            return Double.compare( (-b.getG())/b.getCurrent().getH(), (-a.getG())/a.getCurrent().getH());
-//        }
     }
+
 
     private SearchResultImpl result;
     private SearchDomain domain;
@@ -42,7 +38,7 @@ public class BnB extends SearchAlgorithm {
 
     public BnB() {
         this.weight = 1;
-        this.userLimitboundFactor = Double.MAX_VALUE;
+        this.userLimitboundFactor = Double.POSITIVE_INFINITY;
         this.fMin = 0;
     }
 
@@ -76,7 +72,7 @@ public class BnB extends SearchAlgorithm {
         this.domain = domain;
         result = new SearchResultImpl();
         result.startTimer();
-        this.boundFactor = Double.MAX_VALUE;
+        this.boundFactor = Double.POSITIVE_INFINITY;
         if (this.boundFactor >= this.userLimitboundFactor) {
             this.boundFactor = this.userLimitboundFactor;
         }
@@ -85,7 +81,7 @@ public class BnB extends SearchAlgorithm {
         Node initialNode = new Node(null, initialState, 0, null);
         open.add(initialNode);
         visited.put(domain.pack(initialState), 0.0);
-        double nextIterationFMin = Double.MAX_VALUE; //fmin of current iteration
+        double nextIterationFMin = Double.POSITIVE_INFINITY; //fmin of current iteration
 
         while (!open.isEmpty()) {
             Node currentNode = open.pop();

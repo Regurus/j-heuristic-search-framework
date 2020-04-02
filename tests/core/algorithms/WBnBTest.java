@@ -40,7 +40,7 @@ public class WBnBTest {
     }
 
     /**
-     * test for weight = 2 , multiplierBound = 2
+     * test for weight = 2 , k = 2
      */
     @Test
     public void testWBNBPancakes() {
