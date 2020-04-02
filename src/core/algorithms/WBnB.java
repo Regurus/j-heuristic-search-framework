@@ -63,4 +63,7 @@ public class WBnB extends SearchAlgorithm {
 
         return result;
     }
+    public int getK(){
+        return (int)this.k;
+    }
 }
