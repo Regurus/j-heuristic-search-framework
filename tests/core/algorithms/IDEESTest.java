@@ -227,4 +227,55 @@ public class IDEESTest {
         System.out.println("AVG Cost Solution: "+avgCost/runs);
 
     }
+
+    @Test
+    public void VacuumTet(){
+        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\VacuumRobotTestFiles";
+        File dir = new File(PATH);
+        File[] files = dir.listFiles();
+
+        assertNotNull("Invalid directory path", files);
+        assertTrue("Directory should not be empty", files.length != 0);
+
+        double avgDeltaExpanded = 0;
+        double avgDeltaGenerated = 0;
+        double avgDeltaSolutionLen = 0;
+        double avgCost = 0;
+
+        int i = 1;
+        try {
+            for(File file : files){
+                InputStream inStream = new FileInputStream(file);
+                VacuumRobot domain = new VacuumRobot(inStream);
+                System.out.println("*********ITERATION NUMBER " + i +"*********");
+
+                System.out.println("IDEES-------------------------------------------");
+                SearchAlgorithm idees = new IDEES(1.5);
+                SearchResult ideesRes = idees.search(domain);
+                System.out.println(ideesRes);
+
+                System.out.println("WIDA*-------------------------------------------");
+                SearchAlgorithm ida = new IDAstar(1.5);
+                SearchResult IDAstarRes = ida.search(domain);
+                System.out.println(IDAstarRes);
+
+                avgDeltaExpanded += IDAstarRes.getExpanded()-ideesRes.getExpanded();
+                avgDeltaGenerated += IDAstarRes.getGenerated()-ideesRes.getGenerated();
+                avgDeltaSolutionLen += IDAstarRes.getSolutions().get(0).getLength()-ideesRes.getSolutions().get(0).getLength();
+                avgCost += IDAstarRes.getSolutions().get(0).getCost()-ideesRes.getSolutions().get(0).getCost();
+
+                i++;
+                if(i==4)
+                    continue;
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
+        System.out.println("AVG Delta Expanded: "+avgDeltaExpanded/files.length);
+        System.out.println("AVG Delta Generated: "+avgDeltaGenerated/files.length);
+        System.out.println("AVG Delta Solution Length: "+avgDeltaSolutionLen/files.length);
+        System.out.println("AVG Cost Solution: "+avgCost/files.length);
+    }
 }
