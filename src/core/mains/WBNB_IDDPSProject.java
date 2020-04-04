@@ -52,7 +52,7 @@ public class WBNB_IDDPSProject {
         System.out.println("Thread 1 started IDA* run on weight: "+weight);
         t1.start();
         Runnable task2 = () -> {
-            WBnB Wbnb = new WBnB(weight);
+            WBnB Wbnb = new WBnB(weight,2);
             try {
 
                 runAlgorithm(Wbnb, weight);

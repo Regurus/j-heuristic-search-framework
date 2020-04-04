@@ -207,7 +207,7 @@ public class BnBTest {
             SearchResult IDAstarRes = idAstar.search(domain);
             System.out.println("IDA*--------------------------------------------");
             System.out.println(IDAstarRes);
-            WBnB wbnb = new WBnB(4);
+            WBnB wbnb = new WBnB(4,2);
             SearchResult WBnBSres = wbnb.search(domain);
             System.out.println("WBnB--------------------------------------------");
             System.out.println(WBnBSres);
