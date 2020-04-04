@@ -1,0 +1,30 @@
+locs: 3
+cranes: 3
+boxes: 3
+piles: 3
+robots: 1
+
+location 0
+adjacent: 0 2 1
+cranes: 1
+piles: 2
+
+location 1
+adjacent: 1 0 1
+cranes: 1
+piles: 0
+
+location 2
+adjacent: 2 1 0
+cranes: 1
+piles: 1
+
+pile 0
+0 2 
+
+pile 2
+1 
+
+container 0 1
+container 1 0
+container 2 0
