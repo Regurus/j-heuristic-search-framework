@@ -161,6 +161,10 @@ public class IDEES extends SearchAlgorithm {
             currentPath = new HashSet<>();
 
             do{
+                if(result.getExpanded()>5000000){
+                    return null;
+                }
+
                 // Init all the queues relevant to search (destroy previous results)
                 nodesExpanded = 0;
                 totalChildren = 0;
@@ -189,6 +193,10 @@ public class IDEES extends SearchAlgorithm {
     }
 
     private boolean DFS(Node n){
+        if(result.getExpanded()>5000000){
+            return false;
+        }
+
         if(domain.isGoal(n.state)){ //Lines 11-14
             if(n.f < incF){
                 incumbent = n;
