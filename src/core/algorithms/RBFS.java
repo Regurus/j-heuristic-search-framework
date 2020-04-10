@@ -101,6 +101,9 @@ public class RBFS extends SearchAlgorithm {
             goal = n;
             return n.f;
         }
+        if (result.expanded>5000000){
+            return -1;
+        }
 
         // generate all successors
         result.expanded++;
