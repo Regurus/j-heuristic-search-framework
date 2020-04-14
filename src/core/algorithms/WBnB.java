@@ -57,10 +57,11 @@ public class WBnB extends SearchAlgorithm {
             result.addIteration(i,boundFactor,output.getExpanded(),output.getGenerated());
             bnbBaseSearch.userLimitboundFactor = bnbBaseSearch.userLimitboundFactor * k;
 //            i++;
-        }while (!output.hasSolution());
-        result.addSolution(output.getSolutions().get(0));
+        }while (!output.hasSolution() && result.expanded<5000000);
+        if(result.expanded<=5000000){
+            result.addSolution(output.getSolutions().get(0));
+        }
         result.stopTimer();
-
         return result;
     }
     public int getK(){
