@@ -22,6 +22,10 @@ public class IDDPS extends IDAstar {
         super(weight);
     }
 
+    public IDDPS(double weight, int maxNodes){
+        super(weight,maxNodes);
+    }
+
     public IDDPS() {
         super();
     }
