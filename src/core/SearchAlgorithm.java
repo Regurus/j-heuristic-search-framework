@@ -22,7 +22,7 @@ package core;
  *
  */
 public abstract class SearchAlgorithm implements SearchConfigurable{
-
+    protected double maxExpanded = Double.POSITIVE_INFINITY;
     public abstract String getName();
 
     /**

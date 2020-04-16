@@ -16,6 +16,7 @@ public class WBnB extends SearchAlgorithm {
     private SearchResultImpl result;
     protected double weight; //weight for heuristic
     protected double k; //increase the bound in each iteration k times
+    protected double maxExpanded = Double.POSITIVE_INFINITY;
 
     private List<Operator> path = new ArrayList<Operator>();
 
@@ -25,6 +26,12 @@ public class WBnB extends SearchAlgorithm {
         this.k = multiplierBound;
     }
 
+    public WBnB(double weight, double multiplierBound, int maxExpanded) {
+        assert weight > 1: "bound factor should increase in each iteration";
+        this.weight = weight;
+        this.k = multiplierBound;
+        this.maxExpanded = maxExpanded;
+    }
 
     @Override
     public String getName() {
@@ -48,7 +55,7 @@ public class WBnB extends SearchAlgorithm {
         State initialState = domain.initialState();
         double boundFactor = initialState.getH() * k;
         SearchResultImpl output;
-        BnB bnbBaseSearch = new BnB(weight, boundFactor);
+        BnB bnbBaseSearch = new BnB(weight, boundFactor,(int)this.maxExpanded);
         int i=0;
         do{
             output = (SearchResultImpl) bnbBaseSearch.search(domain);
@@ -57,8 +64,8 @@ public class WBnB extends SearchAlgorithm {
             result.addIteration(i,boundFactor,output.getExpanded(),output.getGenerated());
             bnbBaseSearch.userLimitboundFactor = bnbBaseSearch.userLimitboundFactor * k;
 //            i++;
-        }while (!output.hasSolution() && result.expanded<5000000);
-        if(result.expanded<=5000000){
+        }while (!output.hasSolution() && result.expanded<this.maxExpanded);
+        if(output.getSolutions().size()>0){
             result.addSolution(output.getSolutions().get(0));
         }
         result.stopTimer();

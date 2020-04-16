@@ -48,6 +48,11 @@ public class RBFS extends SearchAlgorithm {
         this.weight = w;
     }
 
+    public RBFS(double w, int maxExpanded) {
+        this.maxExpanded = maxExpanded;
+        this.weight = w;
+    }
+
     @Override
     public String getName() {
         return "rbfs";
@@ -101,10 +106,9 @@ public class RBFS extends SearchAlgorithm {
             goal = n;
             return n.f;
         }
-        if (result.expanded>5000000){
+        if (result.expanded>this.maxExpanded){
             return -1;
         }
-
         // generate all successors
         result.expanded++;
         List<Node> succ = new ArrayList<Node>();
@@ -140,6 +144,9 @@ public class RBFS extends SearchAlgorithm {
         while (getRank(top, weight) <= u && top.fPrime < Double.MAX_VALUE) {
             double uPrime = (succ.size() == 1)
                 ? u : Math.min(getRank(succ.get(1), weight), u);
+            if (result.expanded>this.maxExpanded){
+                return -1;
+            }
             top.fPrime = rbfs(top, uPrime);
             Collections.sort(succ);
             top = succ.get(0);

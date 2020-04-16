@@ -61,6 +61,8 @@ public class IDDPS extends IDAstar {
     }
 
     private boolean expandNode(State parent, Operator pop, double cost, SearchDomain domain) {
+        if(this.result.expanded>this.maxExpanded)
+            return false;
         result.expanded++;
         ArrayList<ComparableState> states = this.getNextNodes(parent,pop,cost,domain);
         for(ComparableState next: states){

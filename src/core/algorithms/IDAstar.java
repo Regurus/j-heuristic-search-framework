@@ -40,8 +40,6 @@ public class IDAstar extends SearchAlgorithm {
     protected double bound;
     protected double minNextF;
 
-    protected double maxNodes = Double.POSITIVE_INFINITY;
-
     /**
      * The default constructor of the class
      */
@@ -55,7 +53,7 @@ public class IDAstar extends SearchAlgorithm {
 
     public IDAstar(double weight,double maxNodes){
         this.weight = weight;
-        this.maxNodes = maxNodes;
+        this.maxExpanded = maxNodes;
     }
 
     @Override
@@ -105,8 +103,10 @@ public class IDAstar extends SearchAlgorithm {
             if (goalWasFound) {
                 break;
             }
-            if(this.result.expanded>this.maxNodes)
-                break;
+            if(this.result.expanded>this.maxExpanded){
+                this.result.stopTimer();
+                return this.result;
+            }
         } while (true);
         this.result.stopTimer();
 
@@ -156,6 +156,8 @@ public class IDAstar extends SearchAlgorithm {
         }
 
         // Expand the current node
+        if(this.result.expanded>this.maxExpanded)
+            return false;
         ++result.expanded;
         int numOps = domain.getNumOperators(parent);
         for (int i = 0; i < numOps; ++i) {

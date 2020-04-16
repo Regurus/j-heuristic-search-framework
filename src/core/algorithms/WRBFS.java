@@ -32,6 +32,10 @@ public class WRBFS extends RBFS {
 		super(weight);
 	}
 
+	public WRBFS(double weight, int maxExpanded) {
+		super(weight);
+		this.maxExpanded = maxExpanded;
+	}
 	@Override
 	public String getName() {
 		return "wrbfs";

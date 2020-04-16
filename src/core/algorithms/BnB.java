@@ -34,6 +34,7 @@ public class BnB extends SearchAlgorithm {
     private HashMap<PackedElement, Double> visited; // nodes already visited
     private double fMin; //under this number we can return the goal directly
 
+
     private List<Operator> path = new ArrayList<Operator>();
 
     public BnB() {
@@ -46,6 +47,13 @@ public class BnB extends SearchAlgorithm {
         this.weight = weight;
         this.userLimitboundFactor = limit;
         this.fMin = 0;
+    }
+
+    public BnB(double weight, double limit,int maxExpanded) {
+        this.weight = weight;
+        this.userLimitboundFactor = limit;
+        this.fMin = 0;
+        this.maxExpanded = maxExpanded;
     }
 
     @Override
@@ -110,6 +118,8 @@ public class BnB extends SearchAlgorithm {
 
             //expand node
             result.expanded++;
+            if(result.expanded>maxExpanded)
+                return result;
             int numOperators = domain.getNumOperators(state);
             List<Node> priority = new ArrayList<>();
             for(int i=0; i< numOperators; ++i) {
