@@ -114,14 +114,18 @@ public class IDEES extends SearchAlgorithm {
         Node initNode = new Node(initState, null, null, null, null);
 
         Node incumbent = IDEESSearch(initNode);
-        this.solution.setCost(incumbent.f);
         this.result.stopTimer();
 
-        while(incumbent.parent!=null){
-            this.solution.addOperator(incumbent.op);
-            this.solution.addState(incumbent.state);
-            incumbent = incumbent.parent;
+        if(incumbent!=null){
+            while(incumbent.parent!=null){
+                this.solution.setCost(incumbent.f);
+                this.solution.addOperator(incumbent.op);
+                this.solution.addState(incumbent.state);
+                incumbent = incumbent.parent;
+            }
         }
+        else
+            this.solution.setCost(-1);
         SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
         List<Operator> path = this.solution.getOperators();
         List<State> statesPath = this.solution.getStates();
