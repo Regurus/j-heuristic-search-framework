@@ -100,7 +100,7 @@ public class IDEES extends SearchAlgorithm {
         return tempList;
     }
 
-    public SearchResult search(SearchDomain domain){
+    public SearchResult search(SearchDomain domain) {
         this.domain = domain;
         k = 0; //Iteration number
 
@@ -116,16 +116,20 @@ public class IDEES extends SearchAlgorithm {
         Node incumbent = IDEESSearch(initNode);
         this.result.stopTimer();
 
-        if(incumbent!=null){
-            while(incumbent.parent!=null){
+        boolean flag = true;
+
+        if (incumbent != null) {
+            while (incumbent.parent != null) {
                 this.solution.setCost(incumbent.f);
                 this.solution.addOperator(incumbent.op);
                 this.solution.addState(incumbent.state);
                 incumbent = incumbent.parent;
             }
         }
-        else
-            this.solution.setCost(-1);
+        else{
+            flag = false;
+        }
+
         SearchResultImpl.SolutionImpl solution = new SearchResultImpl.SolutionImpl(this.domain);
         List<Operator> path = this.solution.getOperators();
         List<State> statesPath = this.solution.getStates();
@@ -139,7 +143,9 @@ public class IDEES extends SearchAlgorithm {
         solution.addStates(statesPath);
 
         solution.setCost(this.solution.getCost());
-        result.addSolution(solution);
+
+        if(flag)
+            result.addSolution(solution);
 
         return this.result;
     }
