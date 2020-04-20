@@ -97,7 +97,7 @@ public class IDEES extends SearchAlgorithm {
             }
             State newState = domain.applyOperator(node.state, op);
 
-            if(visited.containsKey(newState))
+            if(visited.containsKey(domain.pack(newState)))
                 continue;
 
             visited.put(domain.pack(newState), true);
