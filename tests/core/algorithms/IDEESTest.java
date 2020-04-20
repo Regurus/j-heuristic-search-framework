@@ -278,4 +278,30 @@ public class IDEESTest {
         System.out.println("AVG Delta Solution Length: "+avgDeltaSolutionLen/files.length);
         System.out.println("AVG Cost Solution: "+avgCost/files.length);
     }
+
+
+    @Test
+    public void SingleInstanceTest(){
+        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\FifteenPuzzleInstances\\99.in";
+        File file = new File(PATH);
+        try{
+            InputStream inStream = new FileInputStream(file);
+            FifteenPuzzle domain = new FifteenPuzzle(inStream);
+
+
+            System.out.println("WIDA*-------------------------------------------");
+            SearchAlgorithm ida = new IDAstar(1.5);
+            SearchResult IDAstarRes = ida.search(domain);
+            System.out.println(IDAstarRes);
+
+
+            System.out.println("IDEES-------------------------------------------");
+            SearchAlgorithm idees = new IDEES(1.5);
+            SearchResult ideesRes = idees.search(domain);
+            System.out.println(ideesRes);
+        }
+        catch(Exception e){
+
+        }
+    }
 }
