@@ -34,7 +34,6 @@ public class IDEES extends SearchAlgorithm {
     private int[]  dataFHat;
     private int[]  dataLHat;
 
-    private HashSet<String> currentPath;
 
     public IDEES(){
         this(1.0);
@@ -90,11 +89,12 @@ public class IDEES extends SearchAlgorithm {
         for(int i=0;i<numOps;i++){
             Operator op = domain.getOperator(node.state,i);
             Operator pop = op.reverse(node.state);
-            State newState = domain.applyOperator(node.state, op);
-            if(currentPath.contains(newState.convertToString()))
+
+            if(op.equals(node.pop)){
                 continue;
-            currentPath.add(newState.convertToString());
-//            System.out.println(newState.convertToString());
+            }
+
+            State newState = domain.applyOperator(node.state, op);
             tempList.add(new Node(newState, node, node.state, op, pop));
         }
         return tempList;
@@ -168,7 +168,6 @@ public class IDEES extends SearchAlgorithm {
             tLHat = initNode.d;
             minF = Double.MAX_VALUE;
 
-            currentPath = new HashSet<>();
 
             do{
                 if(result.getExpanded()>5000000){
@@ -239,7 +238,6 @@ public class IDEES extends SearchAlgorithm {
                 }
             }
         }
-        currentPath.remove(n.state.convertToString());
         return false;
     }
 
