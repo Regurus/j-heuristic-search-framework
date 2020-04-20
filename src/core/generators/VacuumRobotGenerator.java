@@ -354,13 +354,13 @@ public class VacuumRobotGenerator extends GeneralInstancesGenerator {
             // Count of Problems
             args[1] = 150 + "";
             // Width
-            args[2] = 15 + "";
+            args[2] = 100 + "";
             // Height
-            args[3] = 15 + "";
+            args[3] = 100 + "";
             // Obstacle Precentage
-            args[4] = 35 + "";
+            args[4] = 15 + "";
             // Count of dirt piles
-            args[5] = 3 + "";
+            args[5] = 5 + "";
         }
 
         // TODO: Read all the input parameters from a single file

@@ -1,6 +1,7 @@
 package core.algorithms;
 
 import core.*;
+import core.collections.PackedElement;
 
 import java.util.*;
 
@@ -34,6 +35,7 @@ public class IDEES extends SearchAlgorithm {
     private int[]  dataFHat;
     private int[]  dataLHat;
 
+    private HashMap<PackedElement, Boolean> visited; // nodes already visited
 
     public IDEES(){
         this(1.0);
@@ -93,8 +95,12 @@ public class IDEES extends SearchAlgorithm {
             if(op.equals(node.pop)){
                 continue;
             }
-
             State newState = domain.applyOperator(node.state, op);
+
+            if(visited.containsKey(newState))
+                continue;
+
+            visited.put(domain.pack(newState), true);
             tempList.add(new Node(newState, node, node.state, op, pop));
         }
         return tempList;
@@ -103,6 +109,7 @@ public class IDEES extends SearchAlgorithm {
     public SearchResult search(SearchDomain domain) {
         this.domain = domain;
         k = 0; //Iteration number
+        visited = new HashMap<>();
 
         this.result = new SearchResultImpl();
         this.solution = new SearchResultImpl.SolutionImpl();
@@ -168,11 +175,12 @@ public class IDEES extends SearchAlgorithm {
             tLHat = initNode.d;
             minF = Double.MAX_VALUE;
 
-
             do{
                 if(result.getExpanded()>5000000){
                     return null;
                 }
+
+                visited.put(domain.pack(initNode.state), true);
 
                 // Init all the queues relevant to search (destroy previous results)
                 nodesExpanded = 0;
@@ -238,6 +246,7 @@ public class IDEES extends SearchAlgorithm {
                 }
             }
         }
+        visited.remove(n.state);
         return false;
     }
 

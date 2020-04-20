@@ -249,15 +249,15 @@ public class IDEESTest {
                 VacuumRobot domain = new VacuumRobot(inStream);
                 System.out.println("*********ITERATION NUMBER " + i +"*********");
 
-                System.out.println("IDEES-------------------------------------------");
-                SearchAlgorithm idees = new IDEES(1.5);
-                SearchResult ideesRes = idees.search(domain);
-                System.out.println(ideesRes);
-
                 System.out.println("WIDA*-------------------------------------------");
-                SearchAlgorithm ida = new IDAstar(1.5);
+                SearchAlgorithm ida = new IDAstar(1);
                 SearchResult IDAstarRes = ida.search(domain);
                 System.out.println(IDAstarRes);
+
+                System.out.println("IDEES-------------------------------------------");
+                SearchAlgorithm idees = new IDEES(1);
+                SearchResult ideesRes = idees.search(domain);
+                System.out.println(ideesRes);
 
                 avgDeltaExpanded += IDAstarRes.getExpanded()-ideesRes.getExpanded();
                 avgDeltaGenerated += IDAstarRes.getGenerated()-ideesRes.getGenerated();
