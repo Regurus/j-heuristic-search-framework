@@ -246,7 +246,7 @@ public class IDEES extends SearchAlgorithm {
                 }
             }
         }
-        visited.remove(n.state);
+        visited.remove(domain.pack(n.state));
         return false;
     }
 
@@ -353,7 +353,7 @@ public class IDEES extends SearchAlgorithm {
          * @return The calculated sseHMean
          */
         private double __calculateSSEMean(double totalSSE) {
-            return (this.g == 0) ? totalSSE : totalSSE / (this.depth+1); //I corrected it cause EES initializes depth as 1.
+            return (this.g == 0) ? totalSSE : totalSSE / (this.depth + 1); //I corrected it cause EES initializes depth as 1.
         }
 
         /**
