@@ -126,8 +126,8 @@ public class IDEES extends SearchAlgorithm {
         boolean flag = true;
 
         if (incumbent != null) {
+            this.solution.setCost(incumbent.f);
             while (incumbent.parent != null) {
-                this.solution.setCost(incumbent.f);
                 this.solution.addOperator(incumbent.op);
                 this.solution.addState(incumbent.state);
                 incumbent = incumbent.parent;
@@ -353,7 +353,7 @@ public class IDEES extends SearchAlgorithm {
          * @return The calculated sseHMean
          */
         private double __calculateSSEMean(double totalSSE) {
-            return (this.g == 0) ? totalSSE : totalSSE / (this.depth + 1); //I corrected it cause EES initializes depth as 1.
+            return (this.g == 0) ? totalSSE : totalSSE / (this.depth + 5); //I corrected it cause EES initializes depth as 1.
         }
 
         /**
@@ -376,8 +376,8 @@ public class IDEES extends SearchAlgorithm {
          * NOTE: if our estimate of sseDMean is ever as large as one, we assume we have infinite cost-to-go.
          */
         private double _computeHHat() {
-            double hHat = Double.MAX_VALUE;
-//            double hHat = 2*this.h;
+//            double hHat = Double.MAX_VALUE;
+            double hHat = 2*weight*this.h;
             double sseDMean = this._calculateSSEDMean();
             if (sseDMean < 1) {
                 double sseHMean = this._calculateSSEHMean();
@@ -392,8 +392,8 @@ public class IDEES extends SearchAlgorithm {
          * NOTE: if our estimate of sseDMean is ever as large as one, we assume we have infinite distance-to-go
          */
         private double _computeDHat() {
-            double dHat = Double.MAX_VALUE;
-//            double dHat = 2*this.d;
+//            double dHat = Double.MAX_VALUE;
+            double dHat = 2*weight*this.d;
             double sseDMean = this._calculateSSEDMean();
             if (sseDMean < 1) {
                 dHat = this.d / (1 - sseDMean);
