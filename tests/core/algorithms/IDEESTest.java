@@ -279,10 +279,9 @@ public class IDEESTest {
         System.out.println("AVG Cost Solution: "+avgCost/files.length);
     }
 
-
     @Test
     public void SingleInstanceTest(){
-        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\FifteenPuzzleInstances\\99.in";
+        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\FifteenPuzzleInstances\\122.in";
         File file = new File(PATH);
         try{
             InputStream inStream = new FileInputStream(file);
@@ -302,6 +301,26 @@ public class IDEESTest {
         }
         catch(Exception e){
 
+        }
+    }
+
+    @Test
+    public void Instance99FifteenPuzzle(){
+        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\FifteenPuzzleInstances\\99.in";
+        File file = new File(PATH);
+        try{
+            InputStream inStream = new FileInputStream(file);
+            FifteenPuzzle domain = new FifteenPuzzle(inStream);
+
+
+            SearchAlgorithm idees = new IDEES(1.5);
+            SearchResult ideesRes = idees.search(domain);
+
+            assertTrue("Nodes generated according to current implementation should be 22081", ideesRes.getGenerated()==22081);
+            assertTrue("Nodes expanded according to current implementation should be 10723", ideesRes.getExpanded()==10723);
+            assertTrue("Solution cost of weight 1.5 should be 42", ideesRes.getSolutions().get(0).getCost()==42.0);
+        }
+        catch(Exception e){
         }
     }
 }

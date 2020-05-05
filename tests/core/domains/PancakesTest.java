@@ -1,6 +1,7 @@
 package core.domains;
 
 import core.Operator;
+import core.State;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,5 +58,88 @@ public class PancakesTest {
             }
             i-=2;
         }
+    }
+
+    @Test
+    public void fullInstanceRun(){
+        Pancakes domain = new Pancakes(6);
+        State initState = domain.initialState();
+
+        assertEquals("Initial order should be sorted", "0 1 2 3 4 5", initState.convertToStringShort());
+        assertTrue("Distance to go should be 0", 0.0 == initState.getD());
+        assertTrue("Cost to go should be 0", 0.0 == initState.getH());
+        assertTrue("This is the goal state", domain.isGoal(initState));
+
+        State curState = initState;
+
+        assertEquals("Amount of operators:", 5, domain.getNumOperators(curState));
+        /*
+            Generally there's no point to check Num of operators further as
+            the number of operators should ALWAYS be equal to the number of gaps (cakes size-1)
+            However - we will check it once more later on to make sure it doesn't change.
+         */
+
+        //Flip the first and the second places - this creates a gap of 1, therefore D and H should be 1.
+        Operator op = domain.getOperator(curState, 0);
+        curState = domain.applyOperator(curState, op);
+
+
+        assertTrue("Distance to go should be 1", 1.0 == curState.getD());
+        assertTrue("Cost to go should be 1", 1.0 == curState.getH());
+
+        //Flip all the pancakes up until the 4th gap.
+
+        op = domain.getOperator(curState, 3);
+        curState = domain.applyOperator(curState, op);
+
+        assertTrue("Distance to go should be 2", 2.0 == curState.getD());
+        assertTrue("Cost to go should be 2", 2.0 == curState.getH());
+        assertEquals("Amount of operators:", 5, domain.getNumOperators(curState));
+        assertFalse("Not a goal state", domain.isGoal(curState));
+
+
+        //Reverse the flip
+        op = domain.getOperator(curState, 3);
+        curState = domain.applyOperator(curState, op);
+
+        //Flip the entire pile, still only 1 gap in the pile.
+        op = domain.getOperator(curState, 4);
+        curState = domain.applyOperator(curState, op);
+
+        //Distance is now 2 as the gaps are 1 and they are sorted in reverse
+        assertTrue("Distance to go should be 2", 2.0 == curState.getD());
+        assertTrue("Cost to go should be 2", 2.0 == curState.getH());
+
+        //We will flip the 3rd pancake, now gaps should be 3.
+        op = domain.getOperator(curState, 3);
+        curState = domain.applyOperator(curState, op);
+
+        assertTrue("Distance to go should be 3", 3.0 == curState.getD());
+        assertTrue("Cost to go should be 3", 3.0 == curState.getH());
+
+        domain.setInitialState(curState);
+        initState = domain.initialState();
+
+        assertTrue("States should be equal", initState.equals(curState));
+
+        //Solve the instance.
+
+        op = domain.getOperator(curState,3);
+        curState = domain.applyOperator(curState, op);
+
+        op = domain.getOperator(curState, 4);
+        curState = domain.applyOperator(curState, op);
+
+        assertFalse("States shouldn't be equal", curState.equals(initState));
+        assertTrue("Distance to go should be 1", 1.0 == curState.getD());
+        assertTrue("Cost to go should be 1", 1.0 == curState.getH());
+        assertFalse("Not a goal state", domain.isGoal(curState));
+
+        op = domain.getOperator(curState, 0);
+        curState = domain.applyOperator(curState, op);
+
+        assertTrue("Distance to go should be 0", 0.0 == curState.getD());
+        assertTrue("Cost to go should be 0", 0.0 == curState.getH());
+        assertTrue("This is the goal state", domain.isGoal(curState));
     }
 }
