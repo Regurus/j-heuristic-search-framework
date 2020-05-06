@@ -339,9 +339,9 @@ public class WBnBTest {
             SearchAlgorithm wbnb2 = new WBnB(1.5, 2);
             SearchResult wbnbRes = wbnb2.search(domain);
 
-            assertTrue("Nodes generated according to current implementation should be 22081", wbnbRes.getGenerated()==22081);
-            assertTrue("Nodes expanded according to current implementation should be 10723", wbnbRes.getExpanded()==10723);
-            assertTrue("Solution cost of weight 1.5 should be 42", wbnbRes.getSolutions().get(0).getCost()==42.0);
+            assertTrue("Nodes generated according to current implementation should be 3284676", wbnbRes.getGenerated()==3284676);
+            assertTrue("Nodes expanded according to current implementation should be 1580222", wbnbRes.getExpanded()==1580222);
+            assertTrue("Solution cost of weight 1.5 should be 36", wbnbRes.getSolutions().get(0).getCost()==36.0);
         }
         catch(Exception e){
         }
