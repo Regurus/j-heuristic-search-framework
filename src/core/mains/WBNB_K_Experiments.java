@@ -33,7 +33,7 @@ import java.util.Stack;
             PANCAKE_FILES = f.list();
             f = new File(FIFTEEN_FOLDER);
             FIFTEEN_FILES = f.list();
-            for(double i=1.1; i<3.0; i+=0.1){
+            for(double i=1; i<3.0; i+=0.1){
                 singleWeight(i,iterations);
             }
 
@@ -41,7 +41,7 @@ import java.util.Stack;
 
         public static void singleWeight(double weight,int iterations){
             Runnable task1 = () -> {
-                WBnB Wbnb = new WBnB(weight,1);
+                WBnB Wbnb = new WBnB(weight,1,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -51,7 +51,7 @@ import java.util.Stack;
             Thread t1 = new Thread(task1);
             t1.start();
             Runnable task2 = () -> {
-                WBnB Wbnb = new WBnB(weight,2);
+                WBnB Wbnb = new WBnB(weight,2,5000000);
                 try {
 
                     runAlgorithm(Wbnb, weight);
@@ -62,7 +62,7 @@ import java.util.Stack;
             Thread t2 = new Thread(task2);
             t2.start();
             Runnable task3 = () -> {
-                WBnB Wbnb = new WBnB(weight,3);
+                WBnB Wbnb = new WBnB(weight,3,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -72,7 +72,7 @@ import java.util.Stack;
             Thread t3 = new Thread(task3);
             t3.start();
             Runnable task4 = () -> {
-                WBnB Wbnb = new WBnB(weight,4);
+                WBnB Wbnb = new WBnB(weight,4,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -82,7 +82,7 @@ import java.util.Stack;
             Thread t4 = new Thread(task4);
             t4.start();
             Runnable task5 = () -> {
-                WBnB Wbnb = new WBnB(weight,5);
+                WBnB Wbnb = new WBnB(weight,5,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -92,7 +92,7 @@ import java.util.Stack;
             Thread t5 = new Thread(task5);
             t5.start();
             Runnable task6 = () -> {
-                WBnB Wbnb = new WBnB(weight,6);
+                WBnB Wbnb = new WBnB(weight,6,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -102,7 +102,7 @@ import java.util.Stack;
             Thread t6 = new Thread(task6);
             t6.start();
             Runnable task7 = () -> {
-                WBnB Wbnb = new WBnB(weight,7);
+                WBnB Wbnb = new WBnB(weight,7,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -112,7 +112,7 @@ import java.util.Stack;
             Thread t7 = new Thread(task7);
             t7.start();
             Runnable task8 = () -> {
-                WBnB Wbnb = new WBnB(weight,8);
+                WBnB Wbnb = new WBnB(weight,8,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -122,7 +122,7 @@ import java.util.Stack;
             Thread t8 = new Thread(task8);
             t8.start();
             Runnable task9 = () -> {
-                WBnB Wbnb = new WBnB(weight,9);
+                WBnB Wbnb = new WBnB(weight,9,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {
@@ -132,7 +132,7 @@ import java.util.Stack;
             Thread t9 = new Thread(task9);
             t9.start();
             Runnable task10 = () -> {
-                WBnB Wbnb = new WBnB(weight,10);
+                WBnB Wbnb = new WBnB(weight,10,5000000);
                 try {
                     runAlgorithm(Wbnb, weight);
                 } catch (FileNotFoundException e) {

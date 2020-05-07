@@ -230,7 +230,7 @@ public class IDEESTest {
 
     @Test
     public void VacuumTet(){
-        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\VacuumRobotTestFiles";
+        final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\FifteenPuzzleInstances";
         File dir = new File(PATH);
         File[] files = dir.listFiles();
 
@@ -246,7 +246,7 @@ public class IDEESTest {
         try {
             for(File file : files){
                 InputStream inStream = new FileInputStream(file);
-                VacuumRobot domain = new VacuumRobot(inStream);
+                FifteenPuzzle domain = new FifteenPuzzle(inStream);
                 System.out.println("*********ITERATION NUMBER " + i +"*********");
 
                 System.out.println("WIDA*-------------------------------------------");
@@ -283,25 +283,27 @@ public class IDEESTest {
     public void SingleInstanceTest(){
         final String PATH = System.getProperty("user.dir") + "\\testResources\\core\\domains\\FifteenPuzzleInstances\\122.in";
         File file = new File(PATH);
+        FifteenPuzzle domain = null;
         try{
             InputStream inStream = new FileInputStream(file);
-            FifteenPuzzle domain = new FifteenPuzzle(inStream);
+            domain = new FifteenPuzzle(inStream);
 
 
-            System.out.println("WIDA*-------------------------------------------");
-            SearchAlgorithm ida = new IDAstar(1.5);
-            SearchResult IDAstarRes = ida.search(domain);
-            System.out.println(IDAstarRes);
 
-
-            System.out.println("IDEES-------------------------------------------");
-            SearchAlgorithm idees = new IDEES(1.5);
-            SearchResult ideesRes = idees.search(domain);
-            System.out.println(ideesRes);
         }
         catch(Exception e){
-
+            System.out.println(e.getMessage());
         }
+        System.out.println("WIDA*-------------------------------------------");
+        SearchAlgorithm ida = new IDAstar(1.5);
+        SearchResult IDAstarRes = ida.search(domain);
+        System.out.println(IDAstarRes);
+
+
+        System.out.println("IDEES-------------------------------------------");
+        SearchAlgorithm idees = new IDEES(1.5);
+        SearchResult ideesRes = idees.search(domain);
+        System.out.println(ideesRes);
     }
 
     @Test
