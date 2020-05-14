@@ -33,28 +33,28 @@ public class WBNB_IDDPSProject {
         PANCAKE_FILES = f.list();
         f = new File(FIFTEEN_FOLDER);
         FIFTEEN_FILES = f.list();
-        for(double i=1; i<=3; i+=0.1){
+        for(double i=9; i<=10.0; i+=0.1){
             singleWeight(i,iterations);
         }
 
     }
 
     public static void singleWeight(double weight,int iterations){
-//        Runnable task1 = () -> {
-//            System.out.println("Thread 1 started IDA* run on weight: "+weight);
-//            IDAstar idAstar = new IDAstar(weight,5000000);
-//            try {
-//                runAlgorithm(idAstar, weight);
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//            System.out.println("IDA* run finished on weight: "+weight);
-//        };
-//        Thread t1 = new Thread(task1);
-//        t1.start();
+        Runnable task1 = () -> {
+            System.out.println("Thread 1 started IDA* run on weight: "+weight);
+            IDAstar idAstar = new IDAstar(weight,5000000);
+            try {
+                runAlgorithm(idAstar, weight);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            System.out.println("IDA* run finished on weight: "+weight);
+        };
+        Thread t1 = new Thread(task1);
+        t1.start();
         Runnable task2 = () -> {
             System.out.println("Thread 2 started WBnB run on weight: "+weight);
-            WBnB Wbnb = new WBnB(weight,3,5000000);
+            WBnB Wbnb = new WBnB(weight,2,5000000);
             try {
 
                 runAlgorithm(Wbnb, weight);
@@ -65,48 +65,48 @@ public class WBNB_IDDPSProject {
         };
         Thread t2 = new Thread(task2);
         t2.start();
-//        Runnable task3 = () -> {
-//            System.out.println("Thread 3 started IDDPS run on weight: "+weight);
-//            IDDPS iddps = new IDDPS(weight,5000000);
-//            try {
-//                runAlgorithm(iddps, weight);
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//            System.out.println("IDDPS run finished on weight: "+weight);
-//        };
-//        Thread t3 = new Thread(task3);
-//        t3.start();
-//        Runnable task4 = () -> {
-//            System.out.println("Thread 4 started WRBFS run on weight: "+weight);
-//            WRBFS wrbfs = new WRBFS(weight,5000000);
-//            try {
-//                runAlgorithm(wrbfs, weight);
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//            System.out.println("WRBFS run finished on weight: "+weight);
-//        };
-//        Thread t4 = new Thread(task4);
-//        t4.start();
-//        Runnable task5 = () -> {
-//            System.out.println("Thread 5 started IDEES run on weight: "+weight);
-//            IDEES idees = new IDEES(weight);
-//            try {
-//                runAlgorithm(idees, weight);
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//            System.out.println("IDEES run finished on  weight: "+weight);
-//        };
-//        Thread t5 = new Thread(task5);
-//        t5.start();
+        Runnable task3 = () -> {
+            System.out.println("Thread 3 started IDDPS run on weight: "+weight);
+            IDDPS iddps = new IDDPS(weight,5000000);
+            try {
+                runAlgorithm(iddps, weight);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            System.out.println("IDDPS run finished on weight: "+weight);
+        };
+        Thread t3 = new Thread(task3);
+        t3.start();
+        Runnable task4 = () -> {
+            System.out.println("Thread 4 started WRBFS run on weight: "+weight);
+            WRBFS wrbfs = new WRBFS(weight,5000000);
+            try {
+                runAlgorithm(wrbfs, weight);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            System.out.println("WRBFS run finished on weight: "+weight);
+        };
+        Thread t4 = new Thread(task4);
+        t4.start();
+        Runnable task5 = () -> {
+            System.out.println("Thread 5 started IDEES run on weight: "+weight);
+            IDEES idees = new IDEES(weight);
+            try {
+                runAlgorithm(idees, weight);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            System.out.println("IDEES run finished on  weight: "+weight);
+        };
+        Thread t5 = new Thread(task5);
+        t5.start();
         try {
-//            t1.join();
+            /*t1.join();
             t2.join();
-//            t3.join();
-//            t4.join();
-//            t5.join();
+            t3.join();
+            t4.join();*/
+            t5.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
