@@ -49,62 +49,62 @@ public class IDEES extends SearchAlgorithm {
         return "IDEES";
     }
 
-    private Node _selectNode(List<Node> children){
-        Node toReturn = null;
+//    private Node _selectNode(List<Node> children){
+//        Node toReturn = null;
+//
+//        children.sort((Node n1, Node n2)-> {
+//            return (int)(n1.f - n2.f);
+//        });
+//        Node bestF = children.get(0);
+//
+//        children.sort((Node n1, Node n2)-> {
+//            return (int)(n1.fHat - n2.fHat);
+//        });
+//        Node bestFHat = children.get(0);
+//
+//        children.sort((Node n1, Node n2)-> {
+//            return (int)(n1.dHat - n2.dHat);
+//        });
+//        Node bestDHat = null;
+//        for(Node node : children){
+//            if(node.fHat <= weight*bestFHat.fHat){
+//                if(bestDHat == null || node.dHat < bestDHat.dHat)
+//                    bestDHat = node;
+//            }
+//        }
+//
+//        if(bestDHat != null && bestDHat.fHat <= weight*bestF.f)
+//            toReturn = bestDHat;
+//        else if(bestFHat.fHat <= weight*bestF.f)
+//            toReturn = bestFHat;
+//        else
+//            toReturn = bestF;
+//
+//        children.remove(toReturn);
+//        return toReturn;
+//    }
 
-        children.sort((Node n1, Node n2)-> {
-            return (int)(n1.f - n2.f);
-        });
-        Node bestF = children.get(0);
-
-        children.sort((Node n1, Node n2)-> {
-            return (int)(n1.fHat - n2.fHat);
-        });
-        Node bestFHat = children.get(0);
-
-        children.sort((Node n1, Node n2)-> {
-            return (int)(n1.dHat - n2.dHat);
-        });
-        Node bestDHat = null;
-        for(Node node : children){
-            if(node.fHat <= weight*bestFHat.fHat){
-                if(bestDHat == null || node.dHat < bestDHat.dHat)
-                    bestDHat = node;
-            }
-        }
-
-        if(bestDHat != null && bestDHat.fHat <= weight*bestF.f)
-            toReturn = bestDHat;
-        else if(bestFHat.fHat <= weight*bestF.f)
-            toReturn = bestFHat;
-        else
-            toReturn = bestF;
-
-        children.remove(toReturn);
-        return toReturn;
-    }
-
-    private List<Node> _expandNode(Node node){
-        List<Node> tempList = new ArrayList<>();
-        int numOps = domain.getNumOperators(node.state);
-        //Initiate all the nodes of the father
-        for(int i=0;i<numOps;i++){
-            Operator op = domain.getOperator(node.state,i);
-            Operator pop = op.reverse(node.state);
-
-            if(op.equals(node.pop)){
-                continue;
-            }
-            State newState = domain.applyOperator(node.state, op);
-
-            if(visited.containsKey(domain.pack(newState)))
-                continue;
-
-            visited.put(domain.pack(newState), true);
-            tempList.add(new Node(newState, node, node.state, op, pop));
-        }
-        return tempList;
-    }
+//    private List<Node> _expandNode(Node node){
+//        List<Node> tempList = new ArrayList<>();
+//        int numOps = domain.getNumOperators(node.state);
+//        //Initiate all the nodes of the father
+//        for(int i=0;i<numOps;i++){
+//            Operator op = domain.getOperator(node.state,i);
+//            Operator pop = op.reverse(node.state);
+//
+//            if(op.equals(node.pop)){
+//                continue;
+//            }
+//            State newState = domain.applyOperator(node.state, op);
+//
+//            if(visited.containsKey(domain.pack(newState)))
+//                continue;
+//
+//            visited.put(domain.pack(newState), true);
+//            tempList.add(new Node(newState, node, node.state, op, pop));
+//        }
+//        return tempList;
+//    }
 
     public SearchResult search(SearchDomain domain) {
         this.domain = domain;
@@ -229,8 +229,10 @@ public class IDEES extends SearchAlgorithm {
             observe(n);
         }
         else{ //Lines 20-24
-            List<Node> children = _expandNode(n);
-            int numChild = children.size();
+//            List<Node> children = _expandNode(n);
+//            int numChild = children.size();
+            int numChild = domain.getNumOperators(n.state);
+
             nodesExpanded++;
             totalChildren += numChild;
 
@@ -239,7 +241,15 @@ public class IDEES extends SearchAlgorithm {
             for(int i=0;i<numChild;i++){
                 ++result.generated; //Tracks generated nodes
 
-                Node child = _selectNode(children);
+//                Node child = _selectNode(children);
+                Operator op = domain.getOperator(n.state, i);
+                State state = domain.applyOperator(n.state, op);
+                if (visited.containsKey(domain.pack(state)))
+                    continue;
+                visited.put(domain.pack(state), true);
+
+                Operator rev = op.reverse(state);
+                Node child = new Node(state, n, n.state, op, rev);
 
                 if(DFS(child)) {
                     return true;
@@ -353,7 +363,7 @@ public class IDEES extends SearchAlgorithm {
          * @return The calculated sseHMean
          */
         private double __calculateSSEMean(double totalSSE) {
-            return (this.g == 0) ? totalSSE : totalSSE / (this.depth + 5); //I corrected it cause EES initializes depth as 1.
+            return (this.g == 0) ? totalSSE : totalSSE / (this.depth + 1); //I corrected it cause EES initializes depth as 1.
         }
 
         /**
@@ -424,6 +434,8 @@ public class IDEES extends SearchAlgorithm {
             this.hHat = this._computeHHat();
             this.dHat = this._computeDHat();
             this.fHat = this.g + this.hHat;
+            this.fHat = this.f;
+            this.dHat = this.d;
 
             // This must be true assuming the heuristic is consistent (fHat may only overestimate the cost to the goal)
             assert !domain.isCurrentHeuristicConsistent() || this.fHat >= this.f;
